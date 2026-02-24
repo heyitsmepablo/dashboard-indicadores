@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model indicadores {
+  id                Int          @id @default(autoincrement())
+  setor             String       @db.VarChar(100)
+  descricao         String
+  fonte_formula     String?
+  meta              String?
+  unidade_de_medida String       @default("ABSOLUTO") @db.VarChar(50)
+  created_at        DateTime?    @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?    @default(now()) @db.Timestamp(6)
+  resultados        resultados[]
+
+  @@index([setor], map: "idx_indicadores_setor")
+}
+
+model resultados {
+  id              Int         @id @default(autoincrement())
+  indicador_id    Int
+  competencia     DateTime    @db.Date
+  valor           Decimal?    @db.Decimal(15, 2)
+  valor_texto     String?
+  analise_critica String?
+  created_at      DateTime?   @default(now()) @db.Timestamp(6)
+  updated_at      DateTime?   @default(now()) @db.Timestamp(6)
+  indicadores     indicadores @relation(fields: [indicador_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_indicador")
+
+  @@unique([indicador_id, competencia], map: "uk_resultado_competencia")
+  @@index([competencia], map: "idx_resultados_data")
+}

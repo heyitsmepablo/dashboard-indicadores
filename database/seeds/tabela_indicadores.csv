@@ -35,9 +35,9 @@ Hospitalar,Produção de Colonoscopia,Colonoscopia ( quantidade),ABSOLUTO
 Hospitalar,Produção de Eletroencefalograma,Eletroencefalograma (quantidade),ABSOLUTO
 Hospitalar,Produção de Eletrocardiograma,Eletrocardiograma (quantidade),ABSOLUTO
 Hospitalar,Taxa de Ocupação Operacional de Leitos - GLOBAL,Total de paciente dia / total de leito dia operacional X 100,PERCENTUAL
-Hospitalar,Taxa de Ocupação Operacional de Leitos - POR SETOR,5rf,PERCENTUAL
 Hospitalar,Giro de Leito - GLOBAL,Total de saídas (altas + óbitos + transfrências externas + evasões) / nº de leitos operacionais X 100,PERCENTUAL
-Hospitalar,Giro de Leito - POR SETOR,Total de saídas (altas + óbitos + transferências internas e externas + evasões) / nº de leitos operacionais por setor X 100,PERCENTUAL
+Hospitalar,Giro de Leito - Enfermaria,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
+Hospitalar,Giro de Leito - UTI Materna,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
 Hospitalar,Tempo Médio de Permanência - GLOBAL,Total de paciente dia / total de saídas hospitalares (altas + óbitos + transfrências externas + evasões),TEMPO_DIAS
 Hospitalar,Tempo Médio de Permanência – Enfermaria Clinica,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
 Hospitalar,Tempo Médio de Permanência – Enfermaria Cirurgica,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
@@ -136,15 +136,17 @@ Maternidade,Nº de Partos Normal,Número de partos normais ocorridos na unidade,
 Maternidade,Nº de Partos Cesárea,Número de partos cesáreos ocorridos na unidade,ABSOLUTO
 Maternidade,Nº de Parto Normal Assistido por Enfermeiro,Número de partos normais assistidos por enfermeiros ocorridos na unidade,ABSOLUTO
 Maternidade,Taxa de Ocupação Operacional de Leitos - GLOBAL,Total de paciente dia / total de leito dia operacional X 100,PERCENTUAL
-Maternidade,Taxa de Ocupação Operacional de Leitos -Enfermaria,Total de paciente dia por setor / total de leito dia operacional por setor X 100,PERCENTUAL
-Maternidade,Taxa de Ocupação Operacional de Leitos -UTI Materna,Total de paciente dia por setor / total de leito dia operacional por setor X 100,PERCENTUAL
+Maternidade,Taxa de Ocupação Operacional de Leitos -Enfermaria,Total de paciente dia do setor / total de leito dia operacional do setor X 100,PERCENTUAL
+Maternidade,Taxa de Ocupação Operacional de Leitos -UTI Materna,Total de paciente dia do setor / total de leito dia operacional do setor X 100,PERCENTUAL
 Maternidade,Giro de Leito - GLOBAL,Total de saídas (altas + óbitos + transfrências externas + evasões) / nº de leitos operacionais X 100,PERCENTUAL
 Maternidade,Giro de Leito - Enfermaria,Total de saídas (altas + óbitos + transferências internas e externas + evasões) / nº de leitos operacionais por setor X 100,PERCENTUAL
 Maternidade,Giro de Leito - UTI Materna,Total de saídas (altas + óbitos + transferências internas e externas + evasões) / nº de leitos operacionais por setor X 101,ABSOLUTO
 Maternidade,Tempo Médio de Permanência - GLOBAL,Total de paciente dia / total de saídas hospitalares (altas + óbitos + transfrências externas + evasões),TEMPO_DIAS
-Maternidade,Tempo Médio de Permanência - POR SETOR,Total de paciente dia por setor / total de saídas por setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
+Maternidade,Tempo Médio de Permanência - Enfermaria ,Total de paciente dia por setor / total de saídas por setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
+Maternidade,Tempo Médio de Permanência - UTI Materna,Total de paciente dia por setor / total de saídas por setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
 Maternidade,Índice de Intervalo de Substituição de Leitos - GLOBAL,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
-Maternidade,Índice de Intervalo de Substituição de Leitos - POR SETOR,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
+Maternidade,Índice de Intervalo de Substituição de Leitos - Enfermaria,Taxa de desocupação x média de permanência do setor em dias / taxa de ocupação hospitalar,PERCENTUAL
+Maternidade,Índice de Intervalo de Substituição de Leitos - UTI Materna,Taxa de desocupação x média de permanência do setor em dias / taxa de ocupação hospitalar,PERCENTUAL
 Maternidade,Nº de Óbitos Maternos,Nº total de óbitos ocorridos na unidade,ABSOLUTO
 Maternidade,Taxa de Mortalidade Materna,Total geral de óbitos por causas maternas / total de saídas de paciente de obstetrícia X 100,PERCENTUAL
 Maternidade,Densidade de Incidência de Mortalidade Infantil,Nº de óbitos de residentes com menos de um ano de idade / nº total de nascidos vivos de mães residentes X 1.000,ABSOLUTO

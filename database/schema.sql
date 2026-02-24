@@ -1,26 +1,25 @@
-ALTER DATABASE "postgres" SET lc_numeric = 'pt_BR.utf8';
-ALTER DATABASE "postgres" SET lc_monetary = 'pt_BR.utf8';
-ALTER DATABASE "postgres" SET lc_collate = 'pt_BR.utf8';
-ALTER DATABASE "postgres" SET lc_ctype = 'pt_BR.utf8';
-ALTER DATABASE "postgres" SET timezone = 'America/Sao_Paulo';
+-- Arquivo: database/schema.sql
+
+-- Habilita a função de remover acentos
+CREATE EXTENSION IF NOT EXISTS unaccent;
+ALTER FUNCTION unaccent(text) IMMUTABLE;
+-- ============================================================================
+-- 1. ESTRUTURA DE TABELAS
+-- ============================================================================
 
 CREATE TABLE "indicadores" (
   "id" SERIAL PRIMARY KEY,
-  "setor" "VARCHAR(100)" NOT NULL,
+  "setor" VARCHAR(100) NOT NULL,
   "descricao" TEXT NOT NULL,
   "fonte_formula" TEXT,
   "meta" TEXT,
-  "unidade_de_medida" "VARCHAR(50)" NOT NULL CHECK (unidade_de_medida IN (
-        'ABSOLUTO',    -- Ex: 150 (pacientes, partos, consultas)
-        'PERCENTUAL',  -- Ex: 85.5 (para 85,5%)
-        'FINANCEIRO',  -- Ex: 1500.00 (para R$ 1.500,00)
-        'TEMPO_DIAS',  -- Ex: 5 (dias de internação)
-        'TEMPO_HORAS', -- Ex: 12 (horas de espera)
-        'TAXA',        -- Ex: 2.5 (infecções por 1000 dias)
-        'TEXTO'        -- Ex: 'SIM' / 'NÃO' / 'Adequado'
-    )) DEFAULT 'ABSOLUTO',
-  "created_at" TIMESTAMP DEFAULT (CURRENT_TIMESTAMP),
-  "updated_at" TIMESTAMP DEFAULT (CURRENT_TIMESTAMP)
+  "unidade_de_medida" VARCHAR(50) NOT NULL DEFAULT 'ABSOLUTO'
+    CHECK (unidade_de_medida IN (
+        'ABSOLUTO', 'PERCENTUAL', 'FINANCEIRO', 
+        'TEMPO_DIAS', 'TEMPO_HORAS', 'TAXA', 'TEXTO'
+    )),
+  "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE "resultados" (
@@ -30,10 +29,23 @@ CREATE TABLE "resultados" (
   "valor" NUMERIC(15,2),
   "valor_texto" TEXT,
   "analise_critica" TEXT,
-  "created_at" TIMESTAMP DEFAULT (CURRENT_TIMESTAMP),
-  "updated_at" TIMESTAMP DEFAULT (CURRENT_TIMESTAMP)
+  "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ============================================================================
+-- 2. ÍNDICES E RELACIONAMENTOS
+-- ============================================================================
 
 CREATE UNIQUE INDEX "uk_resultado_competencia" ON "resultados" ("indicador_id", "competencia");
 
-ALTER TABLE "resultados" ADD CONSTRAINT "fk_indicador" FOREIGN KEY ("indicador_id") REFERENCES "indicadores" ("id") ON DELETE CASCADE;
+ALTER TABLE "resultados" 
+ADD CONSTRAINT "fk_indicador" 
+FOREIGN KEY ("indicador_id") 
+REFERENCES "indicadores" ("id") 
+ON DELETE CASCADE;
+
+CREATE INDEX "idx_indicadores_setor" ON "indicadores" ("setor");
+CREATE INDEX "idx_resultados_data" ON "resultados" ("competencia");
+CREATE INDEX idx_indicadores_setor_unaccent 
+ON indicadores (unaccent(setor));
