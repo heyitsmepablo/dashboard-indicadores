@@ -1,0 +1,23 @@
+name: dashboard-indicadores
+services:
+  database:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    restart: always
+    shm_size: 128mb
+    environment:
+      LANG: en_US
+      LANGUAGE: en_US
+      LC_ALL: pt_BR.UTF-8
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--lc-numeric=pt_BR.UTF-8 --lc-monetary=pt_BR.UTF-8 --lc-collate=pt_BR.UTF-8 --lc-ctype=pt_BR.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/Docker/data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./database/import_seeds.sql:/docker-entrypoint-initdb.d/02_seeds.sql
+      # Mapeamento da pasta de CSVs
+      - ./database/seeds:/var/lib/postgresql/data/seeds
