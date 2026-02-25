@@ -5,10 +5,11 @@ import { AppSidebar } from '@/components/app-sidebar'
 import { DashboardHeader } from '@/components/dashboard-header'
 import { SectorDashboard } from '@/components/sector-dashboard'
 import { IndicatorComparator } from '@/components/indicator-comparator'
+import { MyDashboard } from '@/components/my-dashboard'
 import { DashboardProvider, useDashboard } from '@/lib/dashboard-context'
 
 function DashboardContent() {
-  const { comparadorAberto } = useDashboard()
+  const { viewMode } = useDashboard()
 
   return (
     <SidebarProvider>
@@ -16,7 +17,9 @@ function DashboardContent() {
       <SidebarInset>
         <DashboardHeader />
         <div className="flex-1 overflow-auto p-4 md:p-6">
-          {comparadorAberto ? <IndicatorComparator /> : <SectorDashboard />}
+          {viewMode === 'comparador' && <IndicatorComparator />}
+          {viewMode === 'meu-painel' && <MyDashboard />}
+          {viewMode === 'setor' && <SectorDashboard />}
         </div>
       </SidebarInset>
     </SidebarProvider>

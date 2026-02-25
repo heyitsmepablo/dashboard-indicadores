@@ -11,9 +11,10 @@ import { getUltimoResultado, getPenultimoResultado } from '@/lib/mock-data'
 interface KpiCardProps {
   indicador: Indicador
   onClick?: () => void
+  isActive?: boolean
 }
 
-export function KpiCard({ indicador, onClick }: KpiCardProps) {
+export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
   const ultimo = getUltimoResultado(indicador.id)
   const penultimo = getPenultimoResultado(indicador.id)
   const meta = parseMeta(indicador.meta, indicador.unidade_de_medida)
@@ -44,7 +45,9 @@ export function KpiCard({ indicador, onClick }: KpiCardProps) {
   return (
     <TooltipProvider>
       <Card
-        className="cursor-pointer transition-all hover:shadow-md hover:border-primary/30 group"
+        className={`cursor-pointer transition-all hover:shadow-md hover:border-primary/30 group ${
+          isActive ? 'ring-2 ring-primary border-primary shadow-md' : ''
+        }`}
         onClick={onClick}
       >
         <CardHeader className="pb-2">

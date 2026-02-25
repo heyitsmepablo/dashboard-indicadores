@@ -6,6 +6,7 @@ import {
   DollarSign,
   GitCompareArrows,
   LayoutDashboard,
+  Pin,
   Settings,
   ShoppingCart,
   Users,
@@ -35,7 +36,7 @@ const iconMap: Record<string, React.ElementType> = {
 }
 
 export function AppSidebar() {
-  const { setorAtivo, setSetorAtivo, comparadorAberto, setComparadorAberto } = useDashboard()
+  const { setorAtivo, setSetorAtivo, viewMode, setViewMode, painelIndicadores } = useDashboard()
   const setores = getSetores()
 
   return (
@@ -65,10 +66,10 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={setor}>
                     <SidebarMenuButton
-                      isActive={setorAtivo === setor && !comparadorAberto}
+                      isActive={setorAtivo === setor && viewMode === 'setor'}
                       onClick={() => {
                         setSetorAtivo(setor)
-                        setComparadorAberto(false)
+                        setViewMode('setor')
                       }}
                       tooltip={setor}
                     >
@@ -96,8 +97,26 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  isActive={comparadorAberto}
-                  onClick={() => setComparadorAberto(true)}
+                  isActive={viewMode === 'meu-painel'}
+                  onClick={() => setViewMode('meu-painel')}
+                  tooltip="Meu Painel"
+                >
+                  <Pin className="h-4 w-4" />
+                  <span>Meu Painel</span>
+                  {painelIndicadores.length > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-auto text-[10px] px-1.5 py-0 h-5 bg-sidebar-accent text-sidebar-accent-foreground"
+                    >
+                      {painelIndicadores.length}
+                    </Badge>
+                  )}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={viewMode === 'comparador'}
+                  onClick={() => setViewMode('comparador')}
                   tooltip="Comparador"
                 >
                   <GitCompareArrows className="h-4 w-4" />

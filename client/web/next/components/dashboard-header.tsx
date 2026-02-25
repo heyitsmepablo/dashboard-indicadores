@@ -11,8 +11,15 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 
+const viewLabels: Record<string, string> = {
+  comparador: 'Comparador',
+  'meu-painel': 'Meu Painel',
+}
+
 export function DashboardHeader() {
-  const { setorAtivo, comparadorAberto } = useDashboard()
+  const { setorAtivo, viewMode } = useDashboard()
+
+  const pageLabel = viewMode === 'setor' ? setorAtivo : viewLabels[viewMode] ?? setorAtivo
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
@@ -26,7 +33,7 @@ export function DashboardHeader() {
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbPage className="text-sm font-medium">
-              {comparadorAberto ? 'Comparador' : setorAtivo}
+              {pageLabel}
             </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
