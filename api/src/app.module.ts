@@ -1,15 +1,35 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaServiceService } from './services/prisma-service/prisma-service.service';
-import { IndicadoresServiceService } from './services/indicadores-service/indicador-service.service';
-import { ResultadoServiceService } from './services/resultado-service/resultado-service.service';
+
 import { IndicadorController } from './controllers/indicador/indicador.controller';
-import { ResultadoController } from './controllers/resultado/resultado.controller';
+
+import { PrismaService } from './services/prisma-service/prisma-service.service';
+import { ResultadoService } from './services/resultado-service/resultado-service.service';
+import { IndicadorService } from './services/indicadores-service/indicador-service.service';
+import { ResultadosController } from './controllers/resultado/resultado.controller';
+import { ConfigModule } from '@nestjs/config';
+import { UnidadeService } from './services/unidade/unidade.service';
+import { UnidadesController } from './controllers/unidade/unidade.controller';
+import { TipoUnidadeController } from './controllers/tipo-de-unidade/tipo-de-unidade.controller';
+import { TipoUnidadeService } from './services/tipo-de-unidade-service/tipo-de-unidade-service.service';
 
 @Module({
-  imports: [],
-  controllers: [AppController, IndicadorController, ResultadoController],
-  providers: [AppService, PrismaServiceService, IndicadoresServiceService, ResultadoServiceService],
+  imports: [ConfigModule.forRoot({ isGlobal: true })],
+  controllers: [
+    AppController,
+    IndicadorController,
+    ResultadosController,
+    TipoUnidadeController,
+    UnidadesController,
+  ],
+  providers: [
+    AppService,
+    PrismaService,
+    IndicadorService,
+    ResultadoService,
+    TipoUnidadeService,
+    UnidadeService,
+  ],
 })
 export class AppModule {}

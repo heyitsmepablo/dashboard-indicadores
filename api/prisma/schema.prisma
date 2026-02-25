@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -26,6 +27,7 @@ model indicadores {
 model resultados {
   id              Int         @id @default(autoincrement())
   indicador_id    Int
+  unidade_id      Int
   competencia     DateTime    @db.Date
   valor           Decimal?    @db.Decimal(15, 2)
   valor_texto     String?
@@ -33,7 +35,28 @@ model resultados {
   created_at      DateTime?   @default(now()) @db.Timestamp(6)
   updated_at      DateTime?   @default(now()) @db.Timestamp(6)
   indicadores     indicadores @relation(fields: [indicador_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_indicador")
+  unidades        unidades    @relation(fields: [unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_resultado_unidade")
 
-  @@unique([indicador_id, competencia], map: "uk_resultado_competencia")
-  @@index([competencia], map: "idx_resultados_data")
+  @@unique([indicador_id, competencia, unidade_id], map: "uk_resultado_competencia_unidade")
+  @@index([competencia], map: "idx_resultados_competencia")
+  @@index([unidade_id], map: "idx_resultados_unidade")
+}
+
+model tipo_de_unidade {
+  id       Int        @id @default(autoincrement())
+  nome     String     @db.VarChar(100)
+  unidades unidades[]
+}
+
+model unidades {
+  id              Int             @id @default(autoincrement())
+  nome            String          @db.VarChar(255)
+  sigla           String?         @db.VarChar(50)
+  tipo_unidade_id Int
+  created_at      DateTime?       @default(now()) @db.Timestamp(6)
+  updated_at      DateTime?       @default(now()) @db.Timestamp(6)
+  resultados      resultados[]
+  tipo_de_unidade tipo_de_unidade @relation(fields: [tipo_unidade_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_unidade_tipo")
+
+  @@index([tipo_unidade_id], map: "idx_unidades_tipo")
 }

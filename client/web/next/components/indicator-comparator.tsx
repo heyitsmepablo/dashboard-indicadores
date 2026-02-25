@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from "react";
 import {
   Area,
   AreaChart,
@@ -13,365 +13,524 @@ import {
   YAxis,
   Tooltip as RechartsTooltip,
   Legend,
-} from 'recharts'
-import { ChartContainer, ChartTooltipContent, ChartLegendContent, type ChartConfig } from '@/components/ui/chart'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
-import { X, Trash2 } from 'lucide-react'
-import { useDashboard } from '@/lib/dashboard-context'
-import { getAllIndicadores, getResultadosPorIndicador } from '@/lib/mock-data'
-import { formatCompetencia, formatValue } from '@/lib/format'
-import { ChartTypeToggle, type ChartType } from './evolution-chart'
+} from "recharts";
+import {
+  ChartContainer,
+  ChartTooltipContent,
+  ChartLegendContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import {
+  X,
+  Trash2,
+  GitCompareArrows,
+  Loader2,
+  Filter,
+  Building,
+  LayoutGrid,
+  Info,
+  CheckCircle2,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
+} from "lucide-react";
 
-const CHART_COLORS = [
-  'var(--color-chart-1)',
-  'var(--color-chart-2)',
-  'var(--color-chart-3)',
-  'var(--color-chart-4)',
-  'var(--color-chart-5)',
-]
+import { useDashboard } from "@/lib/dashboard-context";
+import { formatCompetencia, formatValue, getVariacao } from "@/lib/format";
+import { ChartTypeToggle, type ChartType } from "./evolution-chart";
+import { UnitSelector } from "./unit-selector";
+import { DashifyService } from "@/services/dashify.service";
+import { Indicador } from "@/lib/types";
+import { filtrarUnidadesPorSetor } from "@/lib/sector-utils";
+
+const CHART_COLORS = ["#2563eb", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 export function IndicatorComparator() {
-  const [chartType, setChartType] = useState<ChartType>('line')
-  const { indicadoresSelecionados, toggleIndicadorComparador, limparComparador } = useDashboard()
-  const allIndicadores = getAllIndicadores()
-  const selectedIndicadores = allIndicadores.filter(i => indicadoresSelecionados.includes(i.id))
+  const [chartType, setChartType] = useState<ChartType>("line");
+  const {
+    dadosComparacao,
+    itensComparacao,
+    toggleItemComparador,
+    limparComparador,
+    unidades,
+    setores,
+  } = useDashboard();
 
-  // Group indicadores by setor for the selection panel
-  const setoresMap = allIndicadores.reduce<Record<string, typeof allIndicadores>>((acc, ind) => {
-    if (!acc[ind.setor]) acc[ind.setor] = []
-    acc[ind.setor].push(ind)
-    return acc
-  }, {})
+  const [localSetor, setLocalSetor] = useState<string>("");
+  const [localUnidadeId, setLocalUnidadeId] = useState<number | null>(null);
+  const [indicadoresDisponiveis, setIndicadoresDisponiveis] = useState<
+    Indicador[]
+  >([]);
+  const [loadingIndicadores, setLoadingIndicadores] = useState(false);
 
-  // Build comparison data - normalize values to percentage of their range for visual comparison
-  const buildComparisonData = () => {
-    if (selectedIndicadores.length === 0) return []
+  // --- Helpers de Identificação ---
+  const getNomeUnidade = (id: number) =>
+    unidades.find((u) => u.id === id)?.nome || `Unidade ${id}`;
+  const getSiglaUnidade = (id: number) =>
+    unidades.find((u) => u.id === id)?.sigla || `#${id}`;
 
-    // Get all results and find competencia intersection
-    const allResults = selectedIndicadores.map(ind => ({
-      indicador: ind,
-      resultados: getResultadosPorIndicador(ind.id),
-    }))
+  // --- Lógica de Modo de Comparação ---
+  const modo = useMemo(() => {
+    if (itensComparacao.length < 2) return "INICIAL";
+    const uId = itensComparacao[0].unidadeId;
+    const iId = itensComparacao[0].id;
+    if (itensComparacao.every((i) => i.unidadeId === uId))
+      return "MESMA_UNIDADE";
+    if (itensComparacao.every((i) => i.id === iId)) return "MULTI_UNIDADE";
+    return "MISTO";
+  }, [itensComparacao]);
 
-    // Use the first indicator's competencias as baseline
-    const competencias = allResults[0]?.resultados.map(r => r.competencia) ?? []
+  // Filtro de unidades baseado no setor (Lógica Sidebar)
+  const unidadesDoSetor = useMemo(() => {
+    return localSetor ? filtrarUnidadesPorSetor(localSetor, unidades) : [];
+  }, [localSetor, unidades]);
 
-    return competencias.map(comp => {
-      const point: Record<string, unknown> = {
-        competencia: formatCompetencia(comp),
-      }
-      allResults.forEach(({ indicador, resultados }) => {
-        const resultado = resultados.find(r => r.competencia === comp)
-        if (resultado) {
-          point[`ind_${indicador.id}`] = resultado.valor
-        }
-      })
-      return point
-    })
-  }
+  // Reset da unidade ao trocar de setor
+  useEffect(() => {
+    setLocalUnidadeId(null);
+  }, [localSetor]);
 
-  const data = buildComparisonData()
-
-  const chartConfig: ChartConfig = selectedIndicadores.reduce((acc, ind, idx) => {
-    acc[`ind_${ind.id}`] = {
-      label: ind.descricao,
-      color: CHART_COLORS[idx % CHART_COLORS.length],
+  // Busca indicadores da unidade/setor selecionado
+  useEffect(() => {
+    if (localUnidadeId) {
+      setLoadingIndicadores(true);
+      DashifyService.getIndicadores(localSetor, localUnidadeId)
+        .then(setIndicadoresDisponiveis)
+        .finally(() => setLoadingIndicadores(false));
     }
-    return acc
-  }, {} as ChartConfig)
+  }, [localUnidadeId, localSetor]);
 
-  // Check if all selected have the same unidade_de_medida for Y-axis formatting
-  const uniqueUnidades = [...new Set(selectedIndicadores.map(i => i.unidade_de_medida))]
-  const sameUnidade = uniqueUnidades.length === 1
+  // --- Preparação de Dados para o Recharts ---
+  const data = useMemo(() => {
+    if (dadosComparacao.length === 0) return [];
+    const dates = new Set<string>();
+    dadosComparacao.forEach((ind) =>
+      ind.resultados?.forEach((r) => dates.add(r.competencia.split("T")[0])),
+    );
+
+    return Array.from(dates)
+      .sort()
+      .map((d) => {
+        const p: any = { competencia: formatCompetencia(d) };
+        dadosComparacao.forEach((ind) => {
+          const r = ind.resultados?.find((res) =>
+            res.competencia.startsWith(d),
+          );
+          p[`ind_${ind.id}_${ind.unidadeId}`] = r ? Number(r.valor) : null;
+        });
+        return p;
+      });
+  }, [dadosComparacao]);
+
+  const chartConfig = useMemo(() => {
+    const config: ChartConfig = {};
+    dadosComparacao.forEach((ind, idx) => {
+      config[`ind_${ind.id}_${ind.unidadeId}`] = {
+        label: `${ind.descricao} (${getSiglaUnidade(ind.unidadeId!)})`,
+        color: CHART_COLORS[idx % CHART_COLORS.length],
+      };
+    });
+    return config;
+  }, [dadosComparacao, unidades]);
+
+  const uniqueUnidades = useMemo(
+    () => [...new Set(dadosComparacao.map((i) => i.unidade_de_medida))],
+    [dadosComparacao],
+  );
+
+  const sameUnidade = uniqueUnidades.length === 1;
+
+  // --- Função de Renderização Dinâmica do Gráfico ---
+  const renderSelectedChart = () => {
+    const margin = { top: 20, right: 30, left: 0, bottom: 0 };
+    const grid = <CartesianGrid strokeDasharray="3 3" vertical={false} />;
+    const xAxis = (
+      <XAxis
+        dataKey="competencia"
+        tickLine={false}
+        axisLine={false}
+        tickMargin={10}
+        fontSize={12}
+      />
+    );
+    const yAxis = (
+      <YAxis tickLine={false} axisLine={false} width={40} fontSize={12} />
+    );
+    const tooltip = <RechartsTooltip content={<ChartTooltipContent />} />;
+    const legend = <Legend content={<ChartLegendContent />} />;
+
+    if (chartType === "bar") {
+      return (
+        <BarChart data={data} margin={margin}>
+          {grid} {xAxis} {yAxis} {tooltip} {legend}
+          {dadosComparacao.map((ind, idx) => (
+            <Bar
+              key={`${ind.id}-${ind.unidadeId}`}
+              dataKey={`ind_${ind.id}_${ind.unidadeId}`}
+              fill={CHART_COLORS[idx % CHART_COLORS.length]}
+              radius={[4, 4, 0, 0]}
+              maxBarSize={40}
+            />
+          ))}
+        </BarChart>
+      );
+    }
+
+    if (chartType === "area") {
+      return (
+        <AreaChart data={data} margin={margin}>
+          <defs>
+            {dadosComparacao.map((ind, idx) => (
+              <linearGradient
+                key={`grad-${ind.id}-${ind.unidadeId}`}
+                id={`fill-${ind.id}-${ind.unidadeId}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="5%"
+                  stopColor={CHART_COLORS[idx % CHART_COLORS.length]}
+                  stopOpacity={0.3}
+                />
+                <stop
+                  offset="95%"
+                  stopColor={CHART_COLORS[idx % CHART_COLORS.length]}
+                  stopOpacity={0.05}
+                />
+              </linearGradient>
+            ))}
+          </defs>
+          {grid} {xAxis} {yAxis} {tooltip} {legend}
+          {dadosComparacao.map((ind, idx) => (
+            <Area
+              key={`${ind.id}-${ind.unidadeId}`}
+              type="monotone"
+              dataKey={`ind_${ind.id}_${ind.unidadeId}`}
+              stroke={CHART_COLORS[idx % CHART_COLORS.length]}
+              fill={`url(#fill-${ind.id}-${ind.unidadeId})`}
+              strokeWidth={2}
+              connectNulls
+            />
+          ))}
+        </AreaChart>
+      );
+    }
+
+    return (
+      <LineChart data={data} margin={margin}>
+        {grid} {xAxis} {yAxis} {tooltip} {legend}
+        {dadosComparacao.map((ind, idx) => (
+          <Line
+            key={`${ind.id}-${ind.unidadeId}`}
+            type="monotone"
+            dataKey={`ind_${ind.id}_${ind.unidadeId}`}
+            stroke={CHART_COLORS[idx % CHART_COLORS.length]}
+            strokeWidth={3}
+            dot={{
+              r: 4,
+              fill: CHART_COLORS[idx % CHART_COLORS.length],
+              strokeWidth: 0,
+            }}
+            activeDot={{ r: 6, strokeWidth: 2 }}
+            connectNulls
+          />
+        ))}
+      </LineChart>
+    );
+  };
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
+    <div className="flex flex-col gap-6 pb-20">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Comparador de Indicadores
+        <h1 className="text-2xl font-bold tracking-tight">
+          Comparador de Performance
         </h1>
         <p className="text-sm text-muted-foreground">
-          Selecione indicadores de qualquer setor para comparar lado a lado
+          Analise múltiplos indicadores ou compare unidades entre si.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-        {/* Selection Panel */}
-        <Card className="h-fit">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm">Indicadores</CardTitle>
-              {indicadoresSelecionados.length > 0 && (
-                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={limparComparador}>
-                  <Trash2 className="h-3 w-3" />
-                  Limpar
+      <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 items-start">
+        {/* === PAINEL DE SELEÇÃO === */}
+        <Card className="shadow-md border-t-4 border-t-primary">
+          <CardHeader className="bg-muted/10 pb-4">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
+                <Filter className="h-3 w-3" /> Configuração
+              </span>
+              {itensComparacao.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={limparComparador}
+                  className="text-destructive h-6 hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-3 w-3 mr-1" /> Limpar
                 </Button>
               )}
             </div>
-            <CardDescription className="text-xs">
-              {indicadoresSelecionados.length} selecionado(s)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[400px] pr-3">
-              <div className="flex flex-col gap-4">
-                {Object.entries(setoresMap).map(([setor, inds]) => (
-                  <div key={setor} className="flex flex-col gap-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      {setor}
-                    </span>
-                    {inds.map((ind) => (
-                      <div key={ind.id} className="flex items-center gap-2">
-                        <Checkbox
-                          id={`comp-${ind.id}`}
-                          checked={indicadoresSelecionados.includes(ind.id)}
-                          onCheckedChange={() => toggleIndicadorComparador(ind.id)}
-                          className="h-4 w-4"
-                        />
-                        <Label
-                          htmlFor={`comp-${ind.id}`}
-                          className="text-sm cursor-pointer flex-1 leading-tight"
-                        >
-                          {ind.descricao}
-                        </Label>
-                      </div>
-                    ))}
-                    <Separator className="mt-1" />
-                  </div>
-                ))}
+
+            {itensComparacao.length > 0 && (
+              <div className="mb-4 p-2 bg-primary/5 rounded-lg border border-primary/10">
+                <div className="flex items-center gap-2 text-xs font-medium text-primary">
+                  <CheckCircle2 className="h-4 w-4" />
+                  {modo === "MULTI_UNIDADE"
+                    ? "Modo: Comparação entre Unidades"
+                    : "Modo: Análise de Unidade"}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {modo === "MULTI_UNIDADE"
+                    ? "Mesmo indicador em unidades distintas (Benchmarking)."
+                    : "Indicadores diferentes na mesma unidade."}
+                </p>
               </div>
-            </ScrollArea>
+            )}
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                  <LayoutGrid className="h-3 w-3" /> 1. Setor
+                </Label>
+                <Select value={localSetor} onValueChange={setLocalSetor}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Selecione o setor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {setores.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                  <Building className="h-3 w-3" /> 2. Unidade
+                </Label>
+                <UnitSelector
+                  value={localUnidadeId}
+                  onChange={setLocalUnidadeId}
+                  customList={unidadesDoSetor}
+                  disabled={!localSetor}
+                  placeholder="Busque a unidade..."
+                />
+              </div>
+            </div>
+          </CardHeader>
+
+          <Separator />
+
+          <CardContent className="p-0 h-[400px] relative">
+            {loadingIndicadores ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : !localUnidadeId ? (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-6 text-center">
+                <Info className="h-8 w-8 mb-2 opacity-20" />
+                <p className="text-xs">
+                  Selecione o setor e a unidade para listar os indicadores.
+                </p>
+              </div>
+            ) : (
+              <ScrollArea className="h-full p-2">
+                <div className="space-y-1">
+                  {indicadoresDisponiveis.map((ind) => {
+                    const isSelected = itensComparacao.some(
+                      (i) => i.id === ind.id && i.unidadeId === localUnidadeId,
+                    );
+
+                    const canSelect =
+                      itensComparacao.length === 0 ||
+                      (modo === "MESMA_UNIDADE" &&
+                        localUnidadeId === itensComparacao[0].unidadeId) ||
+                      (modo === "MULTI_UNIDADE" &&
+                        ind.id === itensComparacao[0].id) ||
+                      (itensComparacao.length === 1 &&
+                        (ind.id === itensComparacao[0].id ||
+                          localUnidadeId === itensComparacao[0].unidadeId));
+
+                    return (
+                      <div
+                        key={ind.id}
+                        onClick={() =>
+                          canSelect &&
+                          toggleItemComparador(ind.id, localUnidadeId!)
+                        }
+                        className={`flex items-start gap-3 p-2.5 rounded-lg border transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-primary/10 border-primary/30"
+                            : canSelect
+                              ? "hover:bg-muted border-transparent"
+                              : "opacity-30 cursor-not-allowed grayscale"
+                        }`}
+                      >
+                        <Checkbox checked={isSelected} className="mt-0.5" />
+                        <span className="text-sm leading-tight">
+                          {ind.descricao}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            )}
           </CardContent>
         </Card>
 
-        {/* Chart Area */}
-        <div className="flex flex-col gap-4">
-          {/* Selected badges */}
-          {selectedIndicadores.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {selectedIndicadores.map((ind, idx) => (
-                <Badge
-                  key={ind.id}
-                  variant="secondary"
-                  className="gap-1.5 pr-1 text-xs"
-                  style={{
-                    borderLeft: `3px solid ${CHART_COLORS[idx % CHART_COLORS.length]}`,
-                  }}
-                >
-                  {ind.descricao}
-                  <button
-                    onClick={() => toggleIndicadorComparador(ind.id)}
-                    className="ml-1 rounded-full p-0.5 hover:bg-muted"
-                    aria-label={`Remover ${ind.descricao}`}
+        {/* === ÁREA VISUAL === */}
+        <div className="flex flex-col gap-4 min-w-0">
+          {itensComparacao.length === 0 ? (
+            <Card className="h-[550px] border-dashed flex flex-col items-center justify-center text-muted-foreground bg-muted/5">
+              <GitCompareArrows className="h-12 w-12 mb-4 opacity-10" />
+              <p className="text-sm">Configure os dados no painel lateral.</p>
+            </Card>
+          ) : (
+            <>
+              {/* Badges de Seleção */}
+              <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-xl border border-dashed">
+                {dadosComparacao.map((ind, idx) => (
+                  <Badge
+                    key={`${ind.id}-${ind.unidadeId}`}
+                    variant="secondary"
+                    className="pl-2 pr-1 py-1 gap-2 shadow-sm bg-background border"
                   >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          )}
+                    <div className="flex flex-col items-start leading-none">
+                      <span className="text-[9px] uppercase font-bold text-primary truncate max-w-[120px]">
+                        {getNomeUnidade(ind.unidadeId!)}
+                      </span>
+                      <span className="text-xs font-medium">
+                        {ind.descricao}
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5 rounded-full hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() =>
+                        toggleItemComparador(ind.id, ind.unidadeId!)
+                      }
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                ))}
+              </div>
 
-          {/* Comparison Chart */}
-          {selectedIndicadores.length >= 2 ? (
-            <Card>
-              <CardHeader>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex flex-col gap-1">
-                    <CardTitle className="text-base">Comparacao de Evolucao</CardTitle>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <div className="space-y-1">
+                    <CardTitle className="text-lg">
+                      Gráfico de Evolução
+                    </CardTitle>
                     <CardDescription>
                       {sameUnidade
-                        ? `Valores em ${uniqueUnidades[0]}`
-                        : 'Unidades mistas - comparacao visual'}
+                        ? `Unidade de Medida: ${uniqueUnidades[0]}`
+                        : "Comparações entre dados normalizados"}
                     </CardDescription>
                   </div>
                   <ChartTypeToggle value={chartType} onChange={setChartType} />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={chartConfig} className="h-[350px] w-full">
-                  {(() => {
-                    const margin = { top: 10, right: 10, left: 0, bottom: 0 }
-                    const sharedXAxis = (
-                      <XAxis
-                        dataKey="competencia"
-                        tickLine={false}
-                        axisLine={false}
-                        tickMargin={8}
-                        fontSize={11}
-                      />
-                    )
-                    const sharedYAxis = (
-                      <YAxis
-                        tickLine={false}
-                        axisLine={false}
-                        tickMargin={4}
-                        fontSize={11}
-                        width={60}
-                        tickFormatter={(val) => {
-                          if (sameUnidade) {
-                            const u = uniqueUnidades[0]
-                            if (u === 'PERCENTUAL') return `${(val * 100).toFixed(0)}%`
-                            if (u === 'FINANCEIRO') return `${(val / 1000).toFixed(0)}k`
-                            return val.toLocaleString('pt-BR')
-                          }
-                          return val.toLocaleString('pt-BR')
-                        }}
-                      />
-                    )
-                    const tooltipContent = (
-                      <RechartsTooltip
-                        content={
-                          <ChartTooltipContent
-                            formatter={(value, name) => {
-                              const indId = parseInt(String(name).replace('ind_', ''))
-                              const ind = selectedIndicadores.find(i => i.id === indId)
-                              if (ind && typeof value === 'number') {
-                                return formatValue(value, ind.unidade_de_medida)
-                              }
-                              return String(value)
-                            }}
-                          />
-                        }
-                      />
-                    )
-                    const legend = <Legend content={<ChartLegendContent />} />
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={chartConfig}
+                    className="h-[400px] w-full"
+                  >
+                    {renderSelectedChart()}
+                  </ChartContainer>
+                </CardContent>
+              </Card>
 
-                    if (chartType === 'bar') {
-                      return (
-                        <BarChart data={data} margin={margin}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                          {sharedXAxis}
-                          {sharedYAxis}
-                          {tooltipContent}
-                          {legend}
-                          {selectedIndicadores.map((ind, idx) => (
-                            <Bar
-                              key={ind.id}
-                              dataKey={`ind_${ind.id}`}
-                              fill={CHART_COLORS[idx % CHART_COLORS.length]}
-                              radius={[3, 3, 0, 0]}
-                              maxBarSize={24}
-                            />
-                          ))}
-                        </BarChart>
-                      )
-                    }
+              {/* Cards de Resumo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {dadosComparacao.map((ind, idx) => {
+                  const resultados = ind.resultados || [];
+                  const ultimo = resultados[resultados.length - 1];
+                  const penultimo = resultados[resultados.length - 2];
+                  const valorAtual = ultimo ? Number(ultimo.valor) : 0;
+                  const valorAnterior = penultimo ? Number(penultimo.valor) : 0;
+                  const variacao = penultimo
+                    ? getVariacao(valorAtual, valorAnterior)
+                    : 0;
 
-                    if (chartType === 'area') {
-                      return (
-                        <AreaChart data={data} margin={margin}>
-                          <defs>
-                            {selectedIndicadores.map((ind, idx) => (
-                              <linearGradient key={ind.id} id={`comp-fill-${ind.id}`} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={CHART_COLORS[idx % CHART_COLORS.length]} stopOpacity={0.25} />
-                                <stop offset="100%" stopColor={CHART_COLORS[idx % CHART_COLORS.length]} stopOpacity={0.02} />
-                              </linearGradient>
-                            ))}
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                          {sharedXAxis}
-                          {sharedYAxis}
-                          {tooltipContent}
-                          {legend}
-                          {selectedIndicadores.map((ind, idx) => (
-                            <Area
-                              key={ind.id}
-                              type="monotone"
-                              dataKey={`ind_${ind.id}`}
-                              stroke={CHART_COLORS[idx % CHART_COLORS.length]}
-                              strokeWidth={2}
-                              fill={`url(#comp-fill-${ind.id})`}
-                              dot={false}
-                              activeDot={{ r: 4, strokeWidth: 2 }}
-                            />
-                          ))}
-                        </AreaChart>
-                      )
-                    }
-
-                    return (
-                      <LineChart data={data} margin={margin}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        {sharedXAxis}
-                        {sharedYAxis}
-                        {tooltipContent}
-                        {legend}
-                        {selectedIndicadores.map((ind, idx) => (
-                          <Line
-                            key={ind.id}
-                            type="monotone"
-                            dataKey={`ind_${ind.id}`}
-                            stroke={CHART_COLORS[idx % CHART_COLORS.length]}
-                            strokeWidth={2}
-                            dot={false}
-                            activeDot={{ r: 4, strokeWidth: 2 }}
-                          />
-                        ))}
-                      </LineChart>
-                    )
-                  })()}
-                </ChartContainer>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="flex items-center justify-center h-[400px]">
-              <div className="flex flex-col items-center gap-3 text-center px-6">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                  <svg className="h-6 w-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Selecione pelo menos 2 indicadores
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Use o painel ao lado para escolher indicadores de qualquer setor
-                  </p>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {/* Individual detail cards when comparing */}
-          {selectedIndicadores.length >= 2 && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {selectedIndicadores.map((ind) => {
-                const resultados = getResultadosPorIndicador(ind.id)
-                const ultimo = resultados[resultados.length - 1]
-                const penultimo = resultados[resultados.length - 2]
-                const variacao = penultimo
-                  ? ((ultimo.valor - penultimo.valor) / Math.abs(penultimo.valor)) * 100
-                  : 0
-
-                return (
-                  <Card key={ind.id} className="p-4">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-xs text-muted-foreground">{ind.setor}</span>
-                      <span className="text-sm font-medium">{ind.descricao}</span>
-                      <div className="flex items-baseline gap-2 mt-1">
-                        <span className="text-lg font-bold">
-                          {formatValue(ultimo.valor, ind.unidade_de_medida)}
-                        </span>
-                        <span className={`text-xs font-medium ${variacao >= 0 ? 'text-success' : 'text-destructive'}`}>
-                          {variacao >= 0 ? '+' : ''}{variacao.toFixed(1)}%
-                        </span>
+                  return (
+                    <Card
+                      key={`${ind.id}-${ind.unidadeId}`}
+                      className="p-4 flex flex-col justify-between shadow-sm border-l-4"
+                      style={{
+                        borderLeftColor:
+                          CHART_COLORS[idx % CHART_COLORS.length],
+                      }}
+                    >
+                      <div className="space-y-1">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] h-5 font-normal truncate max-w-[150px]"
+                        >
+                          {getNomeUnidade(ind.unidadeId!)}
+                        </Badge>
+                        <h4 className="text-sm font-semibold leading-tight line-clamp-2 h-10">
+                          {ind.descricao}
+                        </h4>
                       </div>
-                    </div>
-                  </Card>
-                )
-              })}
-            </div>
+                      <div className="mt-4 flex items-end justify-between">
+                        <div>
+                          <span className="text-2xl font-bold tracking-tight">
+                            {ultimo
+                              ? formatValue(valorAtual, ind.unidade_de_medida)
+                              : "-"}
+                          </span>
+                          <p className="text-[10px] text-muted-foreground uppercase font-medium">
+                            Último Realizado
+                          </p>
+                        </div>
+                        {penultimo && (
+                          <div
+                            className={`flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded ${variacao >= 0 ? "text-emerald-600 bg-emerald-50" : "text-red-600 bg-red-50"}`}
+                          >
+                            {variacao > 0 ? (
+                              <ArrowUpRight className="h-3 w-3" />
+                            ) : variacao < 0 ? (
+                              <ArrowDownRight className="h-3 w-3" />
+                            ) : (
+                              <Minus className="h-3 w-3" />
+                            )}
+                            {Math.abs(variacao).toFixed(1)}%
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </div>
     </div>
-  )
+  );
 }

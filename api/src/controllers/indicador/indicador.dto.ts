@@ -2,14 +2,14 @@ import { IsString, IsOptional, IsIn } from 'class-validator';
 
 export class CreateIndicadorDto {
   @IsString()
-  setor: string;
+  setor: string = '';
 
   @IsString()
-  descricao: string;
+  descricao: string = '';
 
   @IsOptional()
   @IsString()
-  meta?: string;
+  meta?: string = '';
 
   @IsString()
   @IsIn([
@@ -21,5 +21,5 @@ export class CreateIndicadorDto {
     'TAXA',
     'TEXTO',
   ])
-  unidadeMedida: string;
+  unidadeMedida: string = 'ABSOLUTO';
 }

@@ -12,3 +12,4 @@ WITH (
     QUOTE '"',
     ENCODING 'UTF8'
 );
+

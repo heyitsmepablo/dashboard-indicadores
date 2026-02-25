@@ -1,27 +1,27 @@
-// src/resultados/resultados.service.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma-service/prisma-service.service';
 
 @Injectable()
-export class ResultadosService {
+export class ResultadoService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // Salva ou Atualiza um resultado (Upsert)
   async saveResult(data: {
     indicadorId: number;
+    unidadeId: number;
     competencia: Date | string;
     valor?: number;
     valorTexto?: string;
     analiseCritica?: string;
   }) {
-    // Garante que a data esteja no formato Date ISO
     const dataCompetencia = new Date(data.competencia);
 
     return await this.prisma.resultados.upsert({
       where: {
-        indicador_id_competencia: {
+        // CORREÇÃO: O Prisma geralmente concatena os campos para o nome da chave composta no TS
+        indicador_id_competencia_unidade_id: {
           indicador_id: data.indicadorId,
           competencia: dataCompetencia,
+          unidade_id: data.unidadeId,
         },
       },
       update: {
@@ -31,6 +31,7 @@ export class ResultadosService {
       },
       create: {
         indicador_id: data.indicadorId,
+        unidade_id: data.unidadeId,
         competencia: dataCompetencia,
         valor: data.valor,
         valor_texto: data.valorTexto,
@@ -39,27 +40,48 @@ export class ResultadosService {
     });
   }
 
-  async findByCompetencia(competencia: string) {
+  async findByCompetencia(competencia: string, unidadeId?: number) {
     const date = new Date(competencia);
+    const where: any = { competencia: date };
+
+    if (unidadeId) {
+      where.unidade_id = unidadeId;
+    }
+
     return this.prisma.resultados.findMany({
-      where: { competencia: date },
-      include: { indicadores: true },
+      where,
+      include: {
+        indicadores: true,
+        unidades: true,
+      },
     });
   }
 
-  // Importação em lote (caso você queira colar uma planilha)
   async bulkCreate(dataList: any[]) {
     return this.prisma.$transaction(
-      dataList.map((item: { indicador_id: number; competencia: Date }) =>
+      dataList.map((item) =>
         this.prisma.resultados.upsert({
           where: {
-            indicador_id_competencia: {
-              indicador_id: item.indicador_id,
+            // CORREÇÃO AQUI TAMBÉM
+            indicador_id_competencia_unidade_id: {
+              indicador_id: item.indicadorId,
               competencia: new Date(item.competencia),
+              unidade_id: item.unidadeId,
             },
           },
-          create: { ...item, competencia: new Date(item.competencia) },
-          update: { ...item, competencia: new Date(item.competencia) },
+          create: {
+            indicador_id: item.indicadorId,
+            competencia: new Date(item.competencia),
+            unidade_id: item.unidadeId,
+            valor: item.valor,
+            valor_texto: item.valorTexto,
+            analise_critica: item.analiseCritica,
+          },
+          update: {
+            valor: item.valor,
+            valor_texto: item.valorTexto,
+            analise_critica: item.analiseCritica,
+          },
         }),
       ),
     );

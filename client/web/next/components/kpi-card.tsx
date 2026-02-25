@@ -1,68 +1,93 @@
-'use client'
+"use client";
 
-import { ArrowDownRight, ArrowUpRight, Minus, Target } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import type { Indicador } from '@/lib/types'
-import { formatValue, parseMeta, getVariacao } from '@/lib/format'
-import { getUltimoResultado, getPenultimoResultado } from '@/lib/mock-data'
+import { ArrowDownRight, ArrowUpRight, Minus, Target } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import type { Indicador } from "@/lib/types";
+import { formatValue, parseMeta, getVariacao } from "@/lib/format";
 
 interface KpiCardProps {
-  indicador: Indicador
-  onClick?: () => void
-  isActive?: boolean
+  indicador: Indicador;
+  onClick?: () => void;
+  isActive?: boolean;
 }
 
 export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
-  const ultimo = getUltimoResultado(indicador.id)
-  const penultimo = getPenultimoResultado(indicador.id)
-  const meta = parseMeta(indicador.meta, indicador.unidade_de_medida)
+  const resultados = indicador.resultados || [];
+  const ultimo =
+    resultados.length > 0 ? resultados[resultados.length - 1] : null;
+  const penultimo =
+    resultados.length > 1 ? resultados[resultados.length - 2] : null;
 
-  if (!ultimo) return null
+  const meta = parseMeta(indicador.meta, indicador.unidade_de_medida);
 
-  const valorAtual = ultimo.valor
-  const valorAnterior = penultimo?.valor ?? 0
-  const variacao = penultimo ? getVariacao(valorAtual, valorAnterior) : 0
+  // Padronização do card vazio
+  if (!ultimo) {
+    return (
+      <Card className="h-[160px] w-full opacity-60 border-dashed flex flex-col justify-between">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground line-clamp-2 h-10 leading-tight">
+            {indicador.descricao}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <span className="text-sm text-muted-foreground">Sem dados</span>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  // Determine if the indicator is "good" based on meta
-  // For turnover/defeitos/tempo, lower is better
-  const isInverseIndicator = ['Turnover', 'Taxa de Defeitos', 'Tempo Medio de Entrega'].some(
-    name => indicador.descricao.includes(name.replace(' ', ''))  || indicador.descricao === name
-  )
+  const valorAtual = Number(ultimo.valor);
+  const valorAnterior = penultimo ? Number(penultimo.valor) : 0;
+  const variacao = penultimo ? getVariacao(valorAtual, valorAnterior) : 0;
 
-  let metaStatus: 'above' | 'below' | 'none' = 'none'
+  const isInverseIndicator = ["Turnover", "Defeitos", "Custos", "Tempo"].some(
+    (term) => indicador.descricao.includes(term),
+  );
+
+  let metaStatus: "above" | "below" | "none" = "none";
   if (meta !== null) {
     if (isInverseIndicator) {
-      metaStatus = valorAtual <= meta ? 'above' : 'below'
+      metaStatus = valorAtual <= meta ? "above" : "below";
     } else {
-      metaStatus = valorAtual >= meta ? 'above' : 'below'
+      metaStatus = valorAtual >= meta ? "above" : "below";
     }
   }
 
-  const variacaoPositive = isInverseIndicator ? variacao < 0 : variacao > 0
+  const variacaoPositive = isInverseIndicator ? variacao < 0 : variacao > 0;
 
   return (
     <TooltipProvider>
       <Card
-        className={`cursor-pointer transition-all hover:shadow-md hover:border-primary/30 group ${
-          isActive ? 'ring-2 ring-primary border-primary shadow-md' : ''
+        className={`w-full cursor-pointer transition-all hover:shadow-md hover:border-primary/30 group flex flex-col justify-between ${
+          isActive
+            ? "ring-2 ring-primary border-primary shadow-md bg-accent/50"
+            : ""
         }`}
         onClick={onClick}
       >
         <CardHeader className="pb-2">
-          <div className="flex items-start justify-between">
-            <CardTitle className="text-sm font-medium text-muted-foreground leading-tight">
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle
+              className="text-sm font-medium text-muted-foreground leading-tight line-clamp-2 h-10 w-full"
+              title={indicador.descricao}
+            >
               {indicador.descricao}
             </CardTitle>
             {meta !== null && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div
-                    className={`flex h-6 w-6 items-center justify-center rounded-full ${
-                      metaStatus === 'above'
-                        ? 'bg-success/15 text-success'
-                        : 'bg-destructive/15 text-destructive'
+                    className={`shrink-0 flex h-6 w-6 items-center justify-center rounded-full ${
+                      metaStatus === "above"
+                        ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                        : "bg-red-500/15 text-red-600 dark:text-red-400"
                     }`}
                   >
                     <Target className="h-3.5 w-3.5" />
@@ -77,7 +102,7 @@ export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-2">
-            <span className="text-2xl font-bold text-card-foreground tracking-tight">
+            <span className="text-2xl font-bold text-card-foreground tracking-tight truncate">
               {formatValue(valorAtual, indicador.unidade_de_medida)}
             </span>
             <div className="flex items-center gap-2">
@@ -86,8 +111,8 @@ export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
                   variant="secondary"
                   className={`text-xs font-medium px-1.5 py-0 h-5 ${
                     variacaoPositive
-                      ? 'bg-success/15 text-success border-success/20'
-                      : 'bg-destructive/15 text-destructive border-destructive/20'
+                      ? "bg-emerald-500/15 text-emerald-700 border-emerald-500/20"
+                      : "bg-red-500/15 text-red-700 border-red-500/20"
                   }`}
                 >
                   {variacaoPositive ? (
@@ -104,16 +129,13 @@ export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
                   0%
                 </Badge>
               )}
-              <span className="text-xs text-muted-foreground">vs. mes anterior</span>
+              <span className="text-xs text-muted-foreground truncate">
+                vs. ant.
+              </span>
             </div>
-            {ultimo.analise_critica && (
-              <p className="text-xs text-muted-foreground/70 mt-1 line-clamp-2 leading-relaxed">
-                {ultimo.analise_critica}
-              </p>
-            )}
           </div>
         </CardContent>
       </Card>
     </TooltipProvider>
-  )
+  );
 }
