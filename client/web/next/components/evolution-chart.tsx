@@ -81,7 +81,8 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
       tickLine={false}
       axisLine={false}
       tickMargin={8}
-      fontSize={11}
+      fontSize={10} // Reduzi ligeiramente o fontSize para acomodar mais itens
+      interval={0} // FORÇA A EXIBIÇÃO DE TODOS OS MESES NO EIXO X
     />
   );
 
@@ -192,7 +193,7 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
           <div className="flex flex-col gap-1">
             <CardTitle className="text-base">{indicador.descricao}</CardTitle>
             <CardDescription>
-              Evolucao mensal{" "}
+              Evolução mensal{" "}
               {meta !== null && (
                 <span className="text-muted-foreground">
                   {"| Meta: "}
@@ -232,21 +233,21 @@ export function ChartTypeToggle({ value, onChange }: ChartTypeToggleProps) {
     >
       <ToggleGroupItem
         value="area"
-        aria-label="Grafico de area"
+        aria-label="Gráfico de área"
         className="h-7 w-7 p-0 data-[state=on]:bg-background data-[state=on]:shadow-sm"
       >
         <AreaChartIcon className="h-3.5 w-3.5" />
       </ToggleGroupItem>
       <ToggleGroupItem
         value="line"
-        aria-label="Grafico de linha"
+        aria-label="Gráfico de linha"
         className="h-7 w-7 p-0 data-[state=on]:bg-background data-[state=on]:shadow-sm"
       >
         <LineChartIcon className="h-3.5 w-3.5" />
       </ToggleGroupItem>
       <ToggleGroupItem
         value="bar"
-        aria-label="Grafico de barras"
+        aria-label="Gráfico de barras"
         className="h-7 w-7 p-0 data-[state=on]:bg-background data-[state=on]:shadow-sm"
       >
         <BarChart3 className="h-3.5 w-3.5" />
