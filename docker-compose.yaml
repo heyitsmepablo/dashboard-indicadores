@@ -19,12 +19,13 @@ services:
       - "5432:5432"
     volumes:
       - ./database/seeds:/tmp/seeds
-      - ./docker/database/data:/var/lib/postgresql/MAJOR/data
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ./database/seed_indicadores.sql:/docker-entrypoint-initdb.d/02_seeds.sql
-      - ./database/seed_tipo_de_unidade.sql:/docker-entrypoint-initdb.d/03_seeds.sql
-      - ./database/seed_unidades.sql:/docker-entrypoint-initdb.d/04_seeds.sql
-      - ./database/seed_resultados.sql:/docker-entrypoint-initdb.d/05_seeds.sql
+      - ./database/sql/seed_indicadores.sql:/docker-entrypoint-initdb.d/02_seeds.sql
+      - ./database/sql/seed_superintendencia.sql:/docker-entrypoint-initdb.d/03_seeds.sql
+      - ./database/sql/seed_tipo_de_unidade.sql:/docker-entrypoint-initdb.d/04_seeds.sql
+      - ./database/sql/seed_unidades.sql:/docker-entrypoint-initdb.d/05_seeds.sql
+      - ./database/sql/seed_resultados.sql:/docker-entrypoint-initdb.d/06_seeds.sql
+      - ./docker/database/data:/var/lib/postgresql/MAJOR/data
       - /etc/localtime:/etc/localtime:ro
     networks:
       - dashboard

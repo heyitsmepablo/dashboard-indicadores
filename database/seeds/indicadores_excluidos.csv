@@ -1,0 +1,9 @@
+setor,descricao,fonte_formula,unidade_de_medida
+Compilados,Taxa de Resolutividade dos Processos de Compras e Contratos,Taxa de Resolutividade (%) = (Total de processos fechados / Total de processos em tramitação) x 100,PERCENTUAL
+Compilados,Índice de Efetividade da Capacidade Ambulatorial,(Total de consultas realizadas / Total de vagas ofertadas) × 100,PERCENTUAL
+Compilados,Índice de Articulação CAPS-APS,(Nº de ações de matriciamento realizados / Nº de ações de matriciamento pactuadas) x 100,PERCENTUAL
+Compilados,Custo médio de dieta via oral paciente desospitalizado,Valor total gasto com dietas no mês / Número de pacientes desospitalizados assistidos,FINANCEIRO
+Compilados,"Equilíbrio entre ocupação, giro e tempo de permanência dos leitos hospitalares",(Taxa de Ocupação Hospitalar (%) x Giro de Leitos) / Tempo Médio de Permanência (dias),PERCENTUAL
+Compilados,Índice de Efetividade da Transição do Cuidado,(Admissões do SAD oriundas de internação hospitalar realizadas ≤ 72h / Total de admissões oriundas de internação hospitalar) × 100,PERCENTUAL
+Compilados,Índice de Continuidade da Assistência à Pessoa com Deficiência,(Usuários que receberam integralmente os insumos previstos no período / Total de usuários ativos cadastrados) ×100,PERCENTUAL
+Compilados,Índice de Segurança do Cuidado Materno-Neonatal da Rede,1 – (Óbitos maternos + Óbitos neonatais + Eventos adversos graves) / (Total de partos + internações maternas e neonatais),PERCENTUAL

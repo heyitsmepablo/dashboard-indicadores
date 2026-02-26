@@ -1,191 +1,119 @@
-setor,descricao,fonte_formula,unidade_de_medida
-Compilados,Taxa de Resolutividade dos Processos de Compras e Contratos,Taxa de Resolutividade (%) = (Total de processos fechados / Total de processos em tramitação) x 100,PERCENTUAL
-Compilados,Índice de Efetividade da Capacidade Ambulatorial,(Total de consultas realizadas / Total de vagas ofertadas) × 100,PERCENTUAL
-Compilados,Índice de Articulação CAPS-APS,(Nº de ações de matriciamento realizados / Nº de ações de matriciamento pactuadas) x 100,PERCENTUAL
-Compilados,Custo médio de dieta via oral paciente desospitalizado,Valor total gasto com dietas no mês / Número de pacientes desospitalizados assistidos,FINANCEIRO
-Compilados,"Equilíbrio entre ocupação, giro e tempo de permanência dos leitos hospitalares",(Taxa de Ocupação Hospitalar (%) x Giro de Leitos) / Tempo Médio de Permanência (dias),PERCENTUAL
-Compilados,Índice de Efetividade da Transição do Cuidado,(Admissões do SAD oriundas de internação hospitalar realizadas ≤ 72h / Total de admissões oriundas de internação hospitalar) × 100,PERCENTUAL
-Compilados,Índice de Continuidade da Assistência à Pessoa com Deficiência,(Usuários que receberam integralmente os insumos previstos no período / Total de usuários ativos cadastrados) ×100,PERCENTUAL
-Compilados,Índice de Segurança do Cuidado Materno-Neonatal da Rede,1 – (Óbitos maternos + Óbitos neonatais + Eventos adversos graves) / (Total de partos + internações maternas e neonatais),PERCENTUAL
-Ambulatório,Número de agendamentos por especialidade,Nº de agendamentos registrados por especialidade,ABSOLUTO
-Ambulatório,N° de consultas médicas realizadas,Nº de consultas médicas realizadas (atendida/concluída),ABSOLUTO
-Ambulatório,N° de consultas não médicas realizadas,Nº de consultas não médicas realizadas (realizada/concluída),ABSOLUTO
-Ambulatório,Percentual de Perda Primária,Agendamento central / Vagas central,PERCENTUAL
-Ambulatório,Média % de Aproveitamento de Vagas,(Total de agendados + Encaixes) / Total de vagas,ABSOLUTO
-Ambulatório,Índice de absenteísmo em consultas ambulatoriais,Total de faltosos / Total de agendados,PERCENTUAL
-Ambulatório,N° de Procedimentos realizados,Nº de procedimentos realizados,ABSOLUTO
-Ambulatório,Faturamento,Valor faturado por produção registrada,FINANCEIRO
-Saúde Mental,Taxa de Continuidade do Cuidado no CAPS,(Altas por melhora + usuários em acompanhamento ativo) / Total de usuários acompanhados no período × 100,PERCENTUAL
-Saúde Mental,Índice de Articulação CAPS-APS,(Nº de ações de matriciamento realizados / Nº de ações de matriciamento pactuadas) x 100,PERCENTUAL
-Nutrição,Custo médio de dieta via oral paciente desospitalizado,Custo Médio de Nutrição por Paciente = Valor total gasto com dietas no mês / Número de pacientes desospitalizados assistidos,FINANCEIRO
-Compras E Contratos,Taxa de Resolutividade dos Processos de Compras e Contratos,Taxa de Resolutividade (%) = (Total de processos fechados / Total de processos em tramitação) x 100,PERCENTUAL
-Hospitalar,Atendimentos de Classificação de Risco – Vermelho,Quantidade de atendimentos de acordo com a classificação Vermelho,ABSOLUTO
-Hospitalar,Atendimentos de Classificação de Risco – Amarelo,Quantidade de atendimentos de acordo com a classificação amarelo,ABSOLUTO
-Hospitalar,Atendimentos de Classificação de Risco – Verde,Quantidade de atendimentos de acordo com a classificação verde,ABSOLUTO
-Hospitalar,Atendimentos de Classificação de Risco – Azul,Quantidade de atendimentos de acordo com a classificação azul,ABSOLUTO
-Hospitalar,Atendimentos na Sala de Medicação,Quantidade de atendimentos por paciente,ABSOLUTO
-Hospitalar,Internações Hospitalares,Quantidade de pacientes internados,ABSOLUTO
-Hospitalar,Produção de Exames laboratoriais,Exames laboratoriais (quantidade),ABSOLUTO
-Hospitalar,Produção de Raio – X,Raio - X (quantidade),ABSOLUTO
-Hospitalar,Produção de Tomografia,Tomografia (quantidade),ABSOLUTO
-Hospitalar,Produção de Ultrassonografia,Ultrassonografia(quantidade),ABSOLUTO
-Hospitalar,Produção de Ressonancia Magnética,Ressonancia Magnética (quantidade),ABSOLUTO
-Hospitalar,Produção de Endoscopia,Endoscopia (quantidade),ABSOLUTO
-Hospitalar,Produção de Colonoscopia,Colonoscopia ( quantidade),ABSOLUTO
-Hospitalar,Produção de Eletroencefalograma,Eletroencefalograma (quantidade),ABSOLUTO
-Hospitalar,Produção de Eletrocardiograma,Eletrocardiograma (quantidade),ABSOLUTO
-Hospitalar,Taxa de Ocupação Operacional de Leitos - GLOBAL,Total de paciente dia / total de leito dia operacional X 100,PERCENTUAL
-Hospitalar,Giro de Leito - GLOBAL,Total de saídas (altas + óbitos + transfrências externas + evasões) / nº de leitos operacionais X 100,PERCENTUAL
-Hospitalar,Giro de Leito - Enfermaria,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
-Hospitalar,Giro de Leito - UTI Materna,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
-Hospitalar,Tempo Médio de Permanência - GLOBAL,Total de paciente dia / total de saídas hospitalares (altas + óbitos + transfrências externas + evasões),TEMPO_DIAS
-Hospitalar,Tempo Médio de Permanência – Enfermaria Clinica,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
-Hospitalar,Tempo Médio de Permanência – Enfermaria Cirurgica,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
-Hospitalar,Tempo Médio de Permanência – UTI Adulto,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
-Hospitalar,Tempo Médio de Permanência – UTI Pediatrica,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
-Hospitalar,Índice de Intervalo de Substituição de Leitos - Enfermaria Clinica,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
-Hospitalar,Índice de Intervalo de Substituição de Leitos - Enfermaria Cirurgica,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
-Hospitalar,Índice de Intervalo de Substituição de Leitos - UTI Adulto,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
-Hospitalar,Índice de Intervalo de Substituição de Leitos - UTI Pediatrica,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
-Hospitalar,Índice de Intervalo de Substituição de Leitos - GLOBAL,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
-Hospitalar,Cirurgias Realizadas,Quantidade de cirurgias realizadas de acordo com a especialidade,ABSOLUTO
-Hospitalar,Taxa de Ocupação de Sala Cirúrgica,Tempo total de uso das S.C. + Tempo total de higienização das S.C. / tempo total de disponibilidade do centro cirurgico para cirurgias X 100,PERCENTUAL
-Hospitalar,Giro de Salas Cirúrgicas,Total de cirurgias no período / nº total de salas cirúrgicas,ABSOLUTO
-Hospitalar,Taxa de Prevenção de Incidentes/Eventos Adversos Global,Total geral de incidentes/eventos adversos / total de pacientes dia X 100-100,PERCENTUAL
-Hospitalar,Incidência de Flebite,Nº de casos de flebite no período / nº de pacientes-dia com acesso venoso periférico X 100,PERCENTUAL
-Hospitalar,Incidência de Extubação Acidental,Nº de pacientes extubados acidentalmente / nº de pacientes intubados por dia X 100,PERCENTUAL
-Hospitalar,Incidência de Lesão por Pressão,Nº de casos novos em determinado período / nº de pessoas expostas ao risco no mesmo período X 100,PERCENTUAL
-Hospitalar,Incidência de não conformidade relaciona à administração de medicamentos,Nº de não conformidades relacionadas a administração de medicamentos / nº de pacientes-dia X 100,PERCENTUAL
-Hospitalar,Incidência de Prescrição Errada,N° de prescrições erradas identificadas / total de pacientes dia X 100,PERCENTUAL
-Hospitalar,Incidência de Queda,Nº de quedas / nº de pacientes-dia X 1.000,ABSOLUTO
-Hospitalar,Incidência Perda de SNE,Nº de perdas de sonda nasogastroenteral / nº de pacientes com sonda nasogastroenteral-dia X 100,PERCENTUAL
-Hospitalar,Índice de Satisfação do Usuário,Total de avaliações classificadas como bom e/ou ótimo / total pesquisas realizadas,PERCENTUAL
-Hospitalar,Taxa Geral de Profissionais Treinados,Total de profissionais treinados / n° total de profissionais da unidade x 100,PERCENTUAL
-Hospitalar,Taxa de Profissionais Treinados por Categoria (Administrativo e poio; Enfermagem; Fisioterapia; Fonoaudiologia; Farmácia; Serviço Social; Psicologia; Médicos),Total de profissionais treinados por categoria / n° total de profissionais desta categoria x 100,PERCENTUAL
-Hospitalar,Taxa de Adesão aos Treinamentos,Total de Profissionais que participaram dos treinamentos / N° total de profissionais convidados para o treinamento x 100,PERCENTUAL
-Hospitalar,Taxa de Acidente de Trabalho,Nº de acidentes de trabalho / nº de funcionários ativos no cadastro do hospital X 100,PERCENTUAL
-Hospitalar,Taxa de infecção relacionada à assistência à saúde,N° de casos de IRAS / total de saídas X 100,PERCENTUAL
-Hospitalar,Densidade de incidência de pneumonia associada à ventilação mecânica,N° de casos de PAV / n° de ventilações mecânicas-dia X 1.000,ABSOLUTO
-Hospitalar,Taxa de utilização de ventilação mecânica,N° de ventilações mecânicas-dia / n° de pacientes-dia X 100,PERCENTUAL
-Hospitalar,Densidade de incidência de infecção do trato urinário relacionada a cateter vesical de demora,N° de ITU CVD / n° de CVD-dia X 1.000,ABSOLUTO
-Hospitalar,Taxa de utilização de cateter vesical de demora,N° CVD-dia / n° de pacientes-dia X 100,PERCENTUAL
-Hospitalar,Densidade de incidência de infecção primária da corrente sanguínea com confirmação laboratorial associada a cateter venoso central,N° de casos novos de IPCS laboratorial / nº de cateteres venosos centrais-dia x1.000,ABSOLUTO
-Hospitalar,Densidade de incidência de infecção primária da corrente sanguínea clínica sem confirmação laboratorial associada à cateter venoso central,N° de casos novos de IPCS clínica / nº de cateteres venosos centrais-dia X 1.000,ABSOLUTO
-Hospitalar,Taxa de utilização de cateter venoso central,N° de pacientes com CVC-dia / n° de pacientes-dia X 100,PERCENTUAL
-Hospitalar,Taxa de cobertura do checklist de inserção do cateter venoso central,N° total de bundles realizados / n° total de cateter central inseridos X 100,PERCENTUAL
-Hospitalar,Índice de cateter inserido seguindo todas as recomendações do checklist (100% de conformidade),N° de bundles positivos / n° total de bundles realizados X 100,PERCENTUAL
-Hospitalar,Taxa de infecção de sítio cirúrgico em cirurgias limpas,N° de casos de ISC em cirurgias limpas / n° de cirurgias limpas X 100,PERCENTUAL
-Hospitalar,Taxa de infecção de sítio cirúrgico em artroplastias totais de quadril,N° de casos de ISC em artroplastias totais de quadril / n° de artroplastias totais de quadril X 100,PERCENTUAL
-Hospitalar,Taxa de infecção de sítio cirúrgico em artroplastias de joelho,N° de casos de ISC em artroplastias de joelho / n° de artroplastias de joelho realizadas X 100,PERCENTUAL
-Hospitalar,Taxa de infecção de sítio cirúrgico em cesáreas,N° de casos de ISC em cesáreas / nº de cesáreas realizadas X 100,PERCENTUAL
-Hospitalar,Taxa de infecção de sítio cirúrgico em craniotomias,N° de casos de ISC em craniotomias / nº de craniotomias realizadas X 100,PERCENTUAL
-Hospitalar,Taxa de infecção de sítio cirúrgico em revascularizações do miocárdio,N° de casos de ISC em RM / n° de cirurgias de RM X 100,PERCENTUAL
-Mistas,Atendimentos de Classificação de Risco – Vermelho,Quantidade de atendimentos de acordo com a classificação Vermelho,ABSOLUTO
-Mistas,Atendimentos de Classificação de Risco – Amarelo,Quantidade de atendimentos de acordo com a classificação amarelo,ABSOLUTO
-Mistas,Atendimentos de Classificação de Risco – Verde,Quantidade de atendimentos de acordo com a classificação verde,ABSOLUTO
-Mistas,Atendimentos de Classificação de Risco – Azul,Quantidade de atendimentos de acordo com a classificação azul,ABSOLUTO
-Mistas,Atendimento de Urgência com Observação até 24 horas em Atenção Especializada (internação nas alas),Quantidade,ABSOLUTO
-Mistas,Atendimento em Unidade de Pronto Atendimento (consultas médicas),Quantidade,ABSOLUTO
-Mistas,Produção de Diagnóstico em Laboratório,Quantidade de Diagnóstico em Laboratório,ABSOLUTO
-Mistas,Produção de Diagnóstico em Raio X,Quantidade de Raio X,ABSOLUTO
-Mistas,Produção de Diagnóstico em Ultrassonografia,Quantidade de Ultrassonografia,ABSOLUTO
-Mistas,Produção de Diagnóstico em Eletrocardiograma,Quantidade de Eletrocardiograma,ABSOLUTO
-Mistas,Taxa de Ocupação Operacional de Leitos - GLOBAL,Total de paciente dia / total de leito dia operacional X 100,PERCENTUAL
-Mistas,Giro de Leito - GLOBAL,Total de saídas (altas + óbitos + transfrências externas + evasões) / nº de leitos operacionais X 100,PERCENTUAL
-Mistas,Giro de Leito - Enfermaria Adulto,Total de saídas (altas + óbitos + transferências internas e externas + evasões) / nº de leitos operacionais do setor X 100,PERCENTUAL
-Mistas,Giro de Leito - Enfermaria Pediatra,Total de saídas (altas + óbitos + transferências internas e externas + evasões) / nº de leitos operacionais do setor X 100,PERCENTUAL
-Mistas,Tempo Médio de Permanência - GLOBAL,Total de paciente dia / total de saídas hospitalares (altas + óbitos + transfrências externas + evasões),TEMPO_DIAS
-Mistas,Índice de Intervalo de Substituição de Leitos - GLOBAL,Taxa de desocupação X média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
-Mistas,Índice de Intervalo de Substituição de Leitos -Enfermaria Adulto,Taxa de desocupação X média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
-Mistas,Índice de Intervalo de Substituição de Leitos -Enfermaria Pediátrica,Taxa de desocupação X média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
-Mistas,Taxa de Mortalidade Institucional (> 24 horas),Nº de óbitos > 24 horas / saídas X 100,PERCENTUAL
-Mistas,Taxa de Mortalidade GLOBAL (> e < de 24 horas),Total geral de óbitos (> e < 24horas) / saídas X 100,PERCENTUAL
-Mistas,Taxa de Prevenção de Incidentes/Eventos Adversos Global,Total geral de incidentes/eventos adversos / total de pacientes dia X 100-100,PERCENTUAL
-Mistas,Incidência de Flebite,Nº de casos de flebite no período / nº de pacientes-dia com acesso venoso periférico X 100,PERCENTUAL
-Mistas,Incidência de Extubação Acidental,Nº de pacientes extubados acidentalmente / nº de pacientes intubados por dia X 100,PERCENTUAL
-Mistas,Incidência de Lesão por Pressão,Nº de casos novos em determinado período / nº de pessoas expostas ao risco no mesmo período X 100,PERCENTUAL
-Mistas,Incidência de não conformidade relacionada à administração de medicamentos,Nº de não conformidades relacionadas a administração de medicamentos / nº de pacientes-dia X 100,PERCENTUAL
-Mistas,Incidência de Prescrição Errada,N° de prescrições erradas identificadas / total de paciente dia X 100,PERCENTUAL
-Mistas,Incidência de Queda,Nº de quedas / nº de pacientes-dia X 1.000,ABSOLUTO
-Mistas,Incidência Perda de SNE,Nº de perdas de sonda nasogastroenteral / nº de pacientes com sonda nasogastroenteral-dia X 100,PERCENTUAL
-Mistas,Índice de Satisfação do Usuário,Total de avaliações classificadas como bom e/ou ótimo / total pesquisas realizadas,PERCENTUAL
-Mistas,Taxa Geral de Profissionais Treinados,Total de profissionais treinados / n° total de profissionais da unidade x 100,PERCENTUAL
-Mistas,Taxa de Profissionais Treinados por Categoria (Administrativo e poio; Enfermagem; Fisioterapia; Fonoaudiologia; Farmácia; Serviço Social; Psicologia; Médicos),Total de profissionais treinados por categoria / n° total de profissionais desta categoria x 100,PERCENTUAL
-Mistas,Taxa de Adesão aos Treinamentos,Total de Profissionais que participaram dos treinamentos / N° total de profissionais convidados para o treinamento x 100,PERCENTUAL
-Mistas,Taxa de Acidente de Trabalho,Nº de acidentes de trabalho / nº de funcionários ativos no cadastro do hospital X 100,PERCENTUAL
-Mistas,Taxa de infecção relacionada à assistência à saúde,N° de casos de IRAS / total de saídas X 100,PERCENTUAL
-Mistas,Densidade de incidência de pneumonia associada à ventilação mecânica,N° de casos de PAV /n° de ventilações mecânicas-dia X 1.000,ABSOLUTO
-Mistas,Taxa de utilização de ventilação mecânica,N° de ventilações mecânicas-dia / n° de pacientes-dia X 100,PERCENTUAL
-Mistas,Densidade de incidência de infecção do trato urinário relacionada a cateter vesical de demora,N° de ITU CVD / n° de CVD-dia X 1.000,ABSOLUTO
-Mistas,Taxa de utilização de cateter vesical de demora,N° CVD-dia / n° de pacientes-dia X 100,PERCENTUAL
-Mistas,Densidade de incidência de infecção primária da corrente sanguínea com confirmação laboratorial associada a cateter venoso central,N° de casos novos de IPCS laboratorial / nº de cateteres venosos centrais-dia,ABSOLUTO
-Mistas,Densidade de incidência de infecção primária da corrente sanguínea clínica sem confirmação laboratorial associada à cateter venoso central,N° de casos novos de IPCS clínica / nº de cateteres venosos centrais-dia X 1.000,ABSOLUTO
-Mistas,Taxa de utilização de cateter venoso central,N° de pacientes com CVC-dia / n° de pacientes-dia X 100,PERCENTUAL
-Mistas,Taxa de adesão ao checklist de verificação (BUNDLES) das práticas de inserção segura de cateter central,N° total de bundles realizados / n° total de cateter central inseridos X 100,PERCENTUAL
-Mistas,Índice de cateter inserido seguindo todas as recomendações do checklist (100% de conformidade),N° de bundles positivos / n° total de bundles realizados X 100,PERCENTUAL
-Maternidade,Atendimentos de Classificação de Risco – Vermelho,Quantidade de atendimentos de acordo com a classificação Vermelho,ABSOLUTO
-Maternidade,Atendimentos de Classificação de Risco – Amarelo,Quantidade de atendimentos de acordo com a classificação amarelo,ABSOLUTO
-Maternidade,Atendimentos de Classificação de Risco – Verde,Quantidade de atendimentos de acordo com a classificação verde,ABSOLUTO
-Maternidade,Atendimentos de Classificação de Risco – Azul,Quantidade de atendimentos de acordo com a classificação azul,ABSOLUTO
-Maternidade,Atendimentos na Sala de Medicação,Quantidade de atendimentos por paciente,ABSOLUTO
-Maternidade,Internações Hospitalares,Quantidade de pacientes internados,ABSOLUTO
-Maternidade,Cosultas Médicas Especializadas,Quantidade consultas de acordo com a especialidade,ABSOLUTO
-Maternidade,Consultas de Profissionais de Nível Superior (Exceto médico),Quantidade de consultas por categoria profissional,ABSOLUTO
-Maternidade,Serviço de Apoio Diagnóstico e Terapeutico - SADT,Quantidade por procedimento realizados,ABSOLUTO
-Maternidade,Nº de Partos Normal,Número de partos normais ocorridos na unidade,ABSOLUTO
-Maternidade,Nº de Partos Cesárea,Número de partos cesáreos ocorridos na unidade,ABSOLUTO
-Maternidade,Nº de Parto Normal Assistido por Enfermeiro,Número de partos normais assistidos por enfermeiros ocorridos na unidade,ABSOLUTO
-Maternidade,Taxa de Ocupação Operacional de Leitos - GLOBAL,Total de paciente dia / total de leito dia operacional X 100,PERCENTUAL
-Maternidade,Taxa de Ocupação Operacional de Leitos -Enfermaria,Total de paciente dia do setor / total de leito dia operacional do setor X 100,PERCENTUAL
-Maternidade,Taxa de Ocupação Operacional de Leitos -UTI Materna,Total de paciente dia do setor / total de leito dia operacional do setor X 100,PERCENTUAL
-Maternidade,Giro de Leito - GLOBAL,Total de saídas (altas + óbitos + transfrências externas + evasões) / nº de leitos operacionais X 100,PERCENTUAL
-Maternidade,Giro de Leito - Enfermaria,Total de saídas (altas + óbitos + transferências internas e externas + evasões) / nº de leitos operacionais por setor X 100,PERCENTUAL
-Maternidade,Giro de Leito - UTI Materna,Total de saídas (altas + óbitos + transferências internas e externas + evasões) / nº de leitos operacionais por setor X 101,ABSOLUTO
-Maternidade,Tempo Médio de Permanência - GLOBAL,Total de paciente dia / total de saídas hospitalares (altas + óbitos + transfrências externas + evasões),TEMPO_DIAS
-Maternidade,Tempo Médio de Permanência - Enfermaria ,Total de paciente dia por setor / total de saídas por setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
-Maternidade,Tempo Médio de Permanência - UTI Materna,Total de paciente dia por setor / total de saídas por setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
-Maternidade,Índice de Intervalo de Substituição de Leitos - GLOBAL,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
-Maternidade,Índice de Intervalo de Substituição de Leitos - Enfermaria,Taxa de desocupação x média de permanência do setor em dias / taxa de ocupação hospitalar,PERCENTUAL
-Maternidade,Índice de Intervalo de Substituição de Leitos - UTI Materna,Taxa de desocupação x média de permanência do setor em dias / taxa de ocupação hospitalar,PERCENTUAL
-Maternidade,Nº de Óbitos Maternos,Nº total de óbitos ocorridos na unidade,ABSOLUTO
-Maternidade,Taxa de Mortalidade Materna,Total geral de óbitos por causas maternas / total de saídas de paciente de obstetrícia X 100,PERCENTUAL
-Maternidade,Densidade de Incidência de Mortalidade Infantil,Nº de óbitos de residentes com menos de um ano de idade / nº total de nascidos vivos de mães residentes X 1.000,ABSOLUTO
-Maternidade,Taxa de Mortalidade Neonatal,(Óbitos Neonatais / Nascidos Vivos) * 1.000,TAXA
-Maternidade,RN com Peso ≤ a 1.000g,Nº de óbitos de RN com peso ≤ a 1.000g / nº total de RN com peso ≤ a 1.000g X 100,TAXA
-Maternidade,RN com Peso entre 1.101g até 1.500g,Nº de óbitos de RN com peso entre 1.101g até 1.500g / nº total de RN com peso com peso entre 1.101g até 1.500g X 100,PERCENTUAL
-Maternidade,RN com Peso entre 1.501g até 2.500g,Nº de óbitos de RN com peso entre 1.501g até 2.500g / nº total de RN com peso com peso entre 1.501g até 2.500g X 100,PERCENTUAL
-Maternidade,RN com Peso ≥ a 2.500g,Nº de óbitos de RN com peso ≥ a 2.500g / nº total de RN com peso ≥ a 2.500g X 100,PERCENTUAL
-Maternidade,Taxa de Cesáreas,Nº de partos cesáreos / nº de partos ocorridos X 100,PERCENTUAL
-Maternidade,Taxa de Ocupação de Sala Cirúrgica,Tempo total de uso das S.C. + Tempo total de higienização das S.C. / tempo total de disponibilidade do centro cirurgico para cirurgias X 100,PERCENTUAL
-Maternidade,Giro de Salas Cirúrgicas,Total de cirurgias no período / nº total de salas cirúrgicas,ABSOLUTO
-Maternidade,Taxa de Prevenção de Incidentes/Eventos Adversos Global,Total geral de incidentes/eventos adversos / total de pacientes dia X 100-100,PERCENTUAL
-Maternidade,Incidência de Flebite,Nº de casos de flebite no período / nº de pacientes-dia com acesso venoso periférico X 100,PERCENTUAL
-Maternidade,Incidência de Extubação Acidental,Nº de pacientes extubados acidentalmente / nº de pacientes intubados por dia X 100,PERCENTUAL
-Maternidade,Incidência de Lesão por Pressão,Nº de casos novos em determinado período / nº de pessoas expostas ao risco no mesmo período X 100,PERCENTUAL
-Maternidade,Incidência de não conformidade relacionada à administração de medicamentos,Nº de não conformidades relacionadas a administração de medicamentos / nº de pacientes-dia X 100,PERCENTUAL
-Maternidade,Incidência de Prescrição Errada,N° de prescrições erradas identificadas / total de paciente dia X 100,PERCENTUAL
-Maternidade,Incidência de Queda,Nº de quedas / nº de pacientes-dia X 1.000,ABSOLUTO
-Maternidade,Incidência Perda de SNE,Nº de perdas de sonda nasogastroenteral / nº de pacientes com sonda nasogastroenteral-dia X 100,PERCENTUAL
-Maternidade,Índice de Satisfação do Usuário,Total de avaliações classificadas como bom e/ou ótimo / total pesquisas realizadas,PERCENTUAL
-Maternidade,Taxa Geral de Profissionais Treinados – GLOBAL,Total de profissionais treinados / n° total de profissionais da unidade x 100,PERCENTUAL
-Maternidade,Taxa de Profissionais Treinados - Administrativo e apoio;,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 100,PERCENTUAL
-Maternidade,Taxa de Profissionais Treinados - Enfermagem;,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 101,PERCENTUAL
-Maternidade,Taxa de Profissionais Treinados - Fisioterapia;,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 102,PERCENTUAL
-Maternidade,Taxa de Profissionais Treinados – Fonoaudiologia;,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 103,PERCENTUAL
-Maternidade,Taxa de Profissionais Treinados - Farmácia;,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 104,PERCENTUAL
-Maternidade,Taxa de Profissionais Treinados – Serviço Social;,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 105,PERCENTUAL
-Maternidade,Taxa de Profissionais Treinados – Psicologia;,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 106,PERCENTUAL
-Maternidade,Taxa de Profissionais Treinados – Médicos,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 107,PERCENTUAL
-Maternidade,Taxa de Adesão aos Treinamentos,Total de Profissionais que participaram dos treinamentos / N° total de profissionais convidados para o treinamento x 100,PERCENTUAL
-Maternidade,Taxa de Acidente de Trabalho,Nº de acidentes de trabalho / nº de funcionários ativos no cadastro do hospital X 100,PERCENTUAL
-Maternidade,Taxa de Infecção relacionada à assistência à saúde,N° de casos de IRAS / total de saídas X 100,PERCENTUAL
-Maternidade,Densidade de incidência de pneumonia associada à ventilação mecânica,N° de casos de PAV / n° de ventilações mecânicas-dia X 1.000,ABSOLUTO
-Maternidade,Taxa de utilização de ventilação mecânica,N° de ventilações mecânicas-dia / n° de pacientes-dia X 100,PERCENTUAL
-Maternidade,Densidade de incidência de infecção do trato urinário relacionada a cateter vesical de demora,N° de ITU CVD / n° de CVD-dia X 1.000,ABSOLUTO
-Maternidade,Taxa de utilização de cateter vesical de demora,N° CVD-dia / n° de pacientes-dia X 100,PERCENTUAL
-Maternidade,Densidade de incidência de infecção primária da corrente sanguínea com confirmação laboratorial associada a cateter venoso central,N° de casos novos de IPCS laboratorial / nº de cateteres venosos centrais-dia,ABSOLUTO
-Maternidade,Densidade de incidência de infecção primária da corrente sanguínea clínica sem confirmação laboratorial associada à cateter venoso central,N° de casos novos de IPCS clínica / nº de cateteres venosos centrais-dia X 1.000,ABSOLUTO
-Maternidade,Taxa de utilização de cateter venoso central,N° de pacientes com CVC-dia / n° de pacientes-dia x 100,PERCENTUAL
-Maternidade,Taxa de adesão ao checklist de verificação (BUNDLES) das práticas de inserção segura de cateter central,N° total de bundles realizados / n° total de cateter central inseridos X 100,PERCENTUAL
-Maternidade,Índice de cateter inserido seguindo todas as recomendações do checklist (100% de conformidade),N° de bundles positivos / n° total de bundles realizados X 100,PERCENTUAL
-Maternidade,Taxa de infecção de sítio cirúrgico em cesáreas,N° de casos de ISC em cesáreas / nº de cesáreas realizadas X 100,PERCENTUAL
+id,descricao,fonte_formula,unidade_de_medida
+1,Número de agendamentos por especialidade,Nº de agendamentos registrados por especialidade,ABSOLUTO
+2,N° de consultas médicas realizadas,Nº de consultas médicas realizadas (atendida/concluída),ABSOLUTO
+3,N° de consultas não médicas realizadas,Nº de consultas não médicas realizadas (realizada/concluída),ABSOLUTO
+4,Percentual de Perda Primária,Agendamento central / Vagas central,PERCENTUAL
+5,Média % de Aproveitamento de Vagas,(Total de agendados + Encaixes) / Total de vagas,ABSOLUTO
+6,Índice de absenteísmo em consultas ambulatoriais,Total de faltosos / Total de agendados,PERCENTUAL
+7,N° de Procedimentos realizados,Nº de procedimentos realizados,ABSOLUTO
+8,Faturamento,Valor faturado por produção registrada,FINANCEIRO
+9,Taxa de Continuidade do Cuidado no CAPS,(Altas por melhora + usuários em acompanhamento ativo) / Total de usuários acompanhados no período × 100,PERCENTUAL
+10,Índice de Articulação CAPS-APS,(Nº de ações de matriciamento realizados / Nº de ações de matriciamento pactuadas) x 100,PERCENTUAL
+11,Custo médio de dieta via oral paciente desospitalizado,Custo Médio de Nutrição por Paciente = Valor total gasto com dietas no mês / Número de pacientes desospitalizados assistidos,FINANCEIRO
+12,Taxa de Resolutividade dos Processos de Compras e Contratos,Taxa de Resolutividade (%) = (Total de processos fechados / Total de processos em tramitação) x 100,PERCENTUAL
+13,Atendimentos de Classificação de Risco – Vermelho,Quantidade de atendimentos de acordo com a classificação Vermelho,ABSOLUTO
+14,Atendimentos de Classificação de Risco – Amarelo,Quantidade de atendimentos de acordo com a classificação amarelo,ABSOLUTO
+15,Atendimentos de Classificação de Risco – Verde,Quantidade de atendimentos de acordo com a classificação verde,ABSOLUTO
+16,Atendimentos de Classificação de Risco – Azul,Quantidade de atendimentos de acordo com a classificação azul,ABSOLUTO
+17,Atendimentos na Sala de Medicação,Quantidade de atendimentos por paciente,ABSOLUTO
+18,Internações Hospitalares,Quantidade de pacientes internados,ABSOLUTO
+19,Produção de Exames laboratoriais,Exames laboratoriais (quantidade),ABSOLUTO
+20,Produção de Raio – X,Raio - X (quantidade),ABSOLUTO
+21,Produção de Tomografia,Tomografia (quantidade),ABSOLUTO
+22,Produção de Ultrassonografia,Ultrassonografia(quantidade),ABSOLUTO
+23,Produção de Ressonancia Magnética,Ressonancia Magnética (quantidade),ABSOLUTO
+24,Produção de Endoscopia,Endoscopia (quantidade),ABSOLUTO
+25,Produção de Colonoscopia,Colonoscopia ( quantidade),ABSOLUTO
+26,Produção de Eletroencefalograma,Eletroencefalograma (quantidade),ABSOLUTO
+27,Produção de Eletrocardiograma,Eletrocardiograma (quantidade),ABSOLUTO
+28,Taxa de Ocupação Operacional de Leitos - GLOBAL,Total de paciente dia / total de leito dia operacional X 100,PERCENTUAL
+29,Giro de Leito - GLOBAL,Total de saídas (altas + óbitos + transfrências externas + evasões) / nº de leitos operacionais X 100,PERCENTUAL
+30,Giro de Leito - Enfermaria,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
+31,Giro de Leito - UTI Materna,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
+32,Tempo Médio de Permanência - GLOBAL,Total de paciente dia / total de saídas hospitalares (altas + óbitos + transfrências externas + evasões),TEMPO_DIAS
+33,Tempo Médio de Permanência – Enfermaria Clinica,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
+34,Tempo Médio de Permanência – Enfermaria Cirurgica,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
+35,Tempo Médio de Permanência – UTI Adulto,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
+36,Tempo Médio de Permanência – UTI Pediatrica,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
+37,Índice de Intervalo de Substituição de Leitos - Enfermaria Clinica,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
+38,Índice de Intervalo de Substituição de Leitos - Enfermaria Cirurgica,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
+39,Índice de Intervalo de Substituição de Leitos - UTI Adulto,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
+40,Índice de Intervalo de Substituição de Leitos - UTI Pediatrica,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
+41,Índice de Intervalo de Substituição de Leitos - GLOBAL,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
+42,Cirurgias Realizadas,Quantidade de cirurgias realizadas de acordo com a especialidade,ABSOLUTO
+43,Taxa de Ocupação de Sala Cirúrgica,Tempo total de uso das S.C. + Tempo total de higienização das S.C. / tempo total de disponibilidade do centro cirurgico para cirurgias X 100,PERCENTUAL
+44,Giro de Salas Cirúrgicas,Total de cirurgias no período / nº total de salas cirúrgicas,ABSOLUTO
+45,Taxa de Prevenção de Incidentes/Eventos Adversos Global,Total geral de incidentes/eventos adversos / total de pacientes dia X 100-100,PERCENTUAL
+46,Incidência de Flebite,Nº de casos de flebite no período / nº de pacientes-dia com acesso venoso periférico X 100,PERCENTUAL
+47,Incidência de Extubação Acidental,Nº de pacientes extubados acidentalmente / nº de pacientes intubados por dia X 100,PERCENTUAL
+48,Incidência de Lesão por Pressão,Nº de casos novos em determinado período / nº de pessoas expostas ao risco no mesmo período X 100,PERCENTUAL
+49,Incidência de não conformidade relaciona à administração de medicamentos,Nº de não conformidades relacionadas a administração de medicamentos / nº de pacientes-dia X 100,PERCENTUAL
+50,Incidência de Prescrição Errada,N° de prescrições erradas identificadas / total de pacientes dia X 100,PERCENTUAL
+51,Incidência de Queda,Nº de quedas / nº de pacientes-dia X 1.000,ABSOLUTO
+52,Incidência Perda de SNE,Nº de perdas de sonda nasogastroenteral / nº de pacientes com sonda nasogastroenteral-dia X 100,PERCENTUAL
+53,Índice de Satisfação do Usuário,Total de avaliações classificadas como bom e/ou ótimo / total pesquisas realizadas,PERCENTUAL
+54,Taxa Geral de Profissionais Treinados,Total de profissionais treinados / n° total de profissionais da unidade x 100,PERCENTUAL
+55,Taxa de Profissionais Treinados por Categoria (Administrativo e poio; Enfermagem; Fisioterapia; Fonoaudiologia; Farmácia; Serviço Social; Psicologia; Médicos),Total de profissionais treinados por categoria / n° total de profissionais desta categoria x 100,PERCENTUAL
+56,Taxa de Adesão aos Treinamentos,Total de Profissionais que participaram dos treinamentos / N° total de profissionais convidados para o treinamento x 100,PERCENTUAL
+57,Taxa de Acidente de Trabalho,Nº de acidentes de trabalho / nº de funcionários ativos no cadastro do hospital X 100,PERCENTUAL
+58,Taxa de infecção relacionada à assistência à saúde,N° de casos de IRAS / total de saídas X 100,PERCENTUAL
+59,Densidade de incidência de pneumonia associada à ventilação mecânica,N° de casos de PAV / n° de ventilações mecânicas-dia X 1.000,ABSOLUTO
+60,Taxa de utilização de ventilação mecânica,N° de ventilações mecânicas-dia / n° de pacientes-dia X 100,PERCENTUAL
+61,Densidade de incidência de infecção do trato urinário relacionada a cateter vesical de demora,N° de ITU CVD / n° de CVD-dia X 1.000,ABSOLUTO
+62,Taxa de utilização de cateter vesical de demora,N° CVD-dia / n° de pacientes-dia X 100,PERCENTUAL
+63,Densidade de incidência de infecção primária da corrente sanguínea com confirmação laboratorial associada a cateter venoso central,N° de casos novos de IPCS laboratorial / nº de cateteres venosos centrais-dia x1.000,ABSOLUTO
+64,Densidade de incidência de infecção primária da corrente sanguínea clínica sem confirmação laboratorial associada à cateter venoso central,N° de casos novos de IPCS clínica / nº de cateteres venosos centrais-dia X 1.000,ABSOLUTO
+65,Taxa de utilização de cateter venoso central,N° de pacientes com CVC-dia / n° de pacientes-dia X 100,PERCENTUAL
+66,Taxa de cobertura do checklist de inserção do cateter venoso central,N° total de bundles realizados / n° total de cateter central inseridos X 100,PERCENTUAL
+67,Índice de cateter inserido seguindo todas as recomendações do checklist (100% de conformidade),N° de bundles positivos / n° total de bundles realizados X 100,PERCENTUAL
+68,Taxa de infecção de sítio cirúrgico em cirurgias limpas,N° de casos de ISC em cirurgias limpas / n° de cirurgias limpas X 100,PERCENTUAL
+69,Taxa de infecção de sítio cirúrgico em artroplastias totais de quadril,N° de casos de ISC em artroplastias totais de quadril / n° de artroplastias totais de quadril X 100,PERCENTUAL
+70,Taxa de infecção de sítio cirúrgico em artroplastias de joelho,N° de casos de ISC em artroplastias de joelho / n° de artroplastias de joelho realizadas X 100,PERCENTUAL
+71,Taxa de infecção de sítio cirúrgico em cesáreas,N° de casos de ISC em cesáreas / nº de cesáreas realizadas X 100,PERCENTUAL
+72,Taxa de infecção de sítio cirúrgico em craniotomias,N° de casos de ISC em craniotomias / nº de craniotomias realizadas X 100,PERCENTUAL
+73,Taxa de infecção de sítio cirúrgico em revascularizações do miocárdio,N° de casos de ISC em RM / n° de cirurgias de RM X 100,PERCENTUAL
+74,Atendimento de Urgência com Observação até 24 horas em Atenção Especializada (internação nas alas),Quantidade,ABSOLUTO
+75,Atendimento em Unidade de Pronto Atendimento (consultas médicas),Quantidade,ABSOLUTO
+76,Produção de Diagnóstico em Laboratório,Quantidade de Diagnóstico em Laboratório,ABSOLUTO
+77,Produção de Diagnóstico em Raio X,Quantidade de Raio X,ABSOLUTO
+78,Produção de Diagnóstico em Ultrassonografia,Quantidade de Ultrassonografia,ABSOLUTO
+79,Produção de Diagnóstico em Eletrocardiograma,Quantidade de Eletrocardiograma,ABSOLUTO
+80,Giro de Leito - Enfermaria Adulto,Total de saídas (altas + óbitos + transferências internas e externas + evasões) / nº de leitos operacionais do setor X 100,PERCENTUAL
+81,Giro de Leito - Enfermaria Pediatra,Total de saídas (altas + óbitos + transferências internas e externas + evasões) / nº de leitos operacionais do setor X 100,PERCENTUAL
+82,Índice de Intervalo de Substituição de Leitos -Enfermaria Adulto,Taxa de desocupação X média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
+83,Índice de Intervalo de Substituição de Leitos -Enfermaria Pediátrica,Taxa de desocupação X média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
+84,Taxa de Mortalidade Institucional (> 24 horas),Nº de óbitos > 24 horas / saídas X 100,PERCENTUAL
+85,Taxa de Mortalidade GLOBAL (> e < de 24 horas),Total geral de óbitos (> e < 24horas) / saídas X 100,PERCENTUAL
+86,Incidência de não conformidade relacionada à administração de medicamentos,Nº de não conformidades relacionadas a administração de medicamentos / nº de pacientes-dia X 100,PERCENTUAL
+87,Taxa de adesão ao checklist de verificação (BUNDLES) das práticas de inserção segura de cateter central,N° total de bundles realizados / n° total de cateter central inseridos X 100,PERCENTUAL
+88,Cosultas Médicas Especializadas,Quantidade consultas de acordo com a especialidade,ABSOLUTO
+89,Consultas de Profissionais de Nível Superior (Exceto médico),Quantidade de consultas por categoria profissional,ABSOLUTO
+90,Serviço de Apoio Diagnóstico e Terapeutico - SADT,Quantidade por procedimento realizados,ABSOLUTO
+91,Nº de Partos Normal,Número de partos normais ocorridos na unidade,ABSOLUTO
+92,Nº de Partos Cesárea,Número de partos cesáreos ocorridos na unidade,ABSOLUTO
+93,Nº de Parto Normal Assistido por Enfermeiro,Número de partos normais assistidos por enfermeiros ocorridos na unidade,ABSOLUTO
+94,Taxa de Ocupação Operacional de Leitos -Enfermaria,Total de paciente dia do setor / total de leito dia operacional do setor X 100,PERCENTUAL
+95,Taxa de Ocupação Operacional de Leitos -UTI Materna,Total de paciente dia do setor / total de leito dia operacional do setor X 100,PERCENTUAL
+96,Tempo Médio de Permanência - Enfermaria ,Total de paciente dia por setor / total de saídas por setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
+97,Tempo Médio de Permanência - UTI Materna,Total de paciente dia por setor / total de saídas por setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
+98,Índice de Intervalo de Substituição de Leitos - Enfermaria,Taxa de desocupação x média de permanência do setor em dias / taxa de ocupação hospitalar,PERCENTUAL
+99,Índice de Intervalo de Substituição de Leitos - UTI Materna,Taxa de desocupação x média de permanência do setor em dias / taxa de ocupação hospitalar,PERCENTUAL
+100,Nº de Óbitos Maternos,Nº total de óbitos ocorridos na unidade,ABSOLUTO
+101,Taxa de Mortalidade Materna,Total geral de óbitos por causas maternas / total de saídas de paciente de obstetrícia X 100,PERCENTUAL
+102,Densidade de Incidência de Mortalidade Infantil,Nº de óbitos de residentes com menos de um ano de idade / nº total de nascidos vivos de mães residentes X 1.000,ABSOLUTO
+103,Taxa de Mortalidade Neonatal,(Óbitos Neonatais / Nascidos Vivos) * 1.000,TAXA
+104,RN com Peso ≤ a 1.000g,Nº de óbitos de RN com peso ≤ a 1.000g / nº total de RN com peso ≤ a 1.000g X 100,TAXA
+105,RN com Peso entre 1.101g até 1.500g,Nº de óbitos de RN com peso entre 1.101g até 1.500g / nº total de RN com peso com peso entre 1.101g até 1.500g X 100,PERCENTUAL
+106,RN com Peso entre 1.501g até 2.500g,Nº de óbitos de RN com peso entre 1.501g até 2.500g / nº total de RN com peso com peso entre 1.501g até 2.500g X 100,PERCENTUAL
+107,RN com Peso ≥ a 2.500g,Nº de óbitos de RN com peso ≥ a 2.500g / nº total de RN com peso ≥ a 2.500g X 100,PERCENTUAL
+108,Taxa de Cesáreas,Nº de partos cesáreos / nº de partos ocorridos X 100,PERCENTUAL
+109,Taxa Geral de Profissionais Treinados – GLOBAL,Total de profissionais treinados / n° total de profissionais da unidade x 100,PERCENTUAL
+110,Taxa de Profissionais Treinados - Administrativo e apoio;,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 100,PERCENTUAL
+111,Taxa de Profissionais Treinados - Enfermagem;,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 101,PERCENTUAL
+112,Taxa de Profissionais Treinados - Fisioterapia;,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 102,PERCENTUAL
+113,Taxa de Profissionais Treinados – Fonoaudiologia;,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 103,PERCENTUAL
+114,Taxa de Profissionais Treinados - Farmácia;,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 104,PERCENTUAL
+115,Taxa de Profissionais Treinados – Serviço Social;,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 105,PERCENTUAL
+116,Taxa de Profissionais Treinados – Psicologia;,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 106,PERCENTUAL
+117,Taxa de Profissionais Treinados – Médicos,Total de profissionais treinados da categoria / n° total de profissionais da categoria x 107,PERCENTUAL
+118,Taxa de Infecção relacionada à assistência à saúde,N° de casos de IRAS / total de saídas X 100,PERCENTUAL
