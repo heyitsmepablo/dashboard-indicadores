@@ -15,12 +15,22 @@ import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 
 export function MyDashboard() {
-  const { dadosMeuPainel, toggleItemPainel, limparPainel, setViewMode } =
-    useDashboard();
+  const {
+    dadosMeuPainel,
+    toggleItemPainel,
+    limparPainel,
+    setViewMode,
+    unidades,
+  } = useDashboard();
+
+  // Função auxiliar para pegar o nome real da unidade
+  const getNomeUnidade = (id: number) => {
+    const u = unidades.find((unidade) => unidade.id === id);
+    return u ? u.nome : `Unidade ${id}`;
+  };
 
   // Agrupa os indicadores por SETOR e depois por TIPO DE UNIDADE
   const grouped = useMemo(() => {
-    // 1. Agrupa por Setor
     const bySector: Record<string, typeof dadosMeuPainel> = {};
     dadosMeuPainel.forEach((ind) => {
       if (!bySector[ind.setor]) bySector[ind.setor] = [];
@@ -37,7 +47,7 @@ export function MyDashboard() {
             Meu Painel
           </h1>
           <p className="text-sm text-muted-foreground">
-            Seu dashboard personalizado.
+            Seu dashboard personalizado salvo automaticamente.
           </p>
         </div>
         <Card className="border-dashed">
@@ -100,11 +110,13 @@ export function MyDashboard() {
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {inds.map((ind) => {
-              // Tenta pegar o nome do tipo da unidade (se disponível nos resultados ou mockado)
-              // Se o backend não retornar, usa "Geral"
+              // Tenta pegar o nome do tipo da unidade
               const unidadeInfo = ind.resultados?.[0]?.unidades;
               const tipoUnidadeNome =
                 unidadeInfo?.tipo_de_unidade?.nome || "Unidade";
+
+              // Usa o helper para pegar o nome real com base no id
+              const nomeUnidadeReal = getNomeUnidade(ind.unidadeId!);
 
               return (
                 <div
@@ -113,22 +125,22 @@ export function MyDashboard() {
                 >
                   {/* Cabeçalho do Card */}
                   <div className="flex items-start justify-between">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-1 w-full pr-8">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                         <Badge
                           variant="outline"
-                          className="text-[10px] px-1.5 py-0 h-5 font-normal"
+                          className="text-[10px] px-1.5 py-0 h-5 font-normal shrink-0 w-max"
                         >
                           {tipoUnidadeNome}
                         </Badge>
-                        <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                          <Building2 className="h-3 w-3" />
-                          {ind.nomeUnidade}
+                        <span
+                          className="text-xs font-medium text-muted-foreground flex items-center gap-1 truncate w-full"
+                          title={nomeUnidadeReal}
+                        >
+                          <Building2 className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{nomeUnidadeReal}</span>
                         </span>
                       </div>
-                      {/* Descrição do Indicador removida daqui pois já está no EvolutionChart? 
-                              Não, o EvolutionChart tem seu próprio cabeçalho. Vamos manter simples. 
-                          */}
                     </div>
                   </div>
 

@@ -27,6 +27,8 @@ interface UnitSelectorProps {
   className?: string;
   placeholder?: string;
   disabled?: boolean;
+  selectedIds?: number[];
+  groupLabel?: string;
 }
 
 export function UnitSelector({
@@ -36,12 +38,17 @@ export function UnitSelector({
   className,
   placeholder = "Selecione a unidade",
   disabled = false,
+  selectedIds = [],
+  groupLabel,
 }: UnitSelectorProps) {
-  const { unidadesFiltradas, unidadeSelecionada, setUnidadeSelecionada } =
-    useDashboard();
+  const {
+    unidadesFiltradas,
+    unidadeSelecionada,
+    setUnidadeSelecionada,
+    setorAtivo,
+  } = useDashboard();
   const [open, setOpen] = useState(false);
 
-  // Modo Controlado vs Global
   const isControlled = value !== undefined;
   const currentValue = isControlled ? value : unidadeSelecionada;
   const listToRender =
@@ -63,6 +70,17 @@ export function UnitSelector({
 
   const isDisabled = disabled || listToRender.length === 0;
 
+  const groupedList = useMemo(() => {
+    const groups: Record<string, typeof listToRender> = {};
+    listToRender.forEach((u) => {
+      const name =
+        groupLabel || setorAtivo || u.tipo_de_unidade?.nome || "Unidades";
+      if (!groups[name]) groups[name] = [];
+      groups[name].push(u);
+    });
+    return groups;
+  }, [listToRender, groupLabel, setorAtivo]);
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -71,7 +89,6 @@ export function UnitSelector({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            // Mudança aqui: h-auto e py-2 para permitir múltiplas linhas
             "w-full justify-between h-auto min-h-[2.5rem] py-2 px-3 text-xs sm:text-sm text-left",
             !currentValue && "text-muted-foreground",
             className,
@@ -82,15 +99,13 @@ export function UnitSelector({
             <Building2 className="h-4 w-4 shrink-0 opacity-50 mt-0.5" />
             {selectedUnit ? (
               <div className="flex flex-col leading-tight w-full">
-                {/* Sigla em destaque */}
                 <span className="font-bold">{selectedUnit.sigla}</span>
-                {/* Nome completo com quebra de linha permitida */}
                 <span className="opacity-70 text-[10px] sm:text-xs whitespace-normal break-words">
                   {selectedUnit.nome}
                 </span>
               </div>
             ) : (
-              <span className="truncate">
+              <span className="truncate mt-0.5">
                 {isDisabled ? "Indisponível" : placeholder}
               </span>
             )}
@@ -99,38 +114,49 @@ export function UnitSelector({
         </Button>
       </PopoverTrigger>
 
-      {/* Popover ajustado para largura dinâmica ou fixa mínima */}
       <PopoverContent className="w-[500px] p-0" align="start">
         <Command>
           <CommandInput placeholder="Buscar unidade..." className="h-9" />
           <CommandList>
             <CommandEmpty>Nenhuma unidade encontrada.</CommandEmpty>
-            <CommandGroup>
-              {listToRender.map((u) => (
-                <CommandItem
-                  key={u.id}
-                  value={`${u.id} ${u.sigla} ${u.nome}`}
-                  onSelect={() => handleSelect(String(u.id))}
-                  className="text-xs sm:text-sm cursor-pointer py-2"
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4 shrink-0",
-                      currentValue === u.id ? "opacity-100" : "opacity-0",
-                    )}
-                  />
-                  <div className="flex flex-col w-full overflow-hidden">
-                    <span className="font-bold">{u.sigla}</span>
-                    <span
-                      className="text-muted-foreground text-xs truncate"
-                      title={u.nome}
+
+            {Object.entries(groupedList).map(([groupName, units]) => (
+              <CommandGroup key={groupName} heading={groupName.toUpperCase()}>
+                {units.map((u) => {
+                  const isChecked =
+                    selectedIds.length > 0
+                      ? selectedIds.includes(u.id)
+                      : currentValue === u.id;
+
+                  return (
+                    <CommandItem
+                      key={u.id}
+                      value={`${u.id} ${u.sigla} ${u.nome}`}
+                      onSelect={() => handleSelect(String(u.id))}
+                      className="text-xs sm:text-sm cursor-pointer py-2 transition-colors"
                     >
-                      {u.nome}
-                    </span>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4 shrink-0 transition-opacity",
+                          isChecked
+                            ? "opacity-100 text-primary font-bold"
+                            : "opacity-0",
+                        )}
+                      />
+                      <div className="flex flex-col w-full overflow-hidden">
+                        <span className="font-bold">{u.sigla}</span>
+                        <span
+                          className="text-muted-foreground text-xs truncate"
+                          title={u.nome}
+                        >
+                          {u.nome}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            ))}
           </CommandList>
         </Command>
       </PopoverContent>

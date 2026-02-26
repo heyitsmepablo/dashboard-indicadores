@@ -58,6 +58,8 @@ interface DashboardContextType {
 
 const DashboardContext = createContext<DashboardContextType | null>(null);
 
+const STORAGE_KEY_PAINEL = "dashify_meu_painel_v1";
+
 export function DashboardProvider({ children }: { children: ReactNode }) {
   // --- Estados de UI ---
   const [viewMode, setViewMode] = useState<ViewMode>("setor");
@@ -78,8 +80,40 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   // --- Estados de Seleção Local ---
   const [itensComparacao, setItensComparacao] = useState<ItemSelecao[]>([]);
   const [dadosComparacao, setDadosComparacao] = useState<Indicador[]>([]);
+
   const [itensPainel, setItensPainel] = useState<ItemSelecao[]>([]);
   const [dadosMeuPainel, setDadosMeuPainel] = useState<Indicador[]>([]);
+
+  // =========================================================================
+  // PERSISTÊNCIA DO MEU PAINEL (LOCAL STORAGE)
+  // =========================================================================
+  const [isPainelLoaded, setIsPainelLoaded] = useState(false);
+
+  // 1. Carrega do localStorage ao montar (Client-side apenas)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_PAINEL);
+      if (saved) {
+        setItensPainel(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error("Erro ao carregar o painel do localStorage", e);
+    } finally {
+      setIsPainelLoaded(true);
+    }
+  }, []);
+
+  // 2. Salva no localStorage sempre que itensPainel mudar (após carregamento inicial)
+  useEffect(() => {
+    if (isPainelLoaded) {
+      try {
+        localStorage.setItem(STORAGE_KEY_PAINEL, JSON.stringify(itensPainel));
+      } catch (e) {
+        console.error("Erro ao salvar o painel no localStorage", e);
+      }
+    }
+  }, [itensPainel, isPainelLoaded]);
+  // =========================================================================
 
   // 1. Carga Inicial (Setores, Unidades e Contagens)
   useEffect(() => {
@@ -218,6 +252,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         console.error("Erro ao carregar dados do painel", e);
       }
     }
+    // Carrega dados se a view for meu-painel ou se acabamos de ler os itens do Storage
     if (viewMode === "meu-painel" || itensPainel.length > 0) {
       loadMeuPainel();
     }
@@ -229,12 +264,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     return list.some((i) => i.id === id && i.unidadeId === unidadeId);
   };
 
-  /**
-   * Toggle com Regra de Negócio:
-   * - Permite múltiplos indicadores se forem da mesma unidade (Análise Interna).
-   * - Permite múltiplas unidades se for o mesmo indicador (Benchmarking).
-   * - Bloqueia mistura de indicadores diferentes em unidades diferentes.
-   */
   const toggleItemComparador = useCallback((id: number, unidadeId: number) => {
     setItensComparacao((prev) => {
       const isRemovendo = existsInList(prev, id, unidadeId);
@@ -243,21 +272,17 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         return prev.filter((i) => !(i.id === id && i.unidadeId === unidadeId));
       }
 
-      // Primeiro item sempre permitido
       if (prev.length === 0) return [{ id, unidadeId }];
 
       const primeiro = prev[0];
 
-      // Se já tem 1 item, o segundo define o modo
       if (prev.length === 1) {
         if (primeiro.unidadeId === unidadeId || primeiro.id === id) {
           return [...prev, { id, unidadeId }];
         }
-        // Se tentar algo incompatível, substitui o anterior (UX fluida)
         return [{ id, unidadeId }];
       }
 
-      // Se já tem modo definido (MESMA_UNIDADE ou MULTI_UNIDADE)
       const modoMesmaUnidade = prev.every(
         (i) => i.unidadeId === primeiro.unidadeId,
       );
@@ -271,7 +296,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         return [...prev, { id, unidadeId }];
       }
 
-      // Se não encaixa na regra, mantém o estado atual
       return prev;
     });
   }, []);
