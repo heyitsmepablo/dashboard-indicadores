@@ -27,7 +27,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { AreaChartIcon, BarChart3, LineChartIcon } from "lucide-react";
+import {
+  AreaChartIcon,
+  BarChart3,
+  LineChartIcon,
+  FileText,
+} from "lucide-react";
 import type { Indicador } from "@/lib/types";
 import { formatValue, formatCompetencia, parseMeta } from "@/lib/format";
 
@@ -43,11 +48,14 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
   const meta = parseMeta(indicador.meta, indicador.unidade_de_medida);
 
   const data = resultados.map((r) => ({
-    // Usa o formatador robusto que lida com ISO string corretamente
     competencia: formatCompetencia(r.competencia),
     valor: r.valor,
     analise: r.analise_critica,
   }));
+
+  // Captura o último resultado preenchido para extrair a análise
+  const ultimoResultado = data.length > 0 ? data[data.length - 1] : null;
+  const ultimaAnalise = ultimoResultado?.analise;
 
   const chartConfig: ChartConfig = {
     valor: {
@@ -58,7 +66,7 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
 
   const yAxisTickFormatter = (val: number) => {
     if (indicador.unidade_de_medida === "PERCENTUAL")
-      return `${val.toFixed(0)}%`; // Ajuste aqui se necessário
+      return `${val.toFixed(0)}%`;
     if (indicador.unidade_de_medida === "FINANCEIRO")
       return `${(val / 1000).toFixed(0)}k`;
     return val.toLocaleString("pt-BR");
@@ -81,8 +89,8 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
       tickLine={false}
       axisLine={false}
       tickMargin={8}
-      fontSize={10} // Reduzi ligeiramente o fontSize para acomodar mais itens
-      interval={0} // FORÇA A EXIBIÇÃO DE TODOS OS MESES NO EIXO X
+      fontSize={10}
+      interval={0}
     />
   );
 
@@ -211,6 +219,23 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
         <ChartContainer config={chartConfig} className="h-[280px] w-full">
           {renderChart()}
         </ChartContainer>
+
+        {/* Bloco condicional para exibir a última análise crítica */}
+        {ultimaAnalise && (
+          <div className="mt-4 flex gap-3 rounded-lg border bg-muted/40 p-4">
+            <div className="mt-0.5 text-muted-foreground">
+              <FileText className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-semibold leading-none text-foreground">
+                Última Análise Crítica ({ultimoResultado?.competencia})
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {ultimaAnalise}
+              </span>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
