@@ -1,64 +1,90 @@
-# Dashboard de Indicadores
+# Dashify - Dashboard de Indicadores (KPIs)
 
-Este projeto visa centralizar e gerenciar os indicadores de desempenho da rede de saúde. O objetivo é substituir o controle manual disperso por um fluxo de dados automatizado, onde planilhas padronizadas alimentam um banco de dados estruturado, servindo de base para uma interface de visualização gráfica.
+Este projeto visa centralizar, gerenciar e visualizar os indicadores de desempenho da rede de saúde. O objetivo é substituir o controle manual disperso por um fluxo de dados estruturado, servindo de base para uma interface de visualização gráfica interativa, hierárquica e inteligente.
 
-> 🚧 **Status:** MVP (Produto Viável Mínimo). Estrutura de banco de dados pronta. Próximos passos: Script de carga e Interface Web.
+> 🚀 **Status:** MVP Funcional. Banco de dados relacional populado, API desenvolvida e Interface Web (Frontend) completa com navegação e análises avançadas.
 
-## 🏗️ Arquitetura da Solução
+## 🏗️ Arquitetura da Solução e Stack Tecnológico
 
-O fluxo de dados foi desenhado para ser simples e eficiente:
+O sistema evoluiu para uma arquitetura moderna e escalável:
 
-1. **Entrada de Dados:** Planilha Excel padronizada (preenchida pelos setores).
-2. **Processamento (ETL):** Script em **Python** (Pandas) que lê a planilha, valida os dados e insere na tabela de `resultados`.
-3. **Armazenamento:** Banco de Dados **PostgreSQL** (com tabelas de `indicadores` e `resultados`).
-4. **Visualização:**
-   - **API:** Backend simples para expor os dados.
-   - **Frontend:** Interface Web para exibição de gráficos e acompanhamento de metas (sem login/auth nesta fase).
+1. **Armazenamento:** **PostgreSQL** (rodando via Docker). Modelagem relacional avançada estruturada em `Superintendências > Tipos de Unidade > Unidades`.
+2. **Backend (API):** Desenvolvido em **NestJS** com **Prisma ORM**, expondo endpoints RESTful para consultas filtradas e cruzamento de dados.
+3. **Frontend (Dashboard):** Desenvolvido em **Next.js (React)** com **Tailwind CSS**.
+   - Gráficos renderizados via **Recharts**.
+   - Componentes UI baseados no **shadcn/ui** e ícones **Lucide**.
+   - Gerenciamento de estado global via Context API.
+4. **Entrada de Dados (ETL em construção):** Scripts em **Python** para ler planilhas padronizadas e alimentar o banco de dados. (Atualmente utilizando _Seeders_ em SQL para massa de dados de teste).
 
-## 📂 Estrutura do Projeto
+## ✨ Principais Funcionalidades (Frontend)
+
+- **Navegação Hierárquica:** Organização inteligente por _Superintendência > Tipo de Unidade > Unidade_ através de uma Sidebar interativa e expansível.
+- **Painel de Setor:** Visualização em grid de **KPI Cards** dinâmicos, que informam o último resultado, variação percentual em relação ao mês anterior, alcance de meta e disponibilidade de Análise Crítica.
+- **Busca em Tempo Real:** Filtro rápido de indicadores para unidades com grande volume de dados.
+- **Gráficos de Evolução:** Modal inline com gráficos de Área, Linha ou Barras mostrando o histórico de 12 meses, linha de meta (automática) e exibição detalhada de análises críticas atreladas ao mês exato.
+- **Comparador:** Ferramenta avançada para cruzar múltiplos indicadores ou comparar a performance de diferentes unidades lado a lado.
+- **Meu Painel:** Área customizável onde o gestor pode "fixar" (pin) indicadores de diferentes setores/unidades, com dados salvos localmente (`localStorage`).
+
+## 📂 Estrutura do Projeto (Macro)
 
 ```text
-dashboard-indicadores/
-├── database/
-│   ├── schema.sql             # Estrutura das tabelas (DDL)
-│   ├── import_seeds.sql       # Carga inicial do catálogo de indicadores
-│   └── seeds/                 # CSV com a lista oficial de indicadores
-│       └── tabela_indicadores_final_revisada.csv
-├── scripts/                   # (Em breve) Scripts Python para leitura das planilhas de resultados
-└── README.md
+dashify/
+├── backend/                   # API em NestJS + Prisma
+│   ├── prisma/
+│   │   └── schema.prisma      # Schema do ORM
+│   ├── src/                   # Controllers e Services (Superintendências, Unidades, Indicadores)
+│   └── database/seeds/        # Scripts SQL de carga inicial (Catálogo e Resultados Mock)
+├── frontend/                  # Aplicação Web em Next.js
+│   ├── src/
+│   │   ├── app/               # Rotas da aplicação
+│   │   ├── components/        # UI (Sidebar, KPI Cards, Gráficos, UnitSelector)
+│   │   ├── lib/               # Contexto Global, Types e Formatadores
+│   │   └── services/          # Conexão com a API (fetch)
+└── scripts/                   # Scripts Python (ETL) para leitura das planilhas mensais
 ```
 
-## 🚀 Como Rodar Localmente (Banco de Dados)
+## 🚀 Como Rodar Localmente
 
-Pré-requisitos
+Pré-requisitos: Docker, Node.js (v18+) e PostgreSQL.
 
-    PostgreSQL instalado.
+Subir o Banco de Dados (Docker):
+Os containers do banco irão rodar e automaticamente executar os seeds iniciais para popular Catálogos, Unidades e Resultados históricos.
 
-    Python 3.x (para os futuros scripts).
+```bash
+docker-compose up -d
+```
 
-Passo a Passo
+Rodar a API (Backend):
 
-    Crie o banco de dados:
-    SQL
+```bash
+cd backend
+npm install
+npx prisma generate
+npm run start:dev
+```
 
-    CREATE DATABASE painel_indicadores;
+Rodar o Dashboard (Frontend):
 
-    Crie a estrutura:
-    Execute o arquivo database/schema.sql no seu banco de dados para criar as tabelas indicadores e resultados.
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-    Popule o Catálogo:
-    Execute o script database/import_seeds.sql para carregar os 188 indicadores iniciais.
+Acesse: http://localhost:4200
 
-## 🔜 Roadmap (Próximos Passos)
+🔜 Roadmap
 
     [x] Modelagem do Banco de Dados.
 
-    [x] Carga inicial dos Indicadores (Catálogo).
+    [x] Carga inicial dos Indicadores (Catálogo) e massa de dados fictícia.
 
-    [ ] Backend: Criar script Python para ler a planilha mensal de resultados e salvar no banco.
+    [x] API: Desenvolver endpoints em NestJS com ORM Prisma.
 
-    [ ] API: Desenvolver endpoints simples para consultar os dados.
+    [x] Frontend: Criar dashboard web (Next.js) para visualização dos gráficos, filtros e comparador.
 
-    [ ] Frontend: Criar dashboard web para visualização dos gráficos.
+    [ ] Segurança: Implementar autenticação/login.
 
-Responsável: Pablo
+    [ ] Automação de Carga (ETL): Finalizar o script Python (Pandas) para ler as planilhas reais mensais de resultados e realizar upsert no banco via API.
+
+Desenvolvido por: [Pablo Eduardo (Engenheiro de Software)](https://www.linkedin.com/in/pabloeduardoss/)
