@@ -190,16 +190,23 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-4 border-t">
         <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Desenvolvido por</span>
+          <div className="flex items-center gap-x-1 text-xs">
+            <span className="text-muted-foreground">Desenvolvido por:</span>
             <a
-              href="https://www.linkedin.com/in/seu-usuario-aqui"
+              href="https://www.linkedin.com/in/pabloeduardoss"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 font-medium text-primary hover:underline"
             >
-              Pablo <Linkedin className="h-3 w-3" />
+              Pablo Eduardo <Linkedin className="h-3 w-3" />
             </a>
+          </div>
+        </div>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between text-xs ">
+            <span className="text-muted-foreground">
+              Aprovado pela Superintendencia de Qualidade - SEMUS
+            </span>
           </div>
         </div>
       </SidebarFooter>
