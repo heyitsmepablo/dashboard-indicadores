@@ -53,7 +53,8 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-4 w-full">
+      {/* Header com a correção de altura (h-14) e alinhamento do border para o dark mode */}
+      <SidebarHeader className="h-16 border-b border-sidebar-border flex flex-col justify-center px-4 w-full">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <BarChart3 className="h-5 w-5 text-primary-foreground" />
@@ -62,7 +63,7 @@ export function AppSidebar() {
             <span className="text-sm font-semibold text-sidebar-foreground">
               Dashify
             </span>
-            <span className="text-xs text-sidebar-foreground/60">
+            <span className="text-xs text-sidebar-foreground/60 leading-none">
               KPI Dashboard
             </span>
           </div>
@@ -118,7 +119,7 @@ export function AppSidebar() {
                         }`}
                       >
                         <div className="overflow-hidden">
-                          <div className="pl-6 flex flex-col gap-0.5 relative before:absolute before:inset-y-0 before:left-[17px] before:w-px before:bg-border">
+                          <div className="pl-6 flex flex-col gap-0.5 relative before:absolute before:inset-y-0 before:left-[17px] before:w-px before:bg-sidebar-border">
                             {sup.tipo_de_unidade.map((tipo) => (
                               <SidebarMenuItem key={tipo.id}>
                                 <SidebarMenuButton
@@ -188,10 +189,12 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t">
+      <SidebarFooter className="p-4 border-t border-sidebar-border">
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-x-1 text-xs">
-            <span className="text-muted-foreground">Desenvolvido por:</span>
+            <span className="text-sidebar-foreground/60">
+              Desenvolvido por:
+            </span>
             <a
               href="https://www.linkedin.com/in/pabloeduardoss"
               target="_blank"
@@ -204,7 +207,7 @@ export function AppSidebar() {
         </div>
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between text-xs ">
-            <span className="text-muted-foreground">
+            <span className="text-sidebar-foreground/60">
               Aprovado pela Superintendencia de Qualidade - SEMUS
             </span>
           </div>
