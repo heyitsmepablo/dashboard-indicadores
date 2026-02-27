@@ -7,7 +7,7 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-
+import { ApiQuery } from '@nestjs/swagger';
 import { Prisma } from 'generated/prisma/client';
 import { UnidadeService } from 'src/services/unidade/unidade.service';
 
@@ -21,11 +21,16 @@ export class UnidadesController {
   }
 
   @Get()
-  findAll(@Query('tipoId') tipoId?: string) {
-    if (tipoId) {
-      return this.service.findByTipo(parseInt(tipoId));
-    }
-    return this.service.findAll();
+  @ApiQuery({ name: 'tipoId', required: false, type: String })
+  @ApiQuery({ name: 'superintendenciaId', required: false, type: String })
+  findAll(
+    @Query('tipoId') tipoId?: string,
+    @Query('superintendenciaId') supId?: string,
+  ) {
+    if (tipoId) return this.service.findByTipo(parseInt(tipoId));
+
+    const sId = supId ? parseInt(supId) : undefined;
+    return this.service.findAll(sId);
   }
 
   @Get(':id')

@@ -1,13 +1,6 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  Query,
-  ParseIntPipe,
-} from '@nestjs/common';
+import { Controller, Post, Body, Get, Query } from '@nestjs/common';
 import { ResultadoService } from 'src/services/resultado-service/resultado-service.service';
-import { CreateResultadoDto } from './resultado.dto';
+import { CreateResultadoDto } from './resultado.dto'; // Ajuste path
 
 @Controller('resultados')
 export class ResultadosController {

@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { IndicadorService } from 'src/services/indicadores-service/indicador-service.service';
 import { CreateIndicadorDto } from './indicador.dto';
-import { Prisma } from 'generated/prisma/client';
+import { ApiQuery } from '@nestjs/swagger';
 
 @Controller('indicador')
 export class IndicadorController {
@@ -20,23 +20,32 @@ export class IndicadorController {
 
   @Post()
   create(@Body() createIndicadorDto: CreateIndicadorDto) {
-    return this.indicadorService.create(
-      createIndicadorDto as Prisma.indicadoresCreateInput,
-    );
+    return this.indicadorService.create(createIndicadorDto);
   }
+
+  // src/controllers/indicador.controller.ts
 
   @Get()
+  @ApiQuery({
+    name: 'tipoUnidadeId',
+    required: false,
+    type: String,
+    description: 'Filtra indicadores por um tipo de unidade específico',
+  })
+  @ApiQuery({
+    name: 'unidadeId',
+    required: false,
+    type: String,
+    description:
+      'Filtra indicadores que pertencem ao tipo de uma unidade específica',
+  })
   findAll(
-    @Query('setor') setor?: string,
+    @Query('tipoUnidadeId') tipoUnidadeId?: string,
     @Query('unidadeId') unidadeId?: string,
   ) {
+    const tId = tipoUnidadeId ? parseInt(tipoUnidadeId) : undefined;
     const uId = unidadeId ? parseInt(unidadeId) : undefined;
-    return this.indicadorService.findAll(setor, uId);
-  }
-
-  @Get('setores')
-  getSetores() {
-    return this.indicadorService.getUniqueSectors();
+    return this.indicadorService.findAll(tId, uId);
   }
 
   @Get('comparar')
@@ -61,7 +70,7 @@ export class IndicadorController {
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() data: Prisma.indicadoresUpdateInput,
+    @Body() data: CreateIndicadorDto,
   ) {
     return this.indicadorService.update(id, data);
   }

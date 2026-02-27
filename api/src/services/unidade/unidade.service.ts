@@ -10,9 +10,16 @@ export class UnidadeService {
     return this.prisma.unidades.create({ data });
   }
 
-  async findAll() {
+  async findAll(superintendenciaId?: number) {
+    const where = superintendenciaId
+      ? { superintendencia_id: superintendenciaId }
+      : {};
     return this.prisma.unidades.findMany({
-      include: { tipo_de_unidade: true },
+      where,
+      include: {
+        tipo_de_unidade: true,
+        superintendencias: true,
+      },
       orderBy: { nome: 'asc' },
     });
   }
@@ -20,14 +27,17 @@ export class UnidadeService {
   async findOne(id: number) {
     return this.prisma.unidades.findUnique({
       where: { id },
-      include: { tipo_de_unidade: true },
+      include: {
+        tipo_de_unidade: true,
+        superintendencias: true,
+      },
     });
   }
 
-  // Buscar unidades por tipo (ex: listar só hospitais)
   async findByTipo(tipoId: number) {
     return this.prisma.unidades.findMany({
       where: { tipo_unidade_id: tipoId },
+      include: { superintendencias: true },
       orderBy: { nome: 'asc' },
     });
   }

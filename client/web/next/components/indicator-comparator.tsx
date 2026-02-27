@@ -40,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import {
   X,
   Trash2,
@@ -54,6 +55,8 @@ import {
   ArrowDownRight,
   Minus,
   Tag,
+  FolderTree,
+  Search,
 } from "lucide-react";
 
 import { useDashboard } from "@/lib/dashboard-context";
@@ -62,7 +65,6 @@ import { ChartTypeToggle, type ChartType } from "./evolution-chart";
 import { UnitSelector } from "./unit-selector";
 import { DashifyService } from "@/services/dashify.service";
 import { Indicador } from "@/lib/types";
-import { filtrarUnidadesPorSetor } from "@/lib/sector-utils";
 
 const CHART_COLORS = ["#2563eb", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
@@ -74,29 +76,28 @@ export function IndicatorComparator() {
     toggleItemComparador,
     limparComparador,
     unidades,
-    setores,
+    superintendencias,
   } = useDashboard();
 
-  const [localSetor, setLocalSetor] = useState<string>("");
+  const [localSupId, setLocalSupId] = useState<string>("");
+  const [localTipoId, setLocalTipoId] = useState<string>("");
   const [localUnidadeId, setLocalUnidadeId] = useState<number | null>(null);
+
   const [indicadoresDisponiveis, setIndicadoresDisponiveis] = useState<
     Indicador[]
   >([]);
   const [loadingIndicadores, setLoadingIndicadores] = useState(false);
-
-  // --- MEMÓRIA DE UNIDADES ---
   const [activeUnits, setActiveUnits] = useState<number[]>([]);
+  const [termoBuscaIndicador, setTermoBuscaIndicador] = useState("");
 
   useEffect(() => {
     const currentUnits = Array.from(
       new Set(itensComparacao.map((i) => i.unidadeId)),
     );
-    if (currentUnits.length > 0) {
+    if (currentUnits.length > 0)
       setActiveUnits((prev) => Array.from(new Set([...prev, ...currentUnits])));
-    }
   }, [itensComparacao]);
 
-  // --- Helpers de Identificação ---
   const getNomeUnidade = (id: number) =>
     unidades.find((u) => u.id === id)?.nome || `Unidade ${id}`;
   const getSiglaUnidade = (id: number) =>
@@ -112,64 +113,97 @@ export function IndicatorComparator() {
     return "MISTO";
   }, [itensComparacao]);
 
-  const unidadesDoSetor = useMemo(() => {
-    return localSetor ? filtrarUnidadesPorSetor(localSetor, unidades) : [];
-  }, [localSetor, unidades]);
+  const tiposDaSup = useMemo(() => {
+    if (!localSupId) return [];
+    const sup = superintendencias.find((s) => s.id === Number(localSupId));
+    return sup?.tipo_de_unidade || [];
+  }, [localSupId, superintendencias]);
+
+  const unidadesDoTipo = useMemo(() => {
+    return localTipoId
+      ? unidades.filter((u) => u.tipo_unidade_id === Number(localTipoId))
+      : [];
+  }, [localTipoId, unidades]);
+
+  useEffect(() => {
+    setLocalTipoId("");
+    setLocalUnidadeId(null);
+  }, [localSupId]);
 
   useEffect(() => {
     setLocalUnidadeId(null);
-  }, [localSetor]);
+  }, [localTipoId]);
 
   useEffect(() => {
-    if (localUnidadeId) {
+    if (localUnidadeId && localTipoId) {
       setLoadingIndicadores(true);
-      DashifyService.getIndicadores(localSetor, localUnidadeId)
-        .then(setIndicadoresDisponiveis)
-        .finally(() => setLoadingIndicadores(false));
-    }
-  }, [localUnidadeId, localSetor]);
+      // Para saber se o indicador tem dados, precisamos carregar os resultados também
+      // Como o endpoint getIndicadores original não traz resultados completos,
+      // usaremos a mesma abordagem do SectorDashboard para garantir que temos essa info
+      async function fetchIndicadoresDaUnidade() {
+        try {
+          const baseIndicadores = await DashifyService.getIndicadores(
+            Number(localTipoId),
+            localUnidadeId!,
+          );
 
-  // --- Funções de Interação ---
+          if (baseIndicadores.length === 0) {
+            setIndicadoresDisponiveis([]);
+            return;
+          }
+
+          // Busca os resultados reais para checar quais estão vazios
+          const idsSelecao = baseIndicadores.map((ind) => ({
+            id: ind.id,
+            unidadeId: localUnidadeId!,
+          }));
+          const dadosComResultados =
+            await DashifyService.getComparacao(idsSelecao);
+
+          setIndicadoresDisponiveis(dadosComResultados);
+        } catch (error) {
+          console.error(error);
+          setIndicadoresDisponiveis([]);
+        } finally {
+          setLoadingIndicadores(false);
+        }
+      }
+
+      fetchIndicadoresDaUnidade();
+    }
+  }, [localUnidadeId, localTipoId]);
+
   const handleLimparTudo = () => {
     limparComparador();
     setActiveUnits([]);
   };
 
   const removerIndicador = (indicadorId: number) => {
-    const itensParaRemover = itensComparacao.filter(
-      (i) => i.id === indicadorId,
-    );
-    itensParaRemover.forEach((item) =>
-      toggleItemComparador(item.id, item.unidadeId),
-    );
+    itensComparacao
+      .filter((i) => i.id === indicadorId)
+      .forEach((item) => toggleItemComparador(item.id, item.unidadeId));
   };
 
   const removerUnidade = (unidadeId: number) => {
     setActiveUnits((prev) => {
       const newActiveUnits = prev.filter((id) => id !== unidadeId);
-      if (localUnidadeId === unidadeId) {
-        if (newActiveUnits.length > 0) {
-          setLocalUnidadeId(newActiveUnits[newActiveUnits.length - 1]);
-        } else {
-          setLocalUnidadeId(null);
-        }
-      }
+      if (localUnidadeId === unidadeId)
+        setLocalUnidadeId(
+          newActiveUnits.length > 0
+            ? newActiveUnits[newActiveUnits.length - 1]
+            : null,
+        );
       return newActiveUnits;
     });
-
-    const itensParaRemover = itensComparacao.filter(
-      (i) => i.unidadeId === unidadeId,
-    );
-    itensParaRemover.forEach((item) =>
-      toggleItemComparador(item.id, item.unidadeId),
-    );
+    itensComparacao
+      .filter((i) => i.unidadeId === unidadeId)
+      .forEach((item) => toggleItemComparador(item.id, item.unidadeId));
   };
 
   const handleToggleIndicador = (indId: number, currentUnitId: number) => {
     const isSelected = itensComparacao.some(
       (i) => i.id === indId && i.unidadeId === currentUnitId,
     );
-
     if (isSelected) {
       toggleItemComparador(indId, currentUnitId);
     } else {
@@ -185,7 +219,6 @@ export function IndicatorComparator() {
     }
   };
 
-  // --- Preparação de Dados para a UI ---
   const indicadoresUnicos = useMemo(() => {
     const map = new Map<number, { id: number; descricao: string }>();
     dadosComparacao.forEach((ind) =>
@@ -193,10 +226,6 @@ export function IndicatorComparator() {
     );
     return Array.from(map.values());
   }, [dadosComparacao]);
-
-  const unidadesUnicasIds = useMemo(() => {
-    return Array.from(new Set(itensComparacao.map((i) => i.unidadeId)));
-  }, [itensComparacao]);
 
   const data = useMemo(() => {
     if (dadosComparacao.length === 0) return [];
@@ -235,9 +264,16 @@ export function IndicatorComparator() {
   );
   const sameUnidade = uniqueUnidadesMedida.length === 1;
   const isMultiMode = activeUnits.length > 1 || modo === "MULTI_UNIDADE";
-  const isSetorDisabled = itensComparacao.length > 0;
+  const isConfigDisabled = itensComparacao.length > 0;
 
-  // --- Renderização do Gráfico ---
+  const indicadoresFiltrados = useMemo(() => {
+    if (!termoBuscaIndicador.trim()) return indicadoresDisponiveis;
+    const termoLower = termoBuscaIndicador.toLowerCase();
+    return indicadoresDisponiveis.filter((ind) =>
+      ind.descricao.toLowerCase().includes(termoLower),
+    );
+  }, [indicadoresDisponiveis, termoBuscaIndicador]);
+
   const renderSelectedChart = () => {
     const margin = { top: 20, right: 30, left: 0, bottom: 0 };
     const grid = <CartesianGrid strokeDasharray="3 3" vertical={false} />;
@@ -272,7 +308,6 @@ export function IndicatorComparator() {
         </BarChart>
       );
     }
-
     if (chartType === "area") {
       return (
         <AreaChart data={data} margin={margin}>
@@ -314,7 +349,6 @@ export function IndicatorComparator() {
         </AreaChart>
       );
     }
-
     return (
       <LineChart data={data} margin={margin}>
         {grid} {xAxis} {yAxis} {tooltip} {legend}
@@ -349,187 +383,252 @@ export function IndicatorComparator() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 items-start">
-        {/* === PAINEL DE SELEÇÃO === */}
-        <Card className="shadow-md border-t-4 border-t-primary">
-          <CardHeader className="bg-muted/10 pb-4">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
-                <Filter className="h-3 w-3" /> Configuração
-              </span>
-              {(itensComparacao.length > 0 || activeUnits.length > 0) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLimparTudo}
-                  className="text-destructive h-6 hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-3 w-3 mr-1" /> Limpar Tudo
-                </Button>
-              )}
-            </div>
-
-            {activeUnits.length > 0 && (
-              <div className="mb-4 p-2 bg-primary/5 rounded-lg border border-primary/10">
-                <div className="flex items-center gap-2 text-xs font-medium text-primary">
-                  <CheckCircle2 className="h-4 w-4" />
-                  {isMultiMode
-                    ? "Modo: Comparação de Unidades"
-                    : "Modo: Análise de Unidade"}
-                </div>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  {isMultiMode
-                    ? "O indicador selecionado será aplicado às unidades em análise."
-                    : "Você pode adicionar múltiplos indicadores para esta unidade."}
-                </p>
+      <div className="grid grid-cols-1 lg:grid-cols-[380px_minmax(0,1fr)] gap-6 items-start">
+        <div className="flex flex-col min-w-0 w-full">
+          <Card className="shadow-md border-t-4 border-t-primary w-full">
+            <CardHeader className="bg-muted/10 pb-4">
+              <div className="flex items-center justify-between mb-4 gap-2">
+                <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2 shrink-0">
+                  <Filter className="h-3 w-3" /> Configuração
+                </span>
+                {(itensComparacao.length > 0 || activeUnits.length > 0) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLimparTudo}
+                    className="text-destructive h-6 hover:bg-destructive/10 shrink-0 px-2"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" /> Limpar Tudo
+                  </Button>
+                )}
               </div>
-            )}
 
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
-                    <LayoutGrid className="h-3 w-3" /> 1. Setor
-                  </Label>
-                  {isSetorDisabled && (
-                    <span className="text-[9px] text-muted-foreground opacity-70">
-                      Remova os indicadores para trocar
+              {activeUnits.length > 0 && (
+                <div className="mb-4 p-2 bg-primary/5 rounded-lg border border-primary/10">
+                  <div className="flex items-center gap-2 text-xs font-medium text-primary">
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    <span className="truncate">
+                      {isMultiMode
+                        ? "Modo: Comparação de Unidades"
+                        : "Modo: Análise de Unidade"}
                     </span>
-                  )}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">
+                    {isMultiMode
+                      ? "O indicador selecionado será aplicado às unidades em análise."
+                      : "Você pode adicionar múltiplos indicadores para esta unidade."}
+                  </p>
                 </div>
-                <Select
-                  value={localSetor}
-                  onValueChange={setLocalSetor}
-                  disabled={isSetorDisabled}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Selecione o setor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {setores.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              )}
 
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
-                  <Building className="h-3 w-3" /> 2. Unidade
-                </Label>
-                <UnitSelector
-                  value={localUnidadeId}
-                  onChange={(newId) => {
-                    setLocalUnidadeId(newId);
+              <div className="space-y-4 w-82">
+                <div className="space-y-1.5 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1 shrink-0">
+                      <FolderTree className="h-3 w-3" /> 1. Superintendência
+                    </Label>
+                    {isConfigDisabled && (
+                      <span className="text-[9px] text-muted-foreground opacity-70 truncate text-right">
+                        Limpe para trocar
+                      </span>
+                    )}
+                  </div>
+                  <Select
+                    value={localSupId}
+                    onValueChange={setLocalSupId}
+                    disabled={isConfigDisabled}
+                  >
+                    <SelectTrigger className="w-full text-left h-auto min-h-[2.5rem] py-2 px-3 [&>span]:whitespace-normal [&>span]:break-words">
+                      <SelectValue placeholder="Selecione a superintendência" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {superintendencias.map((sup) => (
+                        <SelectItem key={sup.id} value={String(sup.id)}>
+                          {sup.sigla} - {sup.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                    // --- NOVA LÓGICA DE LIMPEZA DE SETOR ANTERIOR ---
-                    const hasForeignUnits = activeUnits.some(
-                      (uId) => !unidadesDoSetor.some((u) => u.id === uId),
-                    );
+                <div className="space-y-1.5 min-w-0">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                    <LayoutGrid className="h-3 w-3" /> 2. Tipo de Unidade
+                  </Label>
+                  <Select
+                    value={localTipoId}
+                    onValueChange={setLocalTipoId}
+                    disabled={isConfigDisabled || !localSupId}
+                  >
+                    <SelectTrigger className="h-9 w-full [&>span]:truncate text-left">
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tiposDaSup.map((tipo) => (
+                        <SelectItem key={tipo.id} value={String(tipo.id)}>
+                          {tipo.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                    if (hasForeignUnits && itensComparacao.length === 0) {
-                      // Se viemos de outro setor e o gráfico está vazio, a memória reseta para só ter a unidade nova
-                      setActiveUnits([newId]);
-                    } else if (
-                      itensComparacao.length === 0 &&
-                      !activeUnits.includes(newId)
-                    ) {
-                      // Se é do mesmo setor e não tá na memória, inclui na memória
-                      setActiveUnits((prev) => [...prev, newId]);
-                    }
-
-                    // --- LÓGICA DE AUTO-ADD DE INDICADOR ---
-                    const activeIndIds = Array.from(
-                      new Set(itensComparacao.map((i) => i.id)),
-                    );
-                    if (activeIndIds.length === 1) {
-                      const indId = activeIndIds[0];
-                      const isAlreadySelected = itensComparacao.some(
-                        (i) => i.id === indId && i.unidadeId === newId,
+                <div className="space-y-1.5 min-w-0">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                    <Building className="h-3 w-3" /> 3. Unidade
+                  </Label>
+                  <UnitSelector
+                    value={localUnidadeId}
+                    onChange={(newId) => {
+                      setLocalUnidadeId(newId);
+                      const hasForeignUnits = activeUnits.some(
+                        (uId) => !unidadesDoTipo.some((u) => u.id === uId),
                       );
-                      if (!isAlreadySelected) {
-                        toggleItemComparador(indId, newId);
+                      if (hasForeignUnits && itensComparacao.length === 0)
+                        setActiveUnits([newId]);
+                      else if (
+                        itensComparacao.length === 0 &&
+                        !activeUnits.includes(newId)
+                      )
+                        setActiveUnits((prev) => [...prev, newId]);
+
+                      const activeIndIds = Array.from(
+                        new Set(itensComparacao.map((i) => i.id)),
+                      );
+                      if (activeIndIds.length === 1) {
+                        const indId = activeIndIds[0];
+                        if (
+                          !itensComparacao.some(
+                            (i) => i.id === indId && i.unidadeId === newId,
+                          )
+                        )
+                          toggleItemComparador(indId, newId);
                       }
-                    }
-                  }}
-                  customList={unidadesDoSetor}
-                  disabled={!localSetor}
-                  placeholder="Busque a unidade..."
-                  selectedIds={activeUnits}
-                  groupLabel={localSetor}
-                />
-              </div>
-            </div>
-          </CardHeader>
-
-          <Separator />
-
-          <CardContent className="p-0 h-[400px] relative">
-            {loadingIndicadores ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              </div>
-            ) : !localUnidadeId ? (
-              <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-6 text-center">
-                <Info className="h-8 w-8 mb-2 opacity-20" />
-                <p className="text-xs">
-                  Selecione o setor e a unidade para listar os indicadores.
-                </p>
-              </div>
-            ) : (
-              <ScrollArea className="h-full p-2">
-                <div className="space-y-1">
-                  {indicadoresDisponiveis.map((ind) => {
-                    const isSelected = itensComparacao.some(
-                      (i) => i.id === ind.id && i.unidadeId === localUnidadeId,
-                    );
-
-                    const canSelect =
-                      itensComparacao.length === 0 ||
-                      (modo === "MESMA_UNIDADE" &&
-                        localUnidadeId === itensComparacao[0].unidadeId) ||
-                      (modo === "MULTI_UNIDADE" &&
-                        ind.id === itensComparacao[0].id) ||
-                      (itensComparacao.length === 1 &&
-                        (ind.id === itensComparacao[0].id ||
-                          localUnidadeId === itensComparacao[0].unidadeId));
-
-                    return (
-                      <div
-                        key={ind.id}
-                        onClick={() =>
-                          canSelect &&
-                          handleToggleIndicador(ind.id, localUnidadeId!)
-                        }
-                        className={`flex items-start gap-3 p-2.5 rounded-lg border transition-all cursor-pointer ${
-                          isSelected
-                            ? "bg-primary/10 border-primary/30"
-                            : canSelect
-                              ? "hover:bg-muted border-transparent"
-                              : "opacity-30 cursor-not-allowed grayscale"
-                        }`}
-                      >
-                        <Checkbox
-                          checked={isSelected}
-                          className="mt-0.5 pointer-events-none"
-                          onCheckedChange={() => {}}
-                        />
-                        <span className="text-sm leading-tight pointer-events-none">
-                          {ind.descricao}
-                        </span>
-                      </div>
-                    );
-                  })}
+                    }}
+                    customList={unidadesDoTipo}
+                    disabled={!localTipoId}
+                    placeholder="Busque a unidade..."
+                    selectedIds={activeUnits}
+                    className="w-full"
+                  />
                 </div>
-              </ScrollArea>
-            )}
-          </CardContent>
-        </Card>
+              </div>
+            </CardHeader>
+
+            <Separator />
+
+            <CardContent className="p-0 h-[400px] flex flex-col relative">
+              {loadingIndicadores ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : !localUnidadeId ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-6 text-center">
+                  <Info className="h-8 w-8 mb-2 opacity-20" />
+                  <p className="text-xs">
+                    Siga os 3 passos acima para listar os indicadores.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="p-3 border-b bg-muted/20 shrink-0">
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar indicador..."
+                        className="h-9 pl-9 text-xs"
+                        value={termoBuscaIndicador}
+                        onChange={(e) => setTermoBuscaIndicador(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex-1 min-h-0">
+                    <ScrollArea className="h-full p-2">
+                      <div className="space-y-1">
+                        {indicadoresFiltrados.length === 0 ? (
+                          <div className="py-8 text-center text-xs text-muted-foreground">
+                            Nenhum indicador encontrado com esse nome.
+                          </div>
+                        ) : (
+                          indicadoresFiltrados.map((ind) => {
+                            // Verifica se o indicador tem resultados para esta unidade
+                            const hasResults =
+                              ind.resultados && ind.resultados.length > 0;
+
+                            const isSelected = itensComparacao.some(
+                              (i) =>
+                                i.id === ind.id &&
+                                i.unidadeId === localUnidadeId,
+                            );
+
+                            // Se não tem resultados, não pode ser selecionado
+                            const canSelect =
+                              hasResults &&
+                              (itensComparacao.length === 0 ||
+                                (modo === "MESMA_UNIDADE" &&
+                                  localUnidadeId ===
+                                    itensComparacao[0].unidadeId) ||
+                                (modo === "MULTI_UNIDADE" &&
+                                  ind.id === itensComparacao[0].id) ||
+                                (itensComparacao.length === 1 &&
+                                  (ind.id === itensComparacao[0].id ||
+                                    localUnidadeId ===
+                                      itensComparacao[0].unidadeId)));
+
+                            return (
+                              <div
+                                key={ind.id}
+                                onClick={() =>
+                                  canSelect &&
+                                  handleToggleIndicador(ind.id, localUnidadeId!)
+                                }
+                                title={
+                                  !hasResults
+                                    ? "Sem dados registrados para esta unidade"
+                                    : ""
+                                }
+                                className={`flex items-start gap-3 p-2.5 rounded-lg border transition-all ${
+                                  !hasResults
+                                    ? "opacity-50 cursor-not-allowed bg-muted/30 border-transparent"
+                                    : isSelected
+                                      ? "bg-primary/10 border-primary/30 cursor-pointer"
+                                      : canSelect
+                                        ? "hover:bg-muted border-transparent cursor-pointer"
+                                        : "opacity-30 cursor-not-allowed grayscale border-transparent"
+                                }`}
+                              >
+                                <Checkbox
+                                  checked={isSelected}
+                                  disabled={!hasResults}
+                                  className={`mt-0.5 pointer-events-none ${!hasResults && "opacity-50"}`}
+                                  onCheckedChange={() => {}}
+                                />
+                                <div className="flex flex-col w-full">
+                                  <span className="text-sm leading-tight pointer-events-none break-words">
+                                    {ind.descricao}
+                                  </span>
+                                  {!hasResults && (
+                                    <span className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                                      <Info className="h-3 w-3" /> Sem dados
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* === ÁREA VISUAL === */}
-        <div className="flex flex-col gap-4 min-w-0">
+        <div className="flex flex-col gap-4 min-w-0 w-full">
           {activeUnits.length === 0 && itensComparacao.length === 0 ? (
             <Card className="h-[550px] border-dashed flex flex-col items-center justify-center text-muted-foreground bg-muted/5">
               <GitCompareArrows className="h-12 w-12 mb-4 opacity-10" />
@@ -539,9 +638,7 @@ export function IndicatorComparator() {
             </Card>
           ) : (
             <>
-              {/* Badges de Gestão de Seleção */}
               <div className="flex flex-col gap-3 p-4 bg-muted/20 rounded-xl border border-dashed">
-                {/* Linha de Unidades */}
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
                     <Building className="h-3 w-3" /> Unidades em Análise (
@@ -575,7 +672,6 @@ export function IndicatorComparator() {
 
                 <Separator className="bg-border/50" />
 
-                {/* Linha de Indicadores */}
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
                     <Tag className="h-3 w-3" /> Indicadores Monitorados
@@ -610,7 +706,6 @@ export function IndicatorComparator() {
                 </div>
               </div>
 
-              {/* Lógica Exibição do Gráfico */}
               {itensComparacao.length === 0 ? (
                 <Card className="h-[400px] flex flex-col items-center justify-center text-muted-foreground border-dashed bg-muted/5">
                   <Tag className="h-12 w-12 opacity-10 mb-2" />
@@ -649,7 +744,6 @@ export function IndicatorComparator() {
                     </CardContent>
                   </Card>
 
-                  {/* Cards de Resumo */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                     {dadosComparacao.map((ind, idx) => {
                       const resultados = ind.resultados || [];

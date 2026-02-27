@@ -10,8 +10,7 @@ import {
   useMemo,
 } from "react";
 import { DashifyService } from "@/services/dashify.service";
-import { Indicador, Unidade } from "@/lib/types";
-import { filtrarUnidadesPorSetor } from "@/lib/sector-utils";
+import { Indicador, Unidade, Superintendencia, TipoUnidade } from "@/lib/types";
 
 export type ViewMode = "setor" | "comparador" | "meu-painel";
 
@@ -21,25 +20,26 @@ export interface ItemSelecao {
 }
 
 interface DashboardContextType {
-  // Estado de Dados
   loading: boolean;
   loadingComparador: boolean;
-  setores: string[];
-  sectorCounts: Record<string, number>;
+
+  superintendencias: Superintendencia[];
+  tiposUnidade: TipoUnidade[];
   unidades: Unidade[];
   unidadesFiltradas: Unidade[];
   indicadoresAtuais: Indicador[];
   listaCompleta: Indicador[];
+  ultimaAtualizacao: string | null;
 
-  // Navegação
-  setorAtivo: string;
-  setSetorAtivo: (setor: string) => void;
+  superintendenciaAtivaId: number | null;
+  setSuperintendenciaAtivaId: (id: number | null) => void;
+  tipoUnidadeAtivoId: number | null;
+  setTipoUnidadeAtivoId: (id: number | null) => void;
   unidadeSelecionada: number | null;
   setUnidadeSelecionada: (id: number | null) => void;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
 
-  // Comparador
   itensComparacao: ItemSelecao[];
   dadosComparacao: Indicador[];
   toggleItemComparador: (id: number, unidadeId: number) => void;
@@ -48,7 +48,6 @@ interface DashboardContextType {
   comparadorAberto: boolean;
   setComparadorAberto: (aberto: boolean) => void;
 
-  // Meu Painel
   itensPainel: ItemSelecao[];
   dadosMeuPainel: Indicador[];
   toggleItemPainel: (id: number, unidadeId: number) => void;
@@ -57,82 +56,93 @@ interface DashboardContextType {
 }
 
 const DashboardContext = createContext<DashboardContextType | null>(null);
-
-const STORAGE_KEY_PAINEL = "dashify_meu_painel_v1";
+const STORAGE_KEY_PAINEL = "dashify_meu_painel_v2";
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
-  // --- Estados de UI ---
   const [viewMode, setViewMode] = useState<ViewMode>("setor");
-  const [setorAtivo, setSetorAtivo] = useState<string>("");
+  const [superintendenciaAtivaId, setSuperintendenciaAtivaId] = useState<
+    number | null
+  >(null);
+  const [tipoUnidadeAtivoId, setTipoUnidadeAtivoId] = useState<number | null>(
+    null,
+  );
   const [unidadeSelecionada, setUnidadeSelecionada] = useState<number | null>(
     null,
   );
   const [loading, setLoading] = useState(true);
   const [loadingComparador, setLoadingComparador] = useState(false);
 
-  // --- Estados de Dados da API ---
-  const [setores, setSetores] = useState<string[]>([]);
-  const [sectorCounts, setSectorCounts] = useState<Record<string, number>>({});
+  const [superintendencias, setSuperintendencias] = useState<
+    Superintendencia[]
+  >([]);
+  const [tiposUnidade, setTiposUnidade] = useState<TipoUnidade[]>([]);
   const [unidades, setUnidades] = useState<Unidade[]>([]);
   const [indicadoresAtuais, setIndicadoresAtuais] = useState<Indicador[]>([]);
   const [listaCompleta, setListaCompleta] = useState<Indicador[]>([]);
 
-  // --- Estados de Seleção Local ---
   const [itensComparacao, setItensComparacao] = useState<ItemSelecao[]>([]);
   const [dadosComparacao, setDadosComparacao] = useState<Indicador[]>([]);
-
   const [itensPainel, setItensPainel] = useState<ItemSelecao[]>([]);
   const [dadosMeuPainel, setDadosMeuPainel] = useState<Indicador[]>([]);
 
-  // =========================================================================
-  // PERSISTÊNCIA DO MEU PAINEL (LOCAL STORAGE)
-  // =========================================================================
   const [isPainelLoaded, setIsPainelLoaded] = useState(false);
 
-  // 1. Carrega do localStorage ao montar (Client-side apenas)
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_PAINEL);
-      if (saved) {
-        setItensPainel(JSON.parse(saved));
-      }
+      if (saved) setItensPainel(JSON.parse(saved));
     } catch (e) {
-      console.error("Erro ao carregar o painel do localStorage", e);
+      console.error(e);
     } finally {
       setIsPainelLoaded(true);
     }
   }, []);
 
-  // 2. Salva no localStorage sempre que itensPainel mudar (após carregamento inicial)
   useEffect(() => {
     if (isPainelLoaded) {
-      try {
-        localStorage.setItem(STORAGE_KEY_PAINEL, JSON.stringify(itensPainel));
-      } catch (e) {
-        console.error("Erro ao salvar o painel no localStorage", e);
-      }
+      localStorage.setItem(STORAGE_KEY_PAINEL, JSON.stringify(itensPainel));
     }
   }, [itensPainel, isPainelLoaded]);
-  // =========================================================================
 
-  // 1. Carga Inicial (Setores, Unidades e Contagens)
+  // CARGA INICIAL
   useEffect(() => {
     async function loadInitialData() {
       try {
-        const [listaSetores, listaUnidades, counts] = await Promise.all([
-          DashifyService.getSetores(),
+        const [listaSup, listaTipos, listaUnidades] = await Promise.all([
+          DashifyService.getSuperintendencias(),
+          DashifyService.getTiposUnidade(),
           DashifyService.getUnidades(),
-          DashifyService.getSectorCounts(),
         ]);
-        setSetores(listaSetores);
-        setUnidades(listaUnidades);
-        setSectorCounts(counts);
 
-        if (listaSetores.length > 0 && !setorAtivo) {
-          setSetorAtivo(listaSetores[0]);
+        const tiposSemSup = listaTipos.filter((t) => !t.superintendencia_id);
+        const superintendenciasFinais = [...listaSup];
+
+        if (tiposSemSup.length > 0) {
+          superintendenciasFinais.push({
+            id: -1,
+            nome: "Outras Estruturas",
+            sigla: "OUTROS",
+            tipo_de_unidade: tiposSemSup,
+          });
+        }
+
+        setSuperintendencias(superintendenciasFinais);
+        setTiposUnidade(listaTipos);
+        setUnidades(listaUnidades);
+
+        if (superintendenciasFinais.length > 0) {
+          setSuperintendenciaAtivaId(superintendenciasFinais[0].id);
+          if (
+            superintendenciasFinais[0].tipo_de_unidade &&
+            superintendenciasFinais[0].tipo_de_unidade.length > 0
+          ) {
+            setTipoUnidadeAtivoId(
+              superintendenciasFinais[0].tipo_de_unidade[0].id,
+            );
+          }
         }
       } catch (error) {
-        console.error("Erro ao carregar dados iniciais", error);
+        console.error("Erro inicial", error);
       } finally {
         setLoading(false);
       }
@@ -140,13 +150,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     loadInitialData();
   }, []);
 
-  // 2. Lógica de Filtragem de Unidades por Setor
   const unidadesFiltradas = useMemo(() => {
-    if (!setorAtivo || unidades.length === 0) return [];
-    return filtrarUnidadesPorSetor(setorAtivo, unidades);
-  }, [setorAtivo, unidades]);
+    if (!tipoUnidadeAtivoId || unidades.length === 0) return [];
+    return unidades.filter((u) => u.tipo_unidade_id === tipoUnidadeAtivoId);
+  }, [tipoUnidadeAtivoId, unidades]);
 
-  // 3. Reset/Auto-seleção de Unidade ao mudar o Setor
   useEffect(() => {
     if (unidadesFiltradas.length > 0) {
       const isValida = unidadesFiltradas.some(
@@ -160,189 +168,182 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }
   }, [unidadesFiltradas, unidadeSelecionada]);
 
-  // 4. Carregamento de Indicadores do Setor/Unidade Ativo
+  // CORREÇÃO: CARGA DE INDICADORES COM RESULTADOS
   useEffect(() => {
-    if (!setorAtivo || !unidadeSelecionada || viewMode !== "setor") return;
+    if (!tipoUnidadeAtivoId || !unidadeSelecionada || viewMode !== "setor")
+      return;
 
     async function loadIndicadores() {
       setLoading(true);
       try {
-        const dados = await DashifyService.getIndicadores(
-          setorAtivo,
+        // 1. Busca quais indicadores pertencem a esta unidade (sem os resultados pesados)
+        const baseIndicadores = await DashifyService.getIndicadores(
+          tipoUnidadeAtivoId!,
           unidadeSelecionada!,
         );
-        const dadosTratados = dados.map((d) => ({
+
+        if (baseIndicadores.length === 0) {
+          setIndicadoresAtuais([]);
+          return;
+        }
+
+        // 2. Usa a rota de comparação para puxar o histórico de resultados DESSES indicadores
+        const idsSelecao = baseIndicadores.map((ind) => ({
+          id: ind.id,
+          unidadeId: unidadeSelecionada!,
+        }));
+        const dadosComResultados =
+          await DashifyService.getComparacao(idsSelecao);
+
+        // 3. Converte as strings que vem do banco para Number para não quebrar o gráfico
+        const dadosTratados = dadosComResultados.map((d) => ({
           ...d,
           resultados: (d.resultados || []).map((r) => ({
             ...r,
             valor: Number(r.valor),
           })),
         }));
+
         setIndicadoresAtuais(dadosTratados);
       } catch (error) {
-        console.error("Erro ao carregar indicadores", error);
+        console.error("Erro ao carregar indicadores:", error);
         setIndicadoresAtuais([]);
       } finally {
         setLoading(false);
       }
     }
-    loadIndicadores();
-  }, [setorAtivo, unidadeSelecionada, viewMode]);
 
-  // 5. Carga de Lista Completa para o Comparador (Lazy Load)
+    loadIndicadores();
+  }, [tipoUnidadeAtivoId, unidadeSelecionada, viewMode]);
+
+  const ultimaAtualizacao = useMemo(() => {
+    let maxDate = 0;
+    indicadoresAtuais.forEach((ind) => {
+      ind.resultados?.forEach((r) => {
+        const dateStr = r.updated_at || r.competencia;
+        if (dateStr) {
+          const dt = new Date(dateStr).getTime();
+          if (dt > maxDate) maxDate = dt;
+        }
+      });
+    });
+    if (maxDate === 0) return null;
+    return new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(maxDate));
+  }, [indicadoresAtuais]);
+
   useEffect(() => {
     if (viewMode === "comparador" && listaCompleta.length === 0) {
-      async function loadAll() {
-        setLoadingComparador(true);
-        try {
-          const dados = await DashifyService.getIndicadores();
-          setListaCompleta(dados);
-        } catch (e) {
-          console.error("Erro ao carregar lista completa", e);
-        } finally {
-          setLoadingComparador(false);
-        }
-      }
-      loadAll();
+      setLoadingComparador(true);
+      DashifyService.getIndicadores()
+        .then(setListaCompleta)
+        .finally(() => setLoadingComparador(false));
     }
   }, [viewMode, listaCompleta]);
 
-  // 6. Carregamento dos dados detalhados para o Comparador
   useEffect(() => {
     if (itensComparacao.length === 0) {
       setDadosComparacao([]);
       return;
     }
-    async function loadComparacao() {
-      try {
-        const dados = await DashifyService.getComparacao(itensComparacao);
-        const dadosTratados = dados.map((d) => ({
-          ...d,
-          resultados: (d.resultados || []).map((r) => ({
-            ...r,
-            valor: Number(r.valor),
-          })),
-        }));
-        setDadosComparacao(dadosTratados);
-      } catch (e) {
-        console.error("Erro ao carregar dados de comparação", e);
-      }
-    }
-    loadComparacao();
+    DashifyService.getComparacao(itensComparacao).then((dados) => {
+      const tratados = dados.map((d) => ({
+        ...d,
+        resultados: (d.resultados || []).map((r) => ({
+          ...r,
+          valor: Number(r.valor),
+        })),
+      }));
+      setDadosComparacao(tratados);
+    });
   }, [itensComparacao]);
 
-  // 7. Carregamento dos dados do Meu Painel
   useEffect(() => {
     if (itensPainel.length === 0) {
       setDadosMeuPainel([]);
       return;
     }
-    async function loadMeuPainel() {
-      try {
-        const dados = await DashifyService.getComparacao(itensPainel);
-        const dadosTratados = dados.map((d) => ({
+    if (viewMode === "meu-painel" || itensPainel.length > 0) {
+      DashifyService.getComparacao(itensPainel).then((dados) => {
+        const tratados = dados.map((d) => ({
           ...d,
           resultados: (d.resultados || []).map((r) => ({
             ...r,
             valor: Number(r.valor),
           })),
         }));
-        setDadosMeuPainel(dadosTratados);
-      } catch (e) {
-        console.error("Erro ao carregar dados do painel", e);
-      }
-    }
-    // Carrega dados se a view for meu-painel ou se acabamos de ler os itens do Storage
-    if (viewMode === "meu-painel" || itensPainel.length > 0) {
-      loadMeuPainel();
+        setDadosMeuPainel(tratados);
+      });
     }
   }, [itensPainel, viewMode]);
 
-  // --- Actions ---
-
-  const existsInList = (list: ItemSelecao[], id: number, unidadeId: number) => {
-    return list.some((i) => i.id === id && i.unidadeId === unidadeId);
-  };
-
   const toggleItemComparador = useCallback((id: number, unidadeId: number) => {
     setItensComparacao((prev) => {
-      const isRemovendo = existsInList(prev, id, unidadeId);
-
-      if (isRemovendo) {
+      if (prev.some((i) => i.id === id && i.unidadeId === unidadeId)) {
         return prev.filter((i) => !(i.id === id && i.unidadeId === unidadeId));
       }
-
       if (prev.length === 0) return [{ id, unidadeId }];
-
-      const primeiro = prev[0];
-
-      if (prev.length === 1) {
-        if (primeiro.unidadeId === unidadeId || primeiro.id === id) {
-          return [...prev, { id, unidadeId }];
-        }
-        return [{ id, unidadeId }];
-      }
-
-      const modoMesmaUnidade = prev.every(
-        (i) => i.unidadeId === primeiro.unidadeId,
-      );
-      const modoMultiUnidade = prev.every((i) => i.id === primeiro.id);
-
-      if (modoMesmaUnidade && unidadeId === primeiro.unidadeId) {
+      const p = prev[0];
+      if (
+        prev.every((i) => i.unidadeId === p.unidadeId) &&
+        unidadeId === p.unidadeId
+      )
         return [...prev, { id, unidadeId }];
-      }
-
-      if (modoMultiUnidade && id === primeiro.id) {
+      if (prev.every((i) => i.id === p.id) && id === p.id)
         return [...prev, { id, unidadeId }];
-      }
-
+      if (prev.length === 1 && (p.unidadeId === unidadeId || p.id === id))
+        return [...prev, { id, unidadeId }];
       return prev;
     });
   }, []);
 
   const isComparando = useCallback(
     (id: number, unidadeId: number) =>
-      existsInList(itensComparacao, id, unidadeId),
+      itensComparacao.some((i) => i.id === id && i.unidadeId === unidadeId),
     [itensComparacao],
   );
-
   const limparComparador = useCallback(() => setItensComparacao([]), []);
 
   const toggleItemPainel = useCallback((id: number, unidadeId: number) => {
-    setItensPainel((prev) => {
-      if (existsInList(prev, id, unidadeId)) {
-        return prev.filter((i) => !(i.id === id && i.unidadeId === unidadeId));
-      }
-      return [...prev, { id, unidadeId }];
-    });
+    setItensPainel((prev) =>
+      prev.some((i) => i.id === id && i.unidadeId === unidadeId)
+        ? prev.filter((i) => !(i.id === id && i.unidadeId === unidadeId))
+        : [...prev, { id, unidadeId }],
+    );
   }, []);
 
   const isNoPainel = useCallback(
-    (id: number, unidadeId: number) => existsInList(itensPainel, id, unidadeId),
+    (id: number, unidadeId: number) =>
+      itensPainel.some((i) => i.id === id && i.unidadeId === unidadeId),
     [itensPainel],
   );
-
   const limparPainel = useCallback(() => setItensPainel([]), []);
-
-  const setComparadorAberto = useCallback((aberto: boolean) => {
-    setViewMode(aberto ? "comparador" : "setor");
-  }, []);
-
-  const comparadorAberto = viewMode === "comparador";
+  const setComparadorAberto = useCallback(
+    (aberto: boolean) => setViewMode(aberto ? "comparador" : "setor"),
+    [],
+  );
 
   return (
     <DashboardContext.Provider
       value={{
         loading,
         loadingComparador,
-        setores,
-        sectorCounts,
+        superintendencias,
+        tiposUnidade,
         unidades,
         unidadesFiltradas,
         indicadoresAtuais,
         listaCompleta,
-        setorAtivo,
-        setSetorAtivo,
+        ultimaAtualizacao,
+        superintendenciaAtivaId,
+        setSuperintendenciaAtivaId,
+        tipoUnidadeAtivoId,
+        setTipoUnidadeAtivoId,
         unidadeSelecionada,
         setUnidadeSelecionada,
         viewMode,
@@ -357,7 +358,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         toggleItemPainel,
         isNoPainel,
         limparPainel,
-        comparadorAberto,
+        comparadorAberto: viewMode === "comparador",
         setComparadorAberto,
       }}
     >
@@ -367,9 +368,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 }
 
 export function useDashboard() {
-  const context = useContext(DashboardContext);
-  if (!context) {
-    throw new Error("useDashboard must be used within a DashboardProvider");
-  }
-  return context;
+  const ctx = useContext(DashboardContext);
+  if (!ctx) throw new Error("useDashboard required");
+  return ctx;
 }

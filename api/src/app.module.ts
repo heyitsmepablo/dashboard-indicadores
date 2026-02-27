@@ -13,6 +13,8 @@ import { UnidadeService } from './services/unidade/unidade.service';
 import { UnidadesController } from './controllers/unidade/unidade.controller';
 import { TipoUnidadeController } from './controllers/tipo-de-unidade/tipo-de-unidade.controller';
 import { TipoUnidadeService } from './services/tipo-de-unidade-service/tipo-de-unidade-service.service';
+import { SuperintendenciaService } from './services/superintendencia/superintendencia.service';
+import { SuperintendenciaController } from './controllers/superintendencia/superintendencia.controller';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
@@ -22,6 +24,7 @@ import { TipoUnidadeService } from './services/tipo-de-unidade-service/tipo-de-u
     ResultadosController,
     TipoUnidadeController,
     UnidadesController,
+    SuperintendenciaController,
   ],
   providers: [
     AppService,
@@ -30,6 +33,7 @@ import { TipoUnidadeService } from './services/tipo-de-unidade-service/tipo-de-u
     ResultadoService,
     TipoUnidadeService,
     UnidadeService,
+    SuperintendenciaService,
   ],
 })
 export class AppModule {}

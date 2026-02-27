@@ -6,13 +6,7 @@ TRUNCATE TABLE "superintendencias" RESTART IDENTITY CASCADE;
 -- 2. Importa do CSV
 COPY "superintendencias" (id, nome, sigla)
 FROM '/tmp/seeds/superintendencias.csv'
-WITH (
-    FORMAT CSV,
-    HEADER true,
-    DELIMITER ',',
-    QUOTE '"',
-    ENCODING 'UTF8'
-);
+WITH (FORMAT CSV, HEADER true, DELIMITER ',', QUOTE '"', ENCODING 'UTF8');
 
 -- 3. Ajusta a sequência
 SELECT setval('superintendencias_id_seq', (SELECT MAX(id) FROM "superintendencias"));

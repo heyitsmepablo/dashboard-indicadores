@@ -1,16 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import {
   BarChart3,
   Building2,
-  DollarSign,
   GitCompareArrows,
-  LayoutDashboard,
   Pin,
-  Settings,
-  ShoppingCart,
-  Users,
   Linkedin,
+  ChevronDown,
+  FolderTree,
 } from "lucide-react";
 import {
   Sidebar,
@@ -28,25 +26,30 @@ import {
 import { useDashboard } from "@/lib/dashboard-context";
 import { Badge } from "@/components/ui/badge";
 
-const iconMap: Record<string, React.ElementType> = {
-  Financeiro: DollarSign,
-  "Recursos Humanos": Users,
-  Operacoes: Settings,
-  Comercial: ShoppingCart,
-};
-
 export function AppSidebar() {
   const {
-    setorAtivo,
-    setSetorAtivo,
+    superintendencias,
+    superintendenciaAtivaId,
+    setSuperintendenciaAtivaId,
+    tipoUnidadeAtivoId,
+    setTipoUnidadeAtivoId,
     viewMode,
     setViewMode,
     itensPainel,
-    setores,
-    sectorCounts,
   } = useDashboard();
 
-  const linkedinUrl = "https://www.linkedin.com/in/seu-usuario-aqui";
+  // Controla o estado manual de expansão
+  const [expandedSup, setExpandedSup] = useState<Record<number, boolean>>({});
+
+  const toggleSup = (id: number) => {
+    setExpandedSup((prev) => {
+      // Descobre se ele está aberto no momento (lendo do estado ou do padrão)
+      const isCurrentlyExpanded =
+        prev[id] !== undefined ? prev[id] : id === superintendenciaAtivaId;
+      // Inverte o valor
+      return { ...prev, [id]: !isCurrentlyExpanded };
+    });
+  };
 
   return (
     <Sidebar>
@@ -65,48 +68,83 @@ export function AppSidebar() {
           </div>
         </div>
       </SidebarHeader>
-
       <SidebarSeparator />
-
-      <SidebarContent>
+      <SidebarContent className="overflow-x-hidden">
         <SidebarGroup>
-          <SidebarGroupLabel>Setores</SidebarGroupLabel>
+          <SidebarGroupLabel>Estrutura Organizacional</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {setores.length === 0 && (
+              {superintendencias.length === 0 && (
                 <div className="px-4 py-2 text-xs text-muted-foreground">
-                  Carregando setores...
+                  Carregando...
                 </div>
               )}
 
-              {setores.map((setor) => {
-                const Icon = iconMap[setor] || Building2;
-                // Proteção contra undefined: (sectorCounts || {})[setor]
-                const count = (sectorCounts && sectorCounts[setor]) || 0;
+              {superintendencias.map((sup) => {
+                // Se existe valor no estado manual, usa ele. Se não, usa o fato de ser o ativo como padrão.
+                const isExpanded =
+                  expandedSup[sup.id] !== undefined
+                    ? expandedSup[sup.id]
+                    : superintendenciaAtivaId === sup.id;
 
                 return (
-                  <SidebarMenuItem key={setor}>
-                    <SidebarMenuButton
-                      isActive={setorAtivo === setor && viewMode === "setor"}
-                      onClick={() => {
-                        setSetorAtivo(setor);
-                        setViewMode("setor");
-                      }}
-                      tooltip={setor}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span className="flex-1 truncate">{setor}</span>
+                  <div key={sup.id} className="flex flex-col">
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        onClick={() => {
+                          toggleSup(sup.id);
+                          setSuperintendenciaAtivaId(sup.id);
+                        }}
+                        className="font-semibold"
+                      >
+                        <FolderTree className="h-4 w-4" />
+                        <span className="flex-1 truncate">{sup.sigla}</span>
+                        {/* Ícone com animação de rotação */}
+                        <ChevronDown
+                          className={`h-4 w-4 opacity-50 transition-transform duration-200 ease-in-out ${
+                            isExpanded ? "rotate-0" : "-rotate-90"
+                          }`}
+                        />
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
 
-                      {count > 0 && (
-                        <Badge
-                          variant="secondary"
-                          className="ml-auto text-[10px] px-1.5 py-0 h-5 min-w-[20px] justify-center bg-sidebar-accent text-sidebar-accent-foreground group-hover:bg-background group-hover:text-foreground"
-                        >
-                          {count}
-                        </Badge>
-                      )}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                    {/* Sub-menu: Tipos de Unidade (com animação de Grid) */}
+                    {sup.tipo_de_unidade && (
+                      <div
+                        className={`grid transition-all duration-300 ease-in-out ${
+                          isExpanded
+                            ? "grid-rows-[1fr] opacity-100 mt-0.5"
+                            : "grid-rows-[0fr] opacity-0 mt-0"
+                        }`}
+                      >
+                        <div className="overflow-hidden">
+                          <div className="pl-6 flex flex-col gap-0.5 relative before:absolute before:inset-y-0 before:left-[17px] before:w-px before:bg-border">
+                            {sup.tipo_de_unidade.map((tipo) => (
+                              <SidebarMenuItem key={tipo.id}>
+                                <SidebarMenuButton
+                                  isActive={
+                                    tipoUnidadeAtivoId === tipo.id &&
+                                    viewMode === "setor"
+                                  }
+                                  onClick={() => {
+                                    setTipoUnidadeAtivoId(tipo.id);
+                                    setSuperintendenciaAtivaId(sup.id);
+                                    setViewMode("setor");
+                                  }}
+                                  className="h-8 text-sm text-sidebar-foreground/80"
+                                >
+                                  <Building2 className="h-3.5 w-3.5" />
+                                  <span className="flex-1 truncate">
+                                    {tipo.nome}
+                                  </span>
+                                </SidebarMenuButton>
+                              </SidebarMenuItem>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </SidebarMenu>
@@ -123,11 +161,10 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   isActive={viewMode === "meu-painel"}
                   onClick={() => setViewMode("meu-painel")}
-                  tooltip="Meu Painel"
                 >
                   <Pin className="h-4 w-4" />
                   <span>Meu Painel</span>
-                  {itensPainel && itensPainel.length > 0 && (
+                  {itensPainel.length > 0 && (
                     <Badge
                       variant="secondary"
                       className="ml-auto text-[10px] px-1.5 py-0 h-5 bg-sidebar-accent text-sidebar-accent-foreground"
@@ -141,7 +178,6 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   isActive={viewMode === "comparador"}
                   onClick={() => setViewMode("comparador")}
-                  tooltip="Comparador"
                 >
                   <GitCompareArrows className="h-4 w-4" />
                   <span>Comparador</span>
@@ -154,21 +190,15 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-4 border-t">
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 text-xs text-sidebar-foreground/50">
-            <LayoutDashboard className="h-3.5 w-3.5" />
-            <span>v1.0.0</span>
-          </div>
-
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">Desenvolvido por</span>
             <a
-              href={linkedinUrl}
+              href="https://www.linkedin.com/in/seu-usuario-aqui"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 font-medium text-primary hover:underline hover:text-primary/80 transition-colors"
+              className="flex items-center gap-1.5 font-medium text-primary hover:underline"
             >
-              Pablo
-              <Linkedin className="h-3 w-3" />
+              Pablo <Linkedin className="h-3 w-3" />
             </a>
           </div>
         </div>

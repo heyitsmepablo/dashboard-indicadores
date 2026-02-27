@@ -6,8 +6,13 @@ import { Prisma } from 'generated/prisma/client';
 export class TipoUnidadeService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll() {
+  async findAll(superintendenciaId?: number) {
+    const where = superintendenciaId
+      ? { superintendencia_id: superintendenciaId }
+      : {};
     return await this.prisma.tipo_de_unidade.findMany({
+      where,
+      include: { superintendencias: true },
       orderBy: { nome: 'asc' },
     });
   }

@@ -17,7 +17,6 @@ export class ResultadoService {
 
     return await this.prisma.resultados.upsert({
       where: {
-        // CORREÇÃO: O Prisma geralmente concatena os campos para o nome da chave composta no TS
         indicador_id_competencia_unidade_id: {
           indicador_id: data.indicadorId,
           competencia: dataCompetencia,
@@ -62,7 +61,6 @@ export class ResultadoService {
       dataList.map((item) =>
         this.prisma.resultados.upsert({
           where: {
-            // CORREÇÃO AQUI TAMBÉM
             indicador_id_competencia_unidade_id: {
               indicador_id: item.indicadorId,
               competencia: new Date(item.competencia),

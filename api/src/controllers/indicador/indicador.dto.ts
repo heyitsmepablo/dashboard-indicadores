@@ -1,15 +1,16 @@
-import { IsString, IsOptional, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsIn, IsArray, IsNumber } from 'class-validator';
 
 export class CreateIndicadorDto {
   @IsString()
-  setor: string = '';
-
-  @IsString()
-  descricao: string = '';
+  descricao: string;
 
   @IsOptional()
   @IsString()
-  meta?: string = '';
+  fonte_formula?: string;
+
+  @IsOptional()
+  @IsString()
+  meta?: string;
 
   @IsString()
   @IsIn([
@@ -21,5 +22,10 @@ export class CreateIndicadorDto {
     'TAXA',
     'TEXTO',
   ])
-  unidadeMedida: string = 'ABSOLUTO';
+  unidade_de_medida: string = 'ABSOLUTO';
+
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  tiposUnidadeIds?: number[];
 }

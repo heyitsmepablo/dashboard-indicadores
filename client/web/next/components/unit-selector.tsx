@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Check, ChevronsUpDown, Building2, Search } from "lucide-react";
+import { Check, ChevronsUpDown, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,12 +41,8 @@ export function UnitSelector({
   selectedIds = [],
   groupLabel,
 }: UnitSelectorProps) {
-  const {
-    unidadesFiltradas,
-    unidadeSelecionada,
-    setUnidadeSelecionada,
-    setorAtivo,
-  } = useDashboard();
+  const { unidadesFiltradas, unidadeSelecionada, setUnidadeSelecionada } =
+    useDashboard();
   const [open, setOpen] = useState(false);
 
   const isControlled = value !== undefined;
@@ -73,13 +69,12 @@ export function UnitSelector({
   const groupedList = useMemo(() => {
     const groups: Record<string, typeof listToRender> = {};
     listToRender.forEach((u) => {
-      const name =
-        groupLabel || setorAtivo || u.tipo_de_unidade?.nome || "Unidades";
+      const name = groupLabel || u.tipo_de_unidade?.nome || "Unidades";
       if (!groups[name]) groups[name] = [];
       groups[name].push(u);
     });
     return groups;
-  }, [listToRender, groupLabel, setorAtivo]);
+  }, [listToRender, groupLabel]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

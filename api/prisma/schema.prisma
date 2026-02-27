@@ -11,17 +11,15 @@ datasource db {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model indicadores {
-  id                Int          @id @default(autoincrement())
-  setor             String       @db.VarChar(100)
-  descricao         String
-  fonte_formula     String?
-  meta              String?
-  unidade_de_medida String       @default("ABSOLUTO") @db.VarChar(50)
-  created_at        DateTime?    @default(now()) @db.Timestamp(6)
-  updated_at        DateTime?    @default(now()) @db.Timestamp(6)
-  resultados        resultados[]
-
-  @@index([setor], map: "idx_indicadores_setor")
+  id                     Int                      @id @default(autoincrement())
+  descricao              String
+  fonte_formula          String?
+  meta                   String?
+  unidade_de_medida      String                   @default("ABSOLUTO") @db.VarChar(50)
+  created_at             DateTime?                @default(now()) @db.Timestamp(6)
+  updated_at             DateTime?                @default(now()) @db.Timestamp(6)
+  indicador_tipo_unidade indicador_tipo_unidade[]
+  resultados             resultados[]
 }
 
 model resultados {
@@ -43,20 +41,48 @@ model resultados {
 }
 
 model tipo_de_unidade {
-  id       Int        @id @default(autoincrement())
-  nome     String     @db.VarChar(100)
-  unidades unidades[]
+  id                     Int                      @id @default(autoincrement())
+  nome                   String                   @db.VarChar(100)
+  superintendencia_id    Int?
+  indicador_tipo_unidade indicador_tipo_unidade[]
+  superintendencias      superintendencias?       @relation(fields: [superintendencia_id], references: [id], onUpdate: NoAction, map: "fk_tipo_unidade_super")
+  unidades               unidades[]
+
+  @@index([superintendencia_id], map: "idx_tipo_unidade_super")
 }
 
 model unidades {
-  id              Int             @id @default(autoincrement())
-  nome            String          @db.VarChar(255)
-  sigla           String?         @db.VarChar(50)
-  tipo_unidade_id Int
-  created_at      DateTime?       @default(now()) @db.Timestamp(6)
-  updated_at      DateTime?       @default(now()) @db.Timestamp(6)
-  resultados      resultados[]
-  tipo_de_unidade tipo_de_unidade @relation(fields: [tipo_unidade_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_unidade_tipo")
+  id                  Int                @id @default(autoincrement())
+  nome                String             @db.VarChar(255)
+  sigla               String?            @db.VarChar(50)
+  tipo_unidade_id     Int
+  superintendencia_id Int?
+  created_at          DateTime?          @default(now()) @db.Timestamp(6)
+  updated_at          DateTime?          @default(now()) @db.Timestamp(6)
+  resultados          resultados[]
+  superintendencias   superintendencias? @relation(fields: [superintendencia_id], references: [id], onUpdate: NoAction, map: "fk_unidade_superintendencia")
+  tipo_de_unidade     tipo_de_unidade    @relation(fields: [tipo_unidade_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_unidade_tipo")
 
   @@index([tipo_unidade_id], map: "idx_unidades_tipo")
+  @@index([superintendencia_id], map: "idx_unidades_super")
+}
+
+model indicador_tipo_unidade {
+  indicador_id    Int
+  tipo_unidade_id Int
+  indicadores     indicadores     @relation(fields: [indicador_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_itu_indicador")
+  tipo_de_unidade tipo_de_unidade @relation(fields: [tipo_unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_itu_tipo")
+
+  @@id([indicador_id, tipo_unidade_id])
+  @@index([tipo_unidade_id], map: "idx_itu_tipo_unidade")
+}
+
+model superintendencias {
+  id              Int               @id @default(autoincrement())
+  nome            String            @db.VarChar(255)
+  sigla           String?           @db.VarChar(50)
+  created_at      DateTime?         @default(now()) @db.Timestamp(6)
+  updated_at      DateTime?         @default(now()) @db.Timestamp(6)
+  tipo_de_unidade tipo_de_unidade[]
+  unidades        unidades[]
 }

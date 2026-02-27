@@ -1,4 +1,3 @@
-// src/resultados/resultado.dto.ts
 import {
   IsNumber,
   IsString,
@@ -12,9 +11,9 @@ export class CreateResultadoDto {
   indicadorId: number;
 
   @IsInt()
-  unidadeId: number; // Novo campo obrigatório
+  unidadeId: number;
 
-  @IsDateString() // Valida formato ISO 8601 (YYYY-MM-DD)
+  @IsDateString()
   competencia: string;
 
   @IsOptional()
