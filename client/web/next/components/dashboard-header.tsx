@@ -4,6 +4,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { useDashboard } from "@/lib/dashboard-context";
 import { Clock } from "lucide-react";
+import { ThemeToggle } from "./theme-toggle";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -37,7 +38,7 @@ export function DashboardHeader() {
     viewMode === "setor" ? `${supSigla} / ${tipoNome}` : viewLabels[viewMode];
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b bg-background px-4 w-full">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 w-full">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 !h-4" />
@@ -56,16 +57,21 @@ export function DashboardHeader() {
         </Breadcrumb>
       </div>
 
-      {/* Data de Última Atualização no Canto Direito */}
-      {viewMode === "setor" && ultimaAtualizacao && (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded-md border">
-          <Clock className="h-3.5 w-3.5" />
-          <span>Última atualização:</span>
-          <span className="font-semibold text-foreground">
-            {ultimaAtualizacao}
-          </span>
-        </div>
-      )}
+      {/* Container Direito: Data e Toggle de Tema */}
+      <div className="flex items-center gap-3">
+        {viewMode === "setor" && ultimaAtualizacao && (
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/30 px-2 py-1.5 rounded-md border">
+            <Clock className="h-3.5 w-3.5" />
+            <span>Última atualização:</span>
+            <span className="font-semibold text-foreground">
+              {ultimaAtualizacao}
+            </span>
+          </div>
+        )}
+
+        {/* Renderiza o botão de troca de tema */}
+        <ThemeToggle />
+      </div>
     </header>
   );
 }
