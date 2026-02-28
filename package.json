@@ -1,0 +1,19 @@
+{
+  "name": "dashify",
+  "version": "1.0.0",
+  "description": "Este projeto visa centralizar, gerenciar e visualizar os indicadores de desempenho da rede de saúde. O objetivo é substituir o controle manual disperso por um fluxo de dados estruturado, servindo de base para uma interface de visualização gráfica interativa, hierárquica e inteligente.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heyitsmepablo/dashboard-indicadores.git"
+  },
+  "author": "Pablo Eduardo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/heyitsmepablo/dashboard-indicadores/issues"
+  },
+  "homepage": "https://github.com/heyitsmepablo/dashboard-indicadores#readme"
+}
