@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -17,7 +17,6 @@ import {
 } from "recharts";
 import {
   ChartContainer,
-  ChartTooltipContent,
   ChartLegendContent,
   type ChartConfig,
 } from "@/components/ui/chart";
@@ -44,7 +43,25 @@ import { useDashboard } from "@/lib/dashboard-context";
 import { formatValue, getVariacao } from "@/lib/format";
 import { ChartTypeToggle, type ChartType } from "@/components/evolution-chart";
 
-const CHART_COLORS = ["#2563eb", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+// Paleta estendida (15 cores) livre de Verde, Vermelho, Amarelo e Azul clássico.
+// Focada em Roxos, Rosas, Magentas, Marrons e Cinzas/Ardósia.
+const CHART_COLORS = [
+  "#8b5cf6", // Violeta
+  "#ec4899", // Rosa
+  "#64748b", // Ardósia (Slate)
+  "#d946ef", // Fúcsia
+  "#8B4513", // Marrom (SaddleBrown)
+  "#c026d3", // Magenta
+  "#475569", // Ardósia Escuro
+  "#a855f7", // Roxo Claro
+  "#db2777", // Rosa Escuro
+  "#9333ea", // Roxo Escuro
+  "#a1a1aa", // Cinza (Zinc)
+  "#78716c", // Pedra (Stone)
+  "#f472b6", // Rosa Claro
+  "#57534e", // Pedra Escuro
+  "#c4b5fd", // Violeta Claro
+];
 
 interface ComparatorResultsProps {
   activeUnits: number[];
@@ -57,6 +74,34 @@ interface ComparatorResultsProps {
   chartConfig: ChartConfig;
   indicadoresUnicos: any[];
 }
+
+// Helper para transformar "Jan. de 2026" em "Janeiro/2026"
+const formatarDataTooltip = (val: any) => {
+  if (!val) return val;
+  const str = String(val).toLowerCase();
+  const meses: Record<string, string> = {
+    jan: "Janeiro",
+    fev: "Fevereiro",
+    mar: "Março",
+    abr: "Abril",
+    mai: "Maio",
+    jun: "Junho",
+    jul: "Julho",
+    ago: "Agosto",
+    set: "Setembro",
+    out: "Outubro",
+    nov: "Novembro",
+    dez: "Dezembro",
+  };
+
+  for (const [key, full] of Object.entries(meses)) {
+    if (str.startsWith(key)) {
+      const yearMatch = str.match(/\d{4}/);
+      if (yearMatch) return `${full}/${yearMatch[0]}`;
+    }
+  }
+  return val;
+};
 
 export function ComparatorResults({
   activeUnits,
@@ -71,8 +116,32 @@ export function ComparatorResults({
 }: ComparatorResultsProps) {
   const { dadosComparacao, itensComparacao, unidades } = useDashboard();
 
-  // Controle de estado para mostrar os rótulos de dados
   const [showLabels, setShowLabels] = useState(false);
+
+  // Estados para foco cruzado
+  const [focusedUnitId, setFocusedUnitId] = useState<number | null>(null);
+  const [focusedIndicatorId, setFocusedIndicatorId] = useState<number | null>(
+    null,
+  );
+
+  const canFocusUnit = activeUnits.length >= 2;
+  const canFocusIndicator = indicadoresUnicos.length >= 2;
+
+  // Limpa o foco se o item focado deixar de existir na tela/seleção
+  useEffect(() => {
+    if (focusedUnitId !== null && !activeUnits.includes(focusedUnitId)) {
+      setFocusedUnitId(null);
+    }
+  }, [activeUnits, focusedUnitId]);
+
+  useEffect(() => {
+    if (
+      focusedIndicatorId !== null &&
+      !indicadoresUnicos.find((i) => i.id === focusedIndicatorId)
+    ) {
+      setFocusedIndicatorId(null);
+    }
+  }, [indicadoresUnicos, focusedIndicatorId]);
 
   const getNomeUnidade = (id: number) =>
     unidades.find((u) => u.id === id)?.nome || `Unidade ${id}`;
@@ -94,12 +163,21 @@ export function ComparatorResults({
     );
   }
 
-  // Custom Label com Empilhamento Dinâmico
+  // Helper para verificar se a barra/linha/área atual deve estar esmaecida
+  const isElementFaded = (uId: number, indId: number) => {
+    const isUnitFaded = focusedUnitId !== null && focusedUnitId !== uId;
+    const isIndFaded =
+      focusedIndicatorId !== null && focusedIndicatorId !== indId;
+    return isUnitFaded || isIndFaded;
+  };
+
   const renderCustomLabel = (
     props: any,
     unidadeMedida: any,
     color: string,
     seriesIndex: number,
+    unidadeId: number,
+    indicadorId: number,
   ) => {
     const { x, y, value } = props;
     if (value === null || value === undefined) return null;
@@ -108,12 +186,12 @@ export function ComparatorResults({
       ? formatValue(value, unidadeMedida)
       : value.toLocaleString("pt-BR");
 
-    // Espaçamento de 14px por linha para empilhar múltiplos indicadores perfeitamente
     const labelY = 15 + seriesIndex * 14;
+    const isFaded = isElementFaded(unidadeId, indicadorId);
+    const labelOpacity = isFaded ? 0.2 : 1;
 
     return (
-      <g>
-        {/* Linha guia até o ponto exato no gráfico */}
+      <g opacity={labelOpacity} className="transition-opacity duration-300">
         <line
           x1={x}
           y1={y}
@@ -124,9 +202,7 @@ export function ComparatorResults({
           strokeDasharray="3 3"
           opacity={0.5}
         />
-        {/* Ponto fixo no topo da calha */}
         <circle cx={x} cy={labelY + 4} r={2} fill={color} />
-        {/* Texto Renderizado */}
         <text
           x={x}
           y={labelY}
@@ -150,10 +226,8 @@ export function ComparatorResults({
   };
 
   const renderChart = () => {
-    // A margem do topo cresce dinamicamente se as labels estiverem ativas e houver muitos indicadores
     const dynamicTopMargin = showLabels ? 25 + dadosComparacao.length * 14 : 25;
     const margin = { top: dynamicTopMargin, right: 35, left: 0, bottom: 0 };
-
     const grid = <CartesianGrid strokeDasharray="3 3" vertical={false} />;
 
     const yAxisTickFormatter = (val: number) => {
@@ -191,18 +265,67 @@ export function ComparatorResults({
 
     const tooltip = (
       <RechartsTooltip
-        content={
-          <ChartTooltipContent
-            formatter={(value) => {
-              if (typeof value === "number") {
-                return sameUnidade
-                  ? formatValue(value, uniqueUnidadesMedida[0])
-                  : value.toLocaleString("pt-BR");
-              }
-              return String(value);
-            }}
-          />
-        }
+        cursor={{
+          stroke: "hsl(var(--muted-foreground) / 0.2)",
+          strokeWidth: 1,
+          strokeDasharray: "3 3",
+        }}
+        content={({ active, payload, label }) => {
+          if (active && payload && payload.length) {
+            return (
+              <div className="z-50 rounded-lg border bg-background px-3 py-2 shadow-md sm:text-sm">
+                <div className="mb-2 font-semibold text-foreground capitalize">
+                  {formatarDataTooltip(label)}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {payload.map((entry: any, index: number) => {
+                    const parts = String(entry.dataKey).split("_");
+                    const indId = Number(parts[1]);
+                    const uId = Number(parts[2]);
+
+                    const sigla = getSiglaUnidade(uId);
+                    const ind = dadosComparacao.find(
+                      (d) => d.id === indId && d.unidadeId === uId,
+                    );
+
+                    const valueFormatted = sameUnidade
+                      ? formatValue(entry.value, uniqueUnidadesMedida[0])
+                      : entry.value.toLocaleString("pt-BR");
+
+                    const isFaded = isElementFaded(uId, indId);
+
+                    return (
+                      <div
+                        key={index}
+                        className={`flex items-center justify-between gap-6 transition-opacity ${
+                          isFaded ? "opacity-30" : "opacity-100"
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="font-bold text-[13px]"
+                            style={{ color: entry.color }}
+                          >
+                            {sigla}
+                          </span>
+                          {indicadoresUnicos.length > 1 && ind && (
+                            <span className="text-[10px] text-muted-foreground/70 truncate max-w-[150px]">
+                              - {ind.descricao}
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-bold text-foreground tabular-nums">
+                          {valueFormatted}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
+          return null;
+        }}
       />
     );
 
@@ -214,6 +337,9 @@ export function ComparatorResults({
           {grid} {xAxis} {yAxis} {tooltip} {legend}
           {dadosComparacao.map((ind, idx) => {
             const color = CHART_COLORS[idx % CHART_COLORS.length];
+            const isFaded = isElementFaded(ind.unidadeId!, ind.id);
+            const elementOpacity = isFaded ? 0.2 : 1;
+
             return (
               <Bar
                 key={`${ind.id}-${ind.unidadeId}`}
@@ -221,6 +347,8 @@ export function ComparatorResults({
                 fill={color}
                 radius={[4, 4, 0, 0]}
                 maxBarSize={40}
+                opacity={elementOpacity}
+                style={{ transition: "opacity 0.3s ease" }}
               >
                 {showLabels && (
                   <LabelList
@@ -231,6 +359,8 @@ export function ComparatorResults({
                         ind.unidade_de_medida,
                         color,
                         idx,
+                        ind.unidadeId!,
+                        ind.id,
                       )
                     }
                   />
@@ -271,6 +401,9 @@ export function ComparatorResults({
           {grid} {xAxis} {yAxis} {tooltip} {legend}
           {dadosComparacao.map((ind, idx) => {
             const color = CHART_COLORS[idx % CHART_COLORS.length];
+            const isFaded = isElementFaded(ind.unidadeId!, ind.id);
+            const elementOpacity = isFaded ? 0.2 : 1;
+
             return (
               <Area
                 key={`${ind.id}-${ind.unidadeId}`}
@@ -279,8 +412,10 @@ export function ComparatorResults({
                 stroke={color}
                 fill={`url(#fill-${ind.id}-${ind.unidadeId})`}
                 strokeWidth={2}
+                opacity={elementOpacity}
+                style={{ transition: "opacity 0.3s ease" }}
                 dot={
-                  showLabels
+                  showLabels && !isFaded
                     ? {
                         r: 4,
                         fill: "var(--background)",
@@ -301,6 +436,8 @@ export function ComparatorResults({
                         ind.unidade_de_medida,
                         color,
                         idx,
+                        ind.unidadeId!,
+                        ind.id,
                       )
                     }
                   />
@@ -317,6 +454,9 @@ export function ComparatorResults({
         {grid} {xAxis} {yAxis} {tooltip} {legend}
         {dadosComparacao.map((ind, idx) => {
           const color = CHART_COLORS[idx % CHART_COLORS.length];
+          const isFaded = isElementFaded(ind.unidadeId!, ind.id);
+          const elementOpacity = isFaded ? 0.2 : 1;
+
           return (
             <Line
               key={`${ind.id}-${ind.unidadeId}`}
@@ -324,15 +464,22 @@ export function ComparatorResults({
               dataKey={`ind_${ind.id}_${ind.unidadeId}`}
               stroke={color}
               strokeWidth={3}
+              opacity={elementOpacity}
+              style={{ transition: "opacity 0.3s ease" }}
               dot={
-                showLabels
+                showLabels && !isFaded
                   ? {
                       r: 4,
                       fill: "var(--background)",
                       stroke: color,
                       strokeWidth: 2,
                     }
-                  : { r: 4, fill: color, strokeWidth: 0 }
+                  : {
+                      r: 4,
+                      fill: color,
+                      strokeWidth: 0,
+                      opacity: elementOpacity,
+                    }
               }
               activeDot={{ r: 6, strokeWidth: 2 }}
               connectNulls
@@ -341,7 +488,14 @@ export function ComparatorResults({
                 <LabelList
                   dataKey={`ind_${ind.id}_${ind.unidadeId}`}
                   content={(props) =>
-                    renderCustomLabel(props, ind.unidade_de_medida, color, idx)
+                    renderCustomLabel(
+                      props,
+                      ind.unidade_de_medida,
+                      color,
+                      idx,
+                      ind.unidadeId!,
+                      ind.id,
+                    )
                   }
                 />
               )}
@@ -355,6 +509,7 @@ export function ComparatorResults({
   return (
     <>
       <div className="flex flex-col gap-3 p-4 bg-muted/20 rounded-xl border border-dashed">
+        {/* === SEÇÃO DE UNIDADES === */}
         <div className="flex flex-col gap-1.5">
           <Badge
             variant="outline"
@@ -364,31 +519,68 @@ export function ComparatorResults({
             {activeUnits.length})
           </Badge>
           <div className="flex flex-wrap gap-2">
-            {activeUnits.map((uId) => (
-              <Badge
-                key={`badge-u-${uId}`}
-                variant="secondary"
-                className="pl-2 pr-1 py-1 gap-1.5 shadow-sm bg-background border h-auto max-w-full text-left flex items-start sm:items-center"
-              >
-                <span className="text-xs font-semibold shrink-0 mt-0.5 sm:mt-0">
-                  {getSiglaUnidade(uId)}
-                </span>
-                <span className="text-[10px] text-muted-foreground font-normal hidden sm:inline-block whitespace-normal break-words">
-                  - {getNomeUnidade(uId)}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-5 w-5 rounded-full hover:bg-destructive/10 hover:text-destructive shrink-0"
-                  onClick={() => removerUnidade(uId)}
+            {activeUnits.map((uId) => {
+              const isFocused = focusedUnitId === uId;
+              const isFadedOther =
+                focusedUnitId !== null && focusedUnitId !== uId;
+
+              return (
+                <Badge
+                  key={`badge-u-${uId}`}
+                  variant={isFocused ? "default" : "secondary"}
+                  className={`pl-2 pr-1 py-1 gap-1.5 shadow-sm h-auto max-w-full text-left flex items-start sm:items-center transition-all ${
+                    canFocusUnit ? "cursor-pointer" : ""
+                  } ${
+                    isFocused
+                      ? "ring-2 ring-primary ring-offset-1 ring-offset-background"
+                      : canFocusUnit && isFadedOther
+                        ? "opacity-50 grayscale hover:opacity-80 bg-background border"
+                        : canFocusUnit
+                          ? "bg-background border hover:bg-muted"
+                          : "bg-background border"
+                  }`}
+                  onClick={() => {
+                    if (canFocusUnit) {
+                      setFocusedUnitId((prev) => (prev === uId ? null : uId));
+                    }
+                  }}
+                  title={
+                    canFocusUnit
+                      ? isFocused
+                        ? "Remover foco"
+                        : "Focar nesta unidade"
+                      : ""
+                  }
                 >
-                  <X className="h-3 w-3" />
-                </Button>
-              </Badge>
-            ))}
+                  <span className="text-xs font-semibold shrink-0 mt-0.5 sm:mt-0 pointer-events-none">
+                    {getSiglaUnidade(uId)}
+                  </span>
+                  <span className="text-[10px] opacity-80 font-normal hidden sm:inline-block whitespace-normal break-words pointer-events-none">
+                    - {getNomeUnidade(uId)}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 rounded-full hover:bg-destructive/10 hover:text-destructive shrink-0 ml-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removerUnidade(uId);
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
+              );
+            })}
           </div>
+          {canFocusUnit && (
+            <span className="text-[10px] text-muted-foreground mt-1 italic">
+              Dica: Clique em uma unidade para destacar seus resultados.
+            </span>
+          )}
         </div>
 
+        {/* === SEÇÃO DE INDICADORES === */}
         <div className="flex flex-col gap-1.5 mt-2">
           <div className="flex items-center gap-4 w-full">
             <Badge
@@ -403,7 +595,7 @@ export function ComparatorResults({
               <button
                 type="button"
                 onClick={limparIndicadores}
-                className="text-[10px] text-blue-400 uppercase font-bold  hover:text-destructive hover:underline cursor-pointer transition-colors"
+                className="text-[10px] text-blue-400 uppercase font-bold hover:text-destructive hover:underline cursor-pointer transition-colors"
               >
                 LIMPAR INDICADORES
               </button>
@@ -416,27 +608,65 @@ export function ComparatorResults({
                 Nenhum indicador selecionado.
               </span>
             ) : (
-              indicadoresUnicos.map((ind) => (
-                <Badge
-                  key={`badge-i-${ind.id}`}
-                  variant="outline"
-                  className="pl-2 pr-1 py-1 gap-1.5 bg-background shadow-sm h-auto max-w-full text-left flex items-start sm:items-center"
-                >
-                  <span className="text-xs font-medium whitespace-normal break-words">
-                    {ind.descricao}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-5 w-5 rounded-full hover:bg-destructive/10 hover:text-destructive shrink-0 ml-1"
-                    onClick={() => removerIndicador(ind.id)}
+              indicadoresUnicos.map((ind) => {
+                const isFocusedInd = focusedIndicatorId === ind.id;
+                const isFadedOtherInd =
+                  focusedIndicatorId !== null && focusedIndicatorId !== ind.id;
+
+                return (
+                  <Badge
+                    key={`badge-i-${ind.id}`}
+                    variant={isFocusedInd ? "default" : "outline"}
+                    className={`pl-2 pr-1 py-1 gap-1.5 shadow-sm h-auto max-w-full text-left flex items-start sm:items-center transition-all ${
+                      canFocusIndicator ? "cursor-pointer" : ""
+                    } ${
+                      isFocusedInd
+                        ? "ring-2 ring-primary ring-offset-1 ring-offset-background"
+                        : canFocusIndicator && isFadedOtherInd
+                          ? "opacity-50 grayscale hover:opacity-80 bg-background"
+                          : canFocusIndicator
+                            ? "bg-background hover:bg-muted"
+                            : "bg-background"
+                    }`}
+                    onClick={() => {
+                      if (canFocusIndicator) {
+                        setFocusedIndicatorId((prev) =>
+                          prev === ind.id ? null : ind.id,
+                        );
+                      }
+                    }}
+                    title={
+                      canFocusIndicator
+                        ? isFocusedInd
+                          ? "Remover foco"
+                          : "Focar neste indicador"
+                        : ""
+                    }
                   >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </Badge>
-              ))
+                    <span className="text-xs font-medium whitespace-normal break-words pointer-events-none">
+                      {ind.descricao}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5 rounded-full hover:bg-destructive/10 hover:text-destructive shrink-0 ml-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removerIndicador(ind.id);
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                );
+              })
             )}
           </div>
+          {canFocusIndicator && (
+            <span className="text-[10px] text-muted-foreground mt-1 italic">
+              Dica: Clique em um indicador para destacar sua linha no gráfico.
+            </span>
+          )}
         </div>
       </div>
 
@@ -492,10 +722,14 @@ export function ComparatorResults({
                 ? getVariacao(valorAtual, valorAnterior)
                 : 0;
 
+              const isCardFaded = isElementFaded(ind.unidadeId!, ind.id);
+
               return (
                 <Card
                   key={`${ind.id}-${ind.unidadeId}`}
-                  className="p-4 flex flex-col justify-between shadow-sm border-l-4"
+                  className={`p-4 flex flex-col justify-between shadow-sm border-l-4 transition-all duration-300 ${
+                    isCardFaded ? "opacity-30 grayscale" : "opacity-100"
+                  }`}
                   style={{
                     borderLeftColor: CHART_COLORS[idx % CHART_COLORS.length],
                   }}
@@ -524,7 +758,11 @@ export function ComparatorResults({
                     </div>
                     {penultimo && (
                       <div
-                        className={`flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded ${variacao >= 0 ? "text-emerald-600 bg-emerald-50" : "text-red-600 bg-red-50"}`}
+                        className={`flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded ${
+                          variacao >= 0
+                            ? "text-emerald-600 bg-emerald-50"
+                            : "text-red-600 bg-red-50"
+                        }`}
                       >
                         {variacao > 0 ? (
                           <ArrowUpRight className="h-3 w-3" />
