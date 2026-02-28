@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -13,6 +13,7 @@ import {
   YAxis,
   Tooltip as RechartsTooltip,
   Legend,
+  LabelList,
 } from "recharts";
 import {
   ChartContainer,
@@ -37,6 +38,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
+  Tag as TagIcon,
 } from "lucide-react";
 import { useDashboard } from "@/lib/dashboard-context";
 import { formatValue, getVariacao } from "@/lib/format";
@@ -48,7 +50,6 @@ interface ComparatorResultsProps {
   activeUnits: number[];
   removerUnidade: (uId: number) => void;
   removerIndicador: (indId: number) => void;
-  /** Função para limpar apenas os indicadores selecionados */
   limparIndicadores: () => void;
   chartType: ChartType;
   setChartType: (val: ChartType) => void;
@@ -57,9 +58,6 @@ interface ComparatorResultsProps {
   indicadoresUnicos: any[];
 }
 
-/**
- * Componente de Apresentação (Dumb) responsável pela visualização gráfica dos dados comparados.
- */
 export function ComparatorResults({
   activeUnits,
   removerUnidade,
@@ -72,6 +70,9 @@ export function ComparatorResults({
   indicadoresUnicos,
 }: ComparatorResultsProps) {
   const { dadosComparacao, itensComparacao, unidades } = useDashboard();
+
+  // Controle de estado para mostrar os rótulos de dados
+  const [showLabels, setShowLabels] = useState(false);
 
   const getNomeUnidade = (id: number) =>
     unidades.find((u) => u.id === id)?.nome || `Unidade ${id}`;
@@ -93,8 +94,66 @@ export function ComparatorResults({
     );
   }
 
+  // Custom Label com Empilhamento Dinâmico
+  const renderCustomLabel = (
+    props: any,
+    unidadeMedida: any,
+    color: string,
+    seriesIndex: number,
+  ) => {
+    const { x, y, value } = props;
+    if (value === null || value === undefined) return null;
+
+    const formatted = sameUnidade
+      ? formatValue(value, unidadeMedida)
+      : value.toLocaleString("pt-BR");
+
+    // Espaçamento de 14px por linha para empilhar múltiplos indicadores perfeitamente
+    const labelY = 15 + seriesIndex * 14;
+
+    return (
+      <g>
+        {/* Linha guia até o ponto exato no gráfico */}
+        <line
+          x1={x}
+          y1={y}
+          x2={x}
+          y2={labelY + 4}
+          stroke={color}
+          strokeWidth={1}
+          strokeDasharray="3 3"
+          opacity={0.5}
+        />
+        {/* Ponto fixo no topo da calha */}
+        <circle cx={x} cy={labelY + 4} r={2} fill={color} />
+        {/* Texto Renderizado */}
+        <text
+          x={x}
+          y={labelY}
+          fontSize={10}
+          textAnchor="middle"
+          fontWeight="bold"
+        >
+          <tspan
+            stroke="hsl(var(--background))"
+            strokeWidth={3}
+            strokeLinejoin="round"
+          >
+            {formatted}
+          </tspan>
+          <tspan x={x} fill={color}>
+            {formatted}
+          </tspan>
+        </text>
+      </g>
+    );
+  };
+
   const renderChart = () => {
-    const margin = { top: 20, right: 30, left: 0, bottom: 0 };
+    // A margem do topo cresce dinamicamente se as labels estiverem ativas e houver muitos indicadores
+    const dynamicTopMargin = showLabels ? 25 + dadosComparacao.length * 14 : 25;
+    const margin = { top: dynamicTopMargin, right: 35, left: 0, bottom: 0 };
+
     const grid = <CartesianGrid strokeDasharray="3 3" vertical={false} />;
 
     const yAxisTickFormatter = (val: number) => {
@@ -118,6 +177,7 @@ export function ComparatorResults({
         fontSize={12}
       />
     );
+
     const yAxis = (
       <YAxis
         tickLine={false}
@@ -152,18 +212,36 @@ export function ComparatorResults({
       return (
         <BarChart data={data} margin={margin}>
           {grid} {xAxis} {yAxis} {tooltip} {legend}
-          {dadosComparacao.map((ind, idx) => (
-            <Bar
-              key={`${ind.id}-${ind.unidadeId}`}
-              dataKey={`ind_${ind.id}_${ind.unidadeId}`}
-              fill={CHART_COLORS[idx % CHART_COLORS.length]}
-              radius={[4, 4, 0, 0]}
-              maxBarSize={40}
-            />
-          ))}
+          {dadosComparacao.map((ind, idx) => {
+            const color = CHART_COLORS[idx % CHART_COLORS.length];
+            return (
+              <Bar
+                key={`${ind.id}-${ind.unidadeId}`}
+                dataKey={`ind_${ind.id}_${ind.unidadeId}`}
+                fill={color}
+                radius={[4, 4, 0, 0]}
+                maxBarSize={40}
+              >
+                {showLabels && (
+                  <LabelList
+                    dataKey={`ind_${ind.id}_${ind.unidadeId}`}
+                    content={(props) =>
+                      renderCustomLabel(
+                        props,
+                        ind.unidade_de_medida,
+                        color,
+                        idx,
+                      )
+                    }
+                  />
+                )}
+              </Bar>
+            );
+          })}
         </BarChart>
       );
     }
+
     if (chartType === "area") {
       return (
         <AreaChart data={data} margin={margin}>
@@ -191,39 +269,85 @@ export function ComparatorResults({
             ))}
           </defs>
           {grid} {xAxis} {yAxis} {tooltip} {legend}
-          {dadosComparacao.map((ind, idx) => (
-            <Area
-              key={`${ind.id}-${ind.unidadeId}`}
-              type="monotone"
-              dataKey={`ind_${ind.id}_${ind.unidadeId}`}
-              stroke={CHART_COLORS[idx % CHART_COLORS.length]}
-              fill={`url(#fill-${ind.id}-${ind.unidadeId})`}
-              strokeWidth={2}
-              connectNulls
-            />
-          ))}
+          {dadosComparacao.map((ind, idx) => {
+            const color = CHART_COLORS[idx % CHART_COLORS.length];
+            return (
+              <Area
+                key={`${ind.id}-${ind.unidadeId}`}
+                type="monotone"
+                dataKey={`ind_${ind.id}_${ind.unidadeId}`}
+                stroke={color}
+                fill={`url(#fill-${ind.id}-${ind.unidadeId})`}
+                strokeWidth={2}
+                dot={
+                  showLabels
+                    ? {
+                        r: 4,
+                        fill: "var(--background)",
+                        stroke: color,
+                        strokeWidth: 2,
+                      }
+                    : false
+                }
+                activeDot={{ r: 6, strokeWidth: 2 }}
+                connectNulls
+              >
+                {showLabels && (
+                  <LabelList
+                    dataKey={`ind_${ind.id}_${ind.unidadeId}`}
+                    content={(props) =>
+                      renderCustomLabel(
+                        props,
+                        ind.unidade_de_medida,
+                        color,
+                        idx,
+                      )
+                    }
+                  />
+                )}
+              </Area>
+            );
+          })}
         </AreaChart>
       );
     }
+
     return (
       <LineChart data={data} margin={margin}>
         {grid} {xAxis} {yAxis} {tooltip} {legend}
-        {dadosComparacao.map((ind, idx) => (
-          <Line
-            key={`${ind.id}-${ind.unidadeId}`}
-            type="monotone"
-            dataKey={`ind_${ind.id}_${ind.unidadeId}`}
-            stroke={CHART_COLORS[idx % CHART_COLORS.length]}
-            strokeWidth={3}
-            dot={{
-              r: 4,
-              fill: CHART_COLORS[idx % CHART_COLORS.length],
-              strokeWidth: 0,
-            }}
-            activeDot={{ r: 6, strokeWidth: 2 }}
-            connectNulls
-          />
-        ))}
+        {dadosComparacao.map((ind, idx) => {
+          const color = CHART_COLORS[idx % CHART_COLORS.length];
+          return (
+            <Line
+              key={`${ind.id}-${ind.unidadeId}`}
+              type="monotone"
+              dataKey={`ind_${ind.id}_${ind.unidadeId}`}
+              stroke={color}
+              strokeWidth={3}
+              dot={
+                showLabels
+                  ? {
+                      r: 4,
+                      fill: "var(--background)",
+                      stroke: color,
+                      strokeWidth: 2,
+                    }
+                  : { r: 4, fill: color, strokeWidth: 0 }
+              }
+              activeDot={{ r: 6, strokeWidth: 2 }}
+              connectNulls
+            >
+              {showLabels && (
+                <LabelList
+                  dataKey={`ind_${ind.id}_${ind.unidadeId}`}
+                  content={(props) =>
+                    renderCustomLabel(props, ind.unidade_de_medida, color, idx)
+                  }
+                />
+              )}
+            </Line>
+          );
+        })}
       </LineChart>
     );
   };
@@ -266,7 +390,6 @@ export function ComparatorResults({
         </div>
 
         <div className="flex flex-col gap-1.5 mt-2">
-          {/* DIV ATUALIZADA: Layout Flex-between para colocar o botão à direita */}
           <div className="flex items-center gap-4 w-full">
             <Badge
               variant="outline"
@@ -276,7 +399,6 @@ export function ComparatorResults({
               {indicadoresUnicos.length})
             </Badge>
 
-            {/* NOVO BOTÃO DISCRETO */}
             {indicadoresUnicos.length > 0 && (
               <button
                 type="button"
@@ -329,7 +451,7 @@ export function ComparatorResults({
       ) : (
         <>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-row items-start justify-between pb-2">
               <div className="space-y-1">
                 <CardTitle className="text-lg">Gráfico de Evolução</CardTitle>
                 <CardDescription>
@@ -338,7 +460,19 @@ export function ComparatorResults({
                     : "Comparações entre dados normalizados"}
                 </CardDescription>
               </div>
-              <ChartTypeToggle value={chartType} onChange={setChartType} />
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={showLabels ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setShowLabels(!showLabels)}
+                  className={`h-8 px-2 text-xs transition-colors ${showLabels ? "text-primary font-medium" : "text-muted-foreground"}`}
+                  title="Mostrar Rótulos de Dados"
+                >
+                  <TagIcon className="h-3.5 w-3.5 mr-1.5" />
+                  {showLabels ? "Ocultar Valores" : "Mostrar Valores"}
+                </Button>
+                <ChartTypeToggle value={chartType} onChange={setChartType} />
+              </div>
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-[400px] w-full">

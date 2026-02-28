@@ -13,6 +13,7 @@ import {
   XAxis,
   YAxis,
   Tooltip as RechartsTooltip,
+  LabelList,
 } from "recharts";
 import {
   ChartContainer,
@@ -32,7 +33,9 @@ import {
   BarChart3,
   LineChartIcon,
   FileText,
+  Tag as TagIcon,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { Indicador } from "@/lib/types";
 import {
   formatValue,
@@ -48,11 +51,10 @@ interface EvolutionChartProps {
   indicador: Indicador;
 }
 
-/**
- * Renderiza o gráfico de evolução histórica do indicador.
- */
 export function EvolutionChart({ indicador }: EvolutionChartProps) {
   const [chartType, setChartType] = useState<ChartType>("area");
+  const [showLabels, setShowLabels] = useState(false);
+
   const resultados = indicador.resultados || [];
   const meta = parseMeta(indicador.meta, indicador.unidade_de_medida);
 
@@ -99,6 +101,7 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
       tickMargin={8}
       fontSize={10}
       interval={0}
+      padding={{ left: 20, right: 20 }} // Evita cortes de texto nas bordas do modal
     />
   );
 
@@ -135,8 +138,71 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
       />
     ) : null;
 
+  // Renderizador exclusivo para a BARRA: Calcula o centro dinamicamente usando a largura
+  const renderBarLabel = (props: any) => {
+    const { x, y, width, value } = props;
+    if (value === null || value === undefined) return null;
+    const formatted = formatValue(value, indicador.unidade_de_medida);
+    const centerX = x + width / 2; // ENCONTRA O CENTRO DA BARRA
+
+    return (
+      <g className="animate-in fade-in zoom-in duration-300">
+        <text
+          x={centerX}
+          y={y - 12}
+          fontSize={11}
+          textAnchor="middle"
+          fontWeight="bold"
+          dominantBaseline="central"
+        >
+          <tspan
+            stroke="hsl(var(--background))"
+            strokeWidth={5}
+            strokeLinejoin="round"
+          >
+            {formatted}
+          </tspan>
+          <tspan x={centerX} fill="var(--chart-1)">
+            {formatted}
+          </tspan>
+        </text>
+      </g>
+    );
+  };
+
+  // Renderizador para LINHA e ÁREA: Usa apenas o ponto (X, Y)
+  const renderFloatingLabel = (props: any) => {
+    const { x, y, value } = props;
+    if (value === null || value === undefined) return null;
+    const formatted = formatValue(value, indicador.unidade_de_medida);
+
+    return (
+      <g className="animate-in fade-in zoom-in duration-300">
+        <text
+          x={x}
+          y={y - 12}
+          fontSize={11}
+          textAnchor="middle"
+          fontWeight="bold"
+          dominantBaseline="central"
+        >
+          <tspan
+            stroke="hsl(var(--background))"
+            strokeWidth={5}
+            strokeLinejoin="round"
+          >
+            {formatted}
+          </tspan>
+          <tspan x={x} fill="var(--chart-1)">
+            {formatted}
+          </tspan>
+        </text>
+      </g>
+    );
+  };
+
   const renderChart = () => {
-    const margin = { top: 10, right: 10, left: 0, bottom: 0 };
+    const margin = { top: showLabels ? 35 : 15, right: 10, left: 0, bottom: 0 };
 
     if (chartType === "bar") {
       return (
@@ -151,7 +217,11 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
             fill="var(--chart-1)"
             radius={[4, 4, 0, 0]}
             maxBarSize={40}
-          />
+          >
+            {showLabels && (
+              <LabelList dataKey="valor" content={renderBarLabel} />
+            )}
+          </Bar>
         </BarChart>
       );
     }
@@ -168,10 +238,23 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
             type="monotone"
             dataKey="valor"
             stroke="var(--chart-1)"
-            strokeWidth={2}
-            dot={{ r: 3, fill: "var(--chart-1)", strokeWidth: 0 }}
-            activeDot={{ r: 5, strokeWidth: 2 }}
-          />
+            strokeWidth={3}
+            dot={
+              showLabels
+                ? {
+                    r: 5,
+                    fill: "var(--background)",
+                    stroke: "var(--chart-1)",
+                    strokeWidth: 2,
+                  }
+                : { r: 3, fill: "var(--chart-1)", strokeWidth: 0 }
+            }
+            activeDot={{ r: 6, strokeWidth: 2 }}
+          >
+            {showLabels && (
+              <LabelList dataKey="valor" content={renderFloatingLabel} />
+            )}
+          </Line>
         </LineChart>
       );
     }
@@ -199,11 +282,24 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
           type="monotone"
           dataKey="valor"
           stroke="var(--chart-1)"
-          strokeWidth={2}
+          strokeWidth={3}
           fill={`url(#fill-${indicador.id})`}
-          dot={false}
-          activeDot={{ r: 4, strokeWidth: 2 }}
-        />
+          dot={
+            showLabels
+              ? {
+                  r: 5,
+                  fill: "var(--background)",
+                  stroke: "var(--chart-1)",
+                  strokeWidth: 2,
+                }
+              : false
+          }
+          activeDot={{ r: 6, strokeWidth: 2 }}
+        >
+          {showLabels && (
+            <LabelList dataKey="valor" content={renderFloatingLabel} />
+          )}
+        </Area>
       </AreaChart>
     );
   };
@@ -226,7 +322,20 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
               )}
             </CardDescription>
           </div>
-          <ChartTypeToggle value={chartType} onChange={setChartType} />
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant={showLabels ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setShowLabels(!showLabels)}
+              className={`h-8 px-2 text-xs transition-colors ${showLabels ? "text-primary font-medium" : "text-muted-foreground"}`}
+              title="Mostrar Rótulos de Dados"
+            >
+              <TagIcon className="h-3.5 w-3.5 mr-1.5" />
+              {showLabels ? "Ocultar Valores" : "Mostrar Valores"}
+            </Button>
+            <ChartTypeToggle value={chartType} onChange={setChartType} />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
