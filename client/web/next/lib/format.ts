@@ -1,5 +1,11 @@
 import { UnidadeMedida } from "./types";
 
+/**
+ * Formata um valor numérico de acordo com sua unidade de medida.
+ * @param value Valor a ser formatado.
+ * @param unidade Tipo de unidade (FINANCEIRO, PERCENTUAL, etc).
+ * @returns String formatada pronta para exibição.
+ */
 export function formatValue(value: number, unidade: UnidadeMedida): string {
   if (value === undefined || value === null || isNaN(value)) return "-";
 
@@ -10,9 +16,7 @@ export function formatValue(value: number, unidade: UnidadeMedida): string {
         currency: "BRL",
       });
     case "PERCENTUAL":
-      // Se o valor vier 0.10 (10%) ou 10 (10%), tenta ajustar, mas assume que < 1 é decimal
-      // Ajuste conforme seu padrão de banco. Aqui assumo que 0.5 = 50%
-      return `${value.toFixed(1)}%`; // Removi a mult por 100 se seus dados já vem como 80, 90 etc.
+      return `${value.toFixed(1)}%`;
     case "TEMPO_HORAS": {
       const hours = Math.floor(value);
       const minutes = Math.round((value - hours) * 60);
@@ -24,23 +28,25 @@ export function formatValue(value: number, unidade: UnidadeMedida): string {
   }
 }
 
+/**
+ * Formata a data de competência no formato curto (ex: "jan. 25").
+ * @param dateStr Data no formato ISO ou YYYY-MM-DD.
+ */
 export function formatCompetencia(dateStr: string): string {
   if (!dateStr) return "";
 
   try {
-    // Pega apenas a parte da data YYYY-MM-DD, ignorando tempo e timezone (T...)
     const cleanDate = dateStr.toString().split("T")[0];
-    const parts = cleanDate.split("-"); // [2025, 01, 01]
+    const parts = cleanDate.split("-");
 
     if (parts.length !== 3) return cleanDate;
 
     const year = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1; // JS meses são 0-11
+    const month = parseInt(parts[1]) - 1;
     const day = parseInt(parts[2]);
 
     const date = new Date(year, month, day);
 
-    // Formata para "jan. 25"
     return date.toLocaleDateString("pt-BR", {
       month: "short",
       year: "2-digit",
@@ -51,6 +57,27 @@ export function formatCompetencia(dateStr: string): string {
   }
 }
 
+/**
+ * Formata a data de competência por extenso (ex: "NOVEMBRO DE 2025").
+ * Utilizado para cabeçalhos de análise crítica.
+ * @param dateStr Data no formato ISO ou YYYY-MM-DD.
+ */
+export function formatCompetenciaLonga(dateStr: string): string {
+  if (!dateStr) return "";
+  try {
+    const [year, month, day] = dateStr.split("T")[0].split("-");
+    const date = new Date(Number(year), Number(month) - 1, Number(day));
+    return date
+      .toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
+      .toUpperCase();
+  } catch (e) {
+    return dateStr.toUpperCase();
+  }
+}
+
+/**
+ * Extrai o valor numérico de uma string de meta vinda do backend.
+ */
 export function parseMeta(
   meta: string | null,
   unidade: UnidadeMedida,
@@ -62,6 +89,9 @@ export function parseMeta(
   return parsed;
 }
 
+/**
+ * Calcula a variação percentual entre o valor atual e o anterior.
+ */
 export function getVariacao(current: number, previous: number): number {
   if (!previous || previous === 0) return 0;
   return ((current - previous) / Math.abs(previous)) * 100;

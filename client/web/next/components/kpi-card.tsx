@@ -25,6 +25,10 @@ interface KpiCardProps {
   isActive?: boolean;
 }
 
+/**
+ * Apresenta o resumo numérico de um Indicador.
+ * Calcula automaticamente se a variação é positiva ou negativa baseado na natureza do KPI.
+ */
 export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
   const resultados = indicador.resultados || [];
   const ultimo =
@@ -32,9 +36,7 @@ export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
   const penultimo =
     resultados.length > 1 ? resultados[resultados.length - 2] : null;
 
-  const meta = parseMeta(indicador.meta, indicador.unidade_de_medida);
-
-  // Estado Vazio: Quando não há nenhum resultado para este indicador nesta unidade
+  // Early return: Estado Vazio
   if (!ultimo) {
     return (
       <Card className="w-full h-full opacity-70 border-dashed flex flex-col justify-between bg-muted/20">
@@ -55,27 +57,28 @@ export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
     );
   }
 
+  const meta = parseMeta(indicador.meta, indicador.unidade_de_medida);
   const valorAtual = Number(ultimo.valor);
   const valorAnterior = penultimo ? Number(penultimo.valor) : 0;
   const variacao = penultimo ? getVariacao(valorAtual, valorAnterior) : 0;
-
-  // Verifica se a última medição possui análise crítica para colocar o alerta
   const temAnalise = !!ultimo.analise_critica;
 
   const isInverseIndicator = ["Turnover", "Defeitos", "Custos", "Tempo"].some(
     (term) => indicador.descricao.includes(term),
   );
 
+  const variacaoPositive = isInverseIndicator ? variacao < 0 : variacao > 0;
+
   let metaStatus: "above" | "below" | "none" = "none";
   if (meta !== null) {
-    if (isInverseIndicator) {
-      metaStatus = valorAtual <= meta ? "above" : "below";
-    } else {
-      metaStatus = valorAtual >= meta ? "above" : "below";
-    }
+    metaStatus = isInverseIndicator
+      ? valorAtual <= meta
+        ? "above"
+        : "below"
+      : valorAtual >= meta
+        ? "above"
+        : "below";
   }
-
-  const variacaoPositive = isInverseIndicator ? variacao < 0 : variacao > 0;
 
   return (
     <TooltipProvider>
@@ -89,7 +92,6 @@ export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
       >
         <CardHeader className="pb-2">
           <CardTitle
-            // pr-14 garante que o texto não entre na área onde os botões de ação (hover) aparecem
             className="text-sm font-medium text-muted-foreground leading-tight line-clamp-2 h-10 w-full pr-14"
             title={indicador.descricao}
           >
@@ -103,11 +105,9 @@ export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
               {formatValue(valorAtual, indicador.unidade_de_medida)}
             </span>
 
-            {/* Base flex para alinhar Variação (esquerda) e Ícones (direita) */}
             <div className="flex items-center justify-between">
-              {/* Bloco da Esquerda: Variação Mensal */}
               <div className="flex items-center gap-2">
-                {variacao !== 0 && (
+                {variacao !== 0 ? (
                   <Badge
                     variant="secondary"
                     className={`text-xs font-medium px-1.5 py-0 h-5 ${
@@ -123,8 +123,7 @@ export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
                     )}
                     {Math.abs(variacao).toFixed(1)}%
                   </Badge>
-                )}
-                {variacao === 0 && (
+                ) : (
                   <Badge
                     variant="secondary"
                     className="text-xs px-1.5 py-0 h-5"
@@ -138,9 +137,7 @@ export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
                 </span>
               </div>
 
-              {/* Bloco da Direita: Ícones de Contexto movidos para cá */}
               <div className="flex items-center gap-1.5 shrink-0">
-                {/* Ícone indicando que tem Análise Crítica */}
                 {temAnalise && (
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -154,7 +151,6 @@ export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
                   </Tooltip>
                 )}
 
-                {/* Ícone de Meta */}
                 {meta !== null && (
                   <Tooltip>
                     <TooltipTrigger asChild>
