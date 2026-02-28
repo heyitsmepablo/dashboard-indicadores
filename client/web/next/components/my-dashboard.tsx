@@ -4,7 +4,8 @@ import { useDashboard } from "@/lib/dashboard-context";
 import { EvolutionChart } from "./evolution-chart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { PinOff, LayoutGrid, Plus, Building2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { PinOff, LayoutGrid, Plus, Building2, FolderTree } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -12,7 +13,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useMemo } from "react";
-import { Badge } from "@/components/ui/badge";
 
 export function MyDashboard() {
   const {
@@ -21,6 +21,7 @@ export function MyDashboard() {
     limparPainel,
     setViewMode,
     unidades,
+    superintendencias,
   } = useDashboard();
 
   const getNomeUnidade = (id: number) => {
@@ -28,18 +29,46 @@ export function MyDashboard() {
     return u ? u.nome : `Unidade ${id}`;
   };
 
-  // Agrupa os indicadores por TIPO DE UNIDADE
+  const getNomeTipoUnidade = (id: number) => {
+    const u = unidades.find((unidade) => unidade.id === id);
+    if (!u || !u.tipo_unidade_id) return "Geral";
+
+    for (const sup of superintendencias) {
+      const tipo = sup.tipo_de_unidade?.find(
+        (t: any) => t.id === u.tipo_unidade_id,
+      );
+      if (tipo) return tipo.nome;
+    }
+
+    return "Geral";
+  };
+
   const grouped = useMemo(() => {
-    const byType: Record<string, typeof dadosMeuPainel> = {};
+    const byTypeAndUnit: Record<
+      string,
+      Record<string, typeof dadosMeuPainel>
+    > = {};
+
     dadosMeuPainel.forEach((ind) => {
-      // Tenta pegar o nome do tipo através da relação da unidade que veio nos resultados
-      const nomeTipo =
-        ind.resultados?.[0]?.unidades?.tipo_de_unidade?.nome || "Geral";
-      if (!byType[nomeTipo]) byType[nomeTipo] = [];
-      byType[nomeTipo].push(ind);
+      const nomeTipo = ind.unidadeId
+        ? getNomeTipoUnidade(ind.unidadeId)
+        : "Geral";
+      const nomeUnidade = ind.unidadeId
+        ? getNomeUnidade(ind.unidadeId)
+        : "Desconhecida";
+
+      if (!byTypeAndUnit[nomeTipo]) {
+        byTypeAndUnit[nomeTipo] = {};
+      }
+      if (!byTypeAndUnit[nomeTipo][nomeUnidade]) {
+        byTypeAndUnit[nomeTipo][nomeUnidade] = [];
+      }
+
+      byTypeAndUnit[nomeTipo][nomeUnidade].push(ind);
     });
-    return byType;
-  }, [dadosMeuPainel]);
+
+    return byTypeAndUnit;
+  }, [dadosMeuPainel, unidades, superintendencias]);
 
   if (dadosMeuPainel.length === 0) {
     return (
@@ -82,7 +111,8 @@ export function MyDashboard() {
 
   return (
     <div className="flex flex-col gap-8 pb-20">
-      <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+      {/* HEADER DO PAINEL */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between border-b pb-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">
             Meu Painel
@@ -94,7 +124,7 @@ export function MyDashboard() {
         <Button
           variant="outline"
           size="sm"
-          className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+          className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
           onClick={limparPainel}
         >
           <PinOff className="h-4 w-4" />
@@ -102,70 +132,84 @@ export function MyDashboard() {
         </Button>
       </div>
 
-      {Object.entries(grouped).map(([tipoNome, inds]) => (
-        <div key={tipoNome} className="flex flex-col gap-5">
-          <div className="flex items-center gap-2 border-b pb-2">
-            <h2 className="text-xl font-bold text-foreground">{tipoNome}</h2>
-          </div>
+      {/* RENDERIZAÇÃO DOS GRUPOS */}
+      <div className="flex flex-col gap-10">
+        {Object.entries(grouped).map(([tipoNome, unidadesGroup]) => (
+          <div key={tipoNome} className="flex flex-col gap-6">
+            {/* Nível 1: TIPO DE UNIDADE */}
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-primary/10 rounded-md">
+                <FolderTree className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-xl font-bold text-foreground">{tipoNome}</h2>
+            </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {inds.map((ind) => {
-              const nomeUnidadeReal = getNomeUnidade(ind.unidadeId!);
-
-              return (
-                <div
-                  key={`${ind.id}-${ind.unidadeId}`}
-                  className="relative group/chart flex flex-col gap-2 p-4 border rounded-xl bg-card text-card-foreground shadow-sm"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex flex-col gap-1 w-full pr-8">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] px-1.5 py-0 h-5 font-normal shrink-0 w-max"
-                        >
-                          {tipoNome}
-                        </Badge>
-                        <span
-                          className="text-xs font-medium text-muted-foreground flex items-center gap-1 truncate w-full"
-                          title={nomeUnidadeReal}
-                        >
-                          <Building2 className="h-3 w-3 shrink-0" />
-                          <span className="truncate">{nomeUnidadeReal}</span>
-                        </span>
-                      </div>
-                    </div>
+            <div className="flex flex-col gap-8 pl-2 md:pl-4 border-l-2 border-muted ml-4">
+              {Object.entries(unidadesGroup).map(([unidadeNome, inds]) => (
+                <div key={unidadeNome} className="flex flex-col gap-4">
+                  {/* Nível 2: UNIDADE */}
+                  <div className="flex items-center gap-2 -ml-[19px] md:-ml-[27px]">
+                    <div className="h-2 w-2 rounded-full bg-primary/50 ring-4 ring-background" />
+                    <h3 className="text-base font-semibold text-foreground flex items-center gap-1.5 bg-background pr-2">
+                      <Building2 className="h-4 w-4 text-muted-foreground" />
+                      {unidadeNome}
+                    </h3>
                   </div>
 
-                  <EvolutionChart indicador={ind} />
-
-                  <div className="absolute top-4 right-4 z-10 opacity-0 group-hover/chart:opacity-100 transition-opacity">
-                    <TooltipProvider delayDuration={300}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
+                  {/* Nível 3: INDICADORES DA UNIDADE */}
+                  {/* Aumentei o gap vertical (gap-y-10) para o badge flutuante não colar no card de cima */}
+                  <div className="grid grid-cols-1 gap-y-10 gap-x-6 lg:grid-cols-2 pl-4 pt-2">
+                    {inds.map((ind) => (
+                      <div
+                        key={`${ind.id}-${ind.unidadeId}`}
+                        className="relative group/chart transition-all duration-300 hover:shadow-md rounded-xl"
+                      >
+                        {/* IDENTIFICAÇÃO FLUTUANTE DA UNIDADE NO CARD */}
+                        <div className="absolute -top-3 left-4 z-10">
+                          <Badge
                             variant="secondary"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive shadow-sm"
-                            onClick={() =>
-                              toggleItemPainel(ind.id, ind.unidadeId!)
-                            }
+                            className="bg-muted border border-border/50 text-muted-foreground shadow-sm flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-semibold"
                           >
-                            <PinOff className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Remover do Painel</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                            <Building2 className="h-3 w-3" />
+                            <span className="truncate max-w-[220px]">
+                              {unidadeNome}
+                            </span>
+                          </Badge>
+                        </div>
+
+                        <EvolutionChart indicador={ind} />
+
+                        {/* Botão de Desafixar flutuante */}
+                        <div className="absolute -top-3 -right-3 z-10 opacity-0 group-hover/chart:opacity-100 transition-opacity">
+                          <TooltipProvider delayDuration={300}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="destructive"
+                                  size="icon"
+                                  className="h-8 w-8 rounded-full shadow-md"
+                                  onClick={() =>
+                                    toggleItemPainel(ind.id, ind.unidadeId!)
+                                  }
+                                >
+                                  <PinOff className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="left">
+                                <p>Remover do Painel</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

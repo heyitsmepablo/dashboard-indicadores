@@ -202,7 +202,8 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
   };
 
   const renderChart = () => {
-    const margin = { top: showLabels ? 35 : 15, right: 10, left: 0, bottom: 0 };
+    // CORREÇÃO AQUI: margem direita alterada para 40 para não cortar a palavra "Meta"
+    const margin = { top: showLabels ? 35 : 15, right: 40, left: 0, bottom: 0 };
 
     if (chartType === "bar") {
       return (
