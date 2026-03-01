@@ -77,12 +77,19 @@ npm run dev
 Acesse: http://localhost:4200
 
 🔜 Roadmap
-[x] Modelagem do Banco de Dados Relacional.
-[x] Carga inicial dos Indicadores (Catálogo) e massa de dados fictícia.
-[x] API: Desenvolver endpoints em NestJS com ORM Prisma e validação de DTOs.
-[x] Frontend: Criar dashboard web interativo (Next.js) com gráficos dinâmicos.
-[x] Segurança: Implementar autenticação, JWT e controle de rotas privadas.
-[x] Inteligência Artificial: Integrar motor de IA via n8n + Gemini para análises críticas sob demanda.
-[ ] Automação de Carga (ETL): Finalizar o script Python (Pandas) para ler as planilhas reais mensais e realizar upsert via API.
+
+      [x] Modelagem do Banco de Dados Relacional.
+
+      [x] Carga inicial dos Indicadores (Catálogo) e massa de dados fictícia.
+
+      [x] API: Desenvolver endpoints em NestJS com ORM Prisma e validação de DTOs.
+
+      [x] Frontend: Criar dashboard web interativo (Next.js) com gráficos dinâmicos.
+
+      [x] Segurança: Implementar autenticação, JWT e controle de rotas privadas.
+
+      [x] Inteligência Artificial: Integrar motor de IA via n8n + Gemini para análises críticas sob demanda.
+
+      [ ] Automação de Carga (ETL): Finalizar o script Python (Pandas) para ler as planilhas reais mensais e realizar upsert via API.
 
 Desenvolvido por: [Pablo Eduardo (Engenheiro de Software)](https://www.linkedin.com/in/pabloeduardoss/)
