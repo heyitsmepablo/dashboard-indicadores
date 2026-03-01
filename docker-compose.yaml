@@ -4,6 +4,7 @@ services:
     build:
       context: ./database
       dockerfile: Dockerfile
+    user: "${UID:-1000}:${GID:-1000}"
     restart: always
     shm_size: 128mb
     environment:
@@ -41,6 +42,25 @@ services:
       - ./docker/pgadmin/data:/var/lib/pgadmin/data
     mem_limit: "2gb"
     cpus: "1"
+    networks:
+      - dashboard
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n_dashify
+    # Executa o n8n com o seu usuário local
+    user: "${UID:-1000}:${GID:-1000}"
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+    volumes:
+      - ./docker/n8n_data:/home/node/.n8n
     networks:
       - dashboard
 networks:

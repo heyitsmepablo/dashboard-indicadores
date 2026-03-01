@@ -18,9 +18,16 @@ import { SuperintendenciaController } from './controllers/superintendencia/super
 
 import { UserModule } from './module/user/user.module';
 import { AuthModule } from './module/auth/auth.module';
+import { AnaliseModule } from './module/analise/analise.module';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), UserModule, AuthModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    UserModule,
+    AuthModule,
+    AnaliseModule,
+  ],
   controllers: [
     AppController,
     IndicadorController,
