@@ -39,7 +39,11 @@ export class ResultadoService {
     });
   }
 
-  async findByCompetencia(competencia: string, unidadeId?: number) {
+  async findByCompetencia(
+    competencia: string,
+    unidadeId?: number,
+    isAuth: boolean = false,
+  ) {
     const date = new Date(competencia);
     const where: any = { competencia: date };
 
@@ -47,13 +51,22 @@ export class ResultadoService {
       where.unidade_id = unidadeId;
     }
 
-    return this.prisma.resultados.findMany({
+    const resultados = await this.prisma.resultados.findMany({
       where,
       include: {
         indicadores: true,
         unidades: true,
       },
     });
+
+    if (!isAuth) {
+      return resultados.map((resultado) => ({
+        ...resultado,
+        analise_critica: null,
+      }));
+    }
+
+    return resultados;
   }
 
   async bulkCreate(dataList: any[]) {

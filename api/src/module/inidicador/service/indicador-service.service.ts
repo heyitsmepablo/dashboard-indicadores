@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma-service/prisma-service.service';
+import { PrismaService } from '../../../services/prisma-service/prisma-service.service';
 import { Prisma } from 'generated/prisma/client';
-import { CreateIndicadorDto } from 'src/controllers/indicador/indicador.dto';
+import { CreateIndicadorDto } from 'src/module/inidicador/indicador.dto';
 
 @Injectable()
 export class IndicadorService {
@@ -23,31 +23,25 @@ export class IndicadorService {
     });
   }
 
-  async findAll(tipoUnidadeId?: number, unidadeId?: number) {
+  async findAll(
+    tipoUnidadeId?: number,
+    unidadeId?: number,
+    isAuth: boolean = false,
+  ) {
     const where: Prisma.indicadoresWhereInput = {};
 
-    // Se passou tipoUnidadeId, filtra direto pelo tipo
     if (tipoUnidadeId) {
       where.indicador_tipo_unidade = {
         some: { tipo_unidade_id: tipoUnidadeId },
       };
-    }
-    // Se passou unidadeId, busca os indicadores vinculados ao tipo daquela unidade
-    else if (unidadeId) {
+    } else if (unidadeId) {
       where.indicador_tipo_unidade = {
-        some: {
-          tipo_de_unidade: {
-            unidades: {
-              some: { id: unidadeId },
-            },
-          },
-        },
+        some: { tipo_de_unidade: { unidades: { some: { id: unidadeId } } } },
       };
     }
 
     return this.prisma.indicadores.findMany({
       where,
-      // Retorna apenas os dados do indicador e a relação com o tipo
       include: {
         indicador_tipo_unidade: { include: { tipo_de_unidade: true } },
       },
@@ -55,7 +49,11 @@ export class IndicadorService {
     });
   }
 
-  async findOneWithResults(id: number, unidadeId?: number) {
+  async findOneWithResults(
+    id: number,
+    unidadeId?: number,
+    isAuth: boolean = false,
+  ) {
     const resultadosQuery: any = {
       orderBy: { competencia: 'asc' },
       take: 12,
@@ -66,16 +64,29 @@ export class IndicadorService {
       resultadosQuery.where = { unidade_id: unidadeId };
     }
 
-    return this.prisma.indicadores.findUnique({
+    const indicador = await this.prisma.indicadores.findUnique({
       where: { id },
       include: {
         indicador_tipo_unidade: { include: { tipo_de_unidade: true } },
         resultados: resultadosQuery,
       },
     });
+
+    if (indicador && !isAuth) {
+      indicador.resultados = indicador.resultados.map((resultado) => ({
+        ...resultado,
+        analise_critica: null,
+      }));
+    }
+
+    return indicador;
   }
 
-  async findManyForComparison(ids: number[], unidadeId?: number) {
+  async findManyForComparison(
+    ids: number[],
+    unidadeId?: number,
+    isAuth: boolean = false,
+  ) {
     const resultadosQuery: any = {
       orderBy: { competencia: 'asc' },
     };
@@ -84,12 +95,24 @@ export class IndicadorService {
       resultadosQuery.where = { unidade_id: unidadeId };
     }
 
-    return this.prisma.indicadores.findMany({
+    const indicadores = await this.prisma.indicadores.findMany({
       where: { id: { in: ids } },
       include: {
         resultados: resultadosQuery,
       },
     });
+
+    if (!isAuth) {
+      return indicadores.map((ind) => ({
+        ...ind,
+        resultados: ind.resultados.map((res) => ({
+          ...res,
+          analise_critica: null,
+        })),
+      }));
+    }
+
+    return indicadores;
   }
 
   async update(id: number, data: CreateIndicadorDto) {
@@ -101,8 +124,8 @@ export class IndicadorService {
         ...indicadorData,
         ...(tiposUnidadeIds && {
           indicador_tipo_unidade: {
-            deleteMany: {}, // Limpa as relações antigas
-            create: tiposUnidadeIds.map((tid) => ({ tipo_unidade_id: tid })), // Insere as novas
+            deleteMany: {},
+            create: tiposUnidadeIds.map((tid) => ({ tipo_unidade_id: tid })),
           },
         }),
       },

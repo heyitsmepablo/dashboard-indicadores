@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-import { IndicadorController } from './controllers/indicador/indicador.controller';
+import { IndicadorController } from './module/inidicador/controller/indicador.controller';
 
 import { PrismaService } from './services/prisma-service/prisma-service.service';
 import { ResultadoService } from './services/resultado-service/resultado-service.service';
-import { IndicadorService } from './services/indicadores-service/indicador-service.service';
+import { IndicadorService } from './module/inidicador/service/indicador-service.service';
 import { ResultadosController } from './controllers/resultado/resultado.controller';
 import { ConfigModule } from '@nestjs/config';
 import { UnidadeService } from './services/unidade/unidade.service';
@@ -16,8 +16,11 @@ import { TipoUnidadeService } from './services/tipo-de-unidade-service/tipo-de-u
 import { SuperintendenciaService } from './services/superintendencia/superintendencia.service';
 import { SuperintendenciaController } from './controllers/superintendencia/superintendencia.controller';
 
+import { UserModule } from './module/user/user.module';
+import { AuthModule } from './module/auth/auth.module';
+
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true })],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), UserModule, AuthModule],
   controllers: [
     AppController,
     IndicadorController,

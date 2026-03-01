@@ -2,11 +2,24 @@
 CREATE EXTENSION IF NOT EXISTS unaccent;
 ALTER FUNCTION unaccent(text) IMMUTABLE;
 
+-- Habilita geração de UUID (para versões mais antigas do Postgres, se necessário)
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 -- ============================================================================
 -- 1. ESTRUTURA DE TABELAS
 -- ============================================================================
 
--- Nova Tabela: Superintendências
+-- Nova Tabela: Usuários (Com UUID)
+CREATE TABLE "usuarios" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "nome" VARCHAR(255) NOT NULL,
+  "email" VARCHAR(255) UNIQUE NOT NULL,
+  "senha" VARCHAR(255) NOT NULL,
+  "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela: Superintendências
 CREATE TABLE "superintendencias" (
   "id" SERIAL PRIMARY KEY,
   "nome" VARCHAR(255) NOT NULL,
@@ -26,14 +39,13 @@ CREATE TABLE "unidades" (
   "nome" VARCHAR(255) NOT NULL,
   "sigla" VARCHAR(50),
   "tipo_unidade_id" INT NOT NULL,
-  "superintendencia_id" INT, -- Vinculação flexível e direta
+  "superintendencia_id" INT, 
   "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE "indicadores" (
   "id" SERIAL PRIMARY KEY,
-  -- Coluna "setor" foi removida para dar lugar ao relacionamento N:N
   "descricao" TEXT NOT NULL,
   "fonte_formula" TEXT,
   "meta" TEXT,
@@ -80,7 +92,6 @@ CREATE INDEX "idx_unidades_super" ON "unidades" ("superintendencia_id");
 -- Relacionamentos tipo_de_unidade (1:N)
 ALTER TABLE "tipo_de_unidade"
 ADD CONSTRAINT "fk_tipo_unidade_super" FOREIGN KEY ("superintendencia_id") REFERENCES "superintendencias" ("id") ON DELETE SET NULL;
-
 
 CREATE INDEX "idx_tipo_unidade_super" ON "tipo_de_unidade" ("superintendencia_id");
 

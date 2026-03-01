@@ -86,3 +86,12 @@ model superintendencias {
   tipo_de_unidade tipo_de_unidade[]
   unidades        unidades[]
 }
+
+model usuarios {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome       String    @db.VarChar(255)
+  email      String    @unique @db.VarChar(255)
+  senha      String    @db.VarChar(255)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @db.Timestamp(6)
+}
