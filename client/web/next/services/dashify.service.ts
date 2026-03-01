@@ -3,20 +3,57 @@ import { Indicador, Unidade, Superintendencia, TipoUnidade } from "@/lib/types";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 export const DashifyService = {
+  // Helper para injetar o token automaticamente
+  getHeaders(): HeadersInit {
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+
+    // Pega o token do localStorage se existir
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("dashify_token")
+        : null;
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    return headers;
+  },
+
+  // === MÉTODOS DE AUTENTICAÇÃO ===
+  async login(email: string, password: string) {
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!res.ok) throw new Error("Credenciais inválidas");
+    return res.json(); // Retorna { access_token, user }
+  },
+
+  // === MÉTODOS DE DADOS ===
   async getSuperintendencias(): Promise<Superintendencia[]> {
-    const res = await fetch(`${API_URL}/superintendencia`);
+    const res = await fetch(`${API_URL}/superintendencia`, {
+      headers: this.getHeaders(),
+    });
     if (!res.ok) throw new Error("Falha ao buscar superintendencias");
     return res.json();
   },
 
   async getTiposUnidade(): Promise<TipoUnidade[]> {
-    const res = await fetch(`${API_URL}/tipo-unidade`);
+    const res = await fetch(`${API_URL}/tipo-unidade`, {
+      headers: this.getHeaders(),
+    });
     if (!res.ok) throw new Error("Falha ao buscar tipos de unidade");
     return res.json();
   },
 
   async getUnidades(): Promise<Unidade[]> {
-    const res = await fetch(`${API_URL}/unidades`);
+    const res = await fetch(`${API_URL}/unidades`, {
+      headers: this.getHeaders(),
+    });
     if (!res.ok) throw new Error("Falha ao buscar unidades");
     return res.json();
   },
@@ -29,7 +66,9 @@ export const DashifyService = {
     if (tipoUnidadeId) params.append("tipoUnidadeId", String(tipoUnidadeId));
     if (unidadeId) params.append("unidadeId", String(unidadeId));
 
-    const res = await fetch(`${API_URL}/indicador?${params.toString()}`);
+    const res = await fetch(`${API_URL}/indicador?${params.toString()}`, {
+      headers: this.getHeaders(),
+    });
     if (!res.ok) throw new Error("Falha ao buscar indicadores");
 
     const data = await res.json();
@@ -59,6 +98,9 @@ export const DashifyService = {
 
         const res = await fetch(
           `${API_URL}/indicador/comparar?${params.toString()}`,
+          {
+            headers: this.getHeaders(),
+          },
         );
         if (!res.ok) return [];
 

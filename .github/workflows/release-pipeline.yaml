@@ -1,6 +1,5 @@
 name: Release Pipeline
 
-# O workflow só será disparado quando houver um push (merge de PR) nessas branches
 on:
     push:
         branches:
@@ -9,11 +8,10 @@ on:
             - dev
             - 1.x
 
-# Permissões cruciais para o @semantic-release/git conseguir fazer o commit de volta
 permissions:
-    contents: write # Permite criar tags e commitar o CHANGELOG/package.json
-    issues: write # Permite comentar em issues (se usar o plugin do github)
-    pull-requests: write # Permite comentar em PRs
+    contents: write
+    issues: write
+    pull-requests: write
 
 jobs:
     release:
@@ -24,29 +22,26 @@ jobs:
             - name: Checkout do repositório
               uses: actions/checkout@v4
               with:
-                  # O Semantic Release precisa de todo o histórico (todas as tags e commits)
-                  # para calcular a próxima versão corretamente. O padrão é 1, precisa ser 0.
                   fetch-depth: 0
-
-                  # Garante que o checkout usa um token com permissão para burlar proteção de branch se necessário
-                  # token: ${{ secrets.GH_TOKEN }} # Pode precisar de um PAT dependendo das regras do repositório
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: "20" # Ajuste para a versão que você usa no projeto
-                  cache: "npm"
+                  node-version: "20"
 
-            - name: Instalar Dependências
-              run: npm ci
+            # 1. Instala o Semantic Release e os plugins temporariamente na raiz
+            # O --no-save garante que ele não tente criar ou alterar um package.json na raiz
+            - name: Instalar Semantic Release (Global/Temporário)
+              run: >
+                  npm install --no-save 
+                  semantic-release 
+                  @semantic-release/changelog 
+                  @semantic-release/git 
+                  @semantic-release/exec 
+                  conventional-changelog-conventionalcommits
 
+            # 2. Executa o comando. Ele vai ler o .releaserc.json da raiz e achar os plugins no node_modules temporário.
             - name: Executar Semantic Release
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: >
-                  npx 
-                  --package semantic-release 
-                  --package @semantic-release/changelog 
-                  --package @semantic-release/git 
-                  --package conventional-changelog-conventionalcommits 
-                  semantic-release
+              run: npx semantic-release

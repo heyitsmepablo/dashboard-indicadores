@@ -3,10 +3,11 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { DashboardHeader } from "@/components/dashboard-header";
-import { SectorDashboard } from "@/components/features/sector"; // <--- Nova Importação
+import { SectorDashboard } from "@/components/features/sector";
 import { IndicatorComparator } from "@/components/features/comparator";
 import { MyDashboard } from "@/components/my-dashboard";
 import { DashboardProvider, useDashboard } from "@/lib/dashboard-context";
+import { AuthProvider } from "@/lib/auth-context"; // <--- Importação adicionada
 
 function DashboardContent() {
   const { viewMode } = useDashboard();
@@ -28,8 +29,11 @@ function DashboardContent() {
 
 export default function Page() {
   return (
-    <DashboardProvider>
-      <DashboardContent />
-    </DashboardProvider>
+    // AuthProvider abraçando a aplicação por fora
+    <AuthProvider>
+      <DashboardProvider>
+        <DashboardContent />
+      </DashboardProvider>
+    </AuthProvider>
   );
 }
