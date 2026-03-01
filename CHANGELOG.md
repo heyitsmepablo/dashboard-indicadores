@@ -2,6 +2,13 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo. Consulte [Conventional Commits](https://www.conventionalcommits.org/pt-br/v1.0.0/) para diretrizes de commits.
 
+## [1.0.0-alpha.3](https://github.com/heyitsmepablo/dashboard-indicadores/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2026-03-01)
+
+### ✨ Funcionalidades
+
+* **apí:** integração com n8n e Gemini para análise automatizada de indicadores ([cd29a60](https://github.com/heyitsmepablo/dashboard-indicadores/commit/cd29a60427ab850b901930a3acb5d735c2c64c10))
+* **client/web:** Dashify Insight AI ([de5bf35](https://github.com/heyitsmepablo/dashboard-indicadores/commit/de5bf354cf072e4813e9ba9750ff19371cfad732))
+
 ## [1.0.0-alpha.2](https://github.com/heyitsmepablo/dashboard-indicadores/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2026-03-01)
 
 ### ✨ Funcionalidades
