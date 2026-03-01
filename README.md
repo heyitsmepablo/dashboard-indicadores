@@ -2,28 +2,31 @@
 
 Este projeto visa centralizar, gerenciar e visualizar os indicadores de desempenho da rede de saúde. O objetivo é substituir o controle manual disperso por um fluxo de dados estruturado, servindo de base para uma interface de visualização gráfica interativa, hierárquica e inteligente.
 
-> 🚀 **Status:** MVP Funcional. Banco de dados relacional populado, API desenvolvida e Interface Web (Frontend) completa com navegação e análises avançadas.
+> 🚀 **Status:** MVP Funcional e Escalável. Banco de dados relacional populado, API segura, Interface Web avançada e **Motor de Inteligência Artificial** integrado para geração automática de insights e análises críticas.
 
 ## 🏗️ Arquitetura da Solução e Stack Tecnológico
 
-O sistema evoluiu para uma arquitetura moderna e escalável:
+O sistema utiliza uma arquitetura moderna, orientada a microsserviços e automação:
 
 1. **Armazenamento:** **PostgreSQL** (rodando via Docker). Modelagem relacional avançada estruturada em `Superintendências > Tipos de Unidade > Unidades`.
-2. **Backend (API):** Desenvolvido em **NestJS** com **Prisma ORM**, expondo endpoints RESTful para consultas filtradas e cruzamento de dados.
+2. **Backend (API):** Desenvolvido em **NestJS** com **Prisma ORM**, expondo endpoints RESTful seguros para consultas filtradas e cruzamento de dados.
 3. **Frontend (Dashboard):** Desenvolvido em **Next.js (React)** com **Tailwind CSS**.
    - Gráficos renderizados via **Recharts**.
    - Componentes UI baseados no **shadcn/ui** e ícones **Lucide**.
-   - Gerenciamento de estado global via Context API.
-4. **Entrada de Dados (ETL em construção):** Scripts em **Python** para ler planilhas padronizadas e alimentar o banco de dados. (Atualmente utilizando _Seeders_ em SQL para massa de dados de teste).
+   - Gerenciamento de estado global via Context API (`DashboardContext` e `AuthContext`).
+4. **Orquestração e Inteligência Artificial (Novo 🤖):** - **n8n** como gateway de automação (via Webhooks).
+   - **Google Gemini 1.5 Flash** atuando como agente especialista em gestão de saúde pública para processamento de linguagem natural (NLP).
+5. **Entrada de Dados (ETL em construção):** Scripts em **Python** para ler planilhas padronizadas e alimentar o banco de dados.
 
 ## ✨ Principais Funcionalidades (Frontend)
 
+- **Dashify Insight AI:** Geração sob demanda de pareceres técnicos via Inteligência Artificial. A IA avalia previsibilidade, volatilidade e tendências da série histórica, entregando recomendações em tempo real com efeito de _streaming de tokens_ (typewriter) na interface. (Acesso restrito a usuários logados).
 - **Navegação Hierárquica:** Organização inteligente por _Superintendência > Tipo de Unidade > Unidade_ através de uma Sidebar interativa e expansível.
-- **Painel de Setor:** Visualização em grid de **KPI Cards** dinâmicos, que informam o último resultado, variação percentual em relação ao mês anterior, alcance de meta e disponibilidade de Análise Crítica.
-- **Busca em Tempo Real:** Filtro rápido de indicadores para unidades com grande volume de dados.
-- **Gráficos de Evolução:** Modal inline com gráficos de Área, Linha ou Barras mostrando o histórico de 12 meses, linha de meta (automática) e exibição detalhada de análises críticas atreladas ao mês exato.
-- **Comparador:** Ferramenta avançada para cruzar múltiplos indicadores ou comparar a performance de diferentes unidades lado a lado.
-- **Meu Painel:** Área customizável onde o gestor pode "fixar" (pin) indicadores de diferentes setores/unidades, com dados salvos localmente (`localStorage`).
+- **Painel de Setor:** Visualização em grid de **KPI Cards** dinâmicos, que informam o último resultado, variação percentual, alcance de meta e disponibilidade de Análise Crítica.
+- **Gráficos de Evolução:** Modal inline com gráficos interativos (Área, Linha, Barras) mostrando o histórico de 12 meses, linha de meta e labels dinâmicos.
+- **Comparador Avançado:** Ferramenta para cruzar múltiplos indicadores ou comparar a performance de diferentes unidades lado a lado.
+- **Meu Painel:** Área customizável onde o gestor pode "fixar" (pin) indicadores estratégicos, com dados persistidos no `localStorage`.
+- **Autenticação:** Proteção de rotas e funcionalidades críticas via JWT (JSON Web Tokens).
 
 ## 📂 Estrutura do Projeto (Macro)
 
@@ -74,17 +77,12 @@ npm run dev
 Acesse: http://localhost:4200
 
 🔜 Roadmap
-
-    [x] Modelagem do Banco de Dados.
-
-    [x] Carga inicial dos Indicadores (Catálogo) e massa de dados fictícia.
-
-    [x] API: Desenvolver endpoints em NestJS com ORM Prisma.
-
-    [x] Frontend: Criar dashboard web (Next.js) para visualização dos gráficos, filtros e comparador.
-
-    [ ] Segurança: Implementar autenticação/login.
-
-    [ ] Automação de Carga (ETL): Finalizar o script Python (Pandas) para ler as planilhas reais mensais de resultados e realizar upsert no banco via API.
+[x] Modelagem do Banco de Dados Relacional.
+[x] Carga inicial dos Indicadores (Catálogo) e massa de dados fictícia.
+[x] API: Desenvolver endpoints em NestJS com ORM Prisma e validação de DTOs.
+[x] Frontend: Criar dashboard web interativo (Next.js) com gráficos dinâmicos.
+[x] Segurança: Implementar autenticação, JWT e controle de rotas privadas.
+[x] Inteligência Artificial: Integrar motor de IA via n8n + Gemini para análises críticas sob demanda.
+[ ] Automação de Carga (ETL): Finalizar o script Python (Pandas) para ler as planilhas reais mensais e realizar upsert via API.
 
 Desenvolvido por: [Pablo Eduardo (Engenheiro de Software)](https://www.linkedin.com/in/pabloeduardoss/)
