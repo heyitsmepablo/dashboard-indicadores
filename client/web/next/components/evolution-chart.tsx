@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Area,
   AreaChart,
@@ -34,8 +34,14 @@ import {
   LineChartIcon,
   FileText,
   Tag as TagIcon,
+  Sparkles,
+  Bot,
+  AlertCircle,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Indicador } from "@/lib/types";
 import {
   formatValue,
@@ -43,7 +49,8 @@ import {
   formatCompetenciaLonga,
   parseMeta,
 } from "@/lib/format";
-import { Badge } from "./ui/badge";
+import { DashifyService } from "@/services/dashify.service";
+import { useAuth } from "@/lib/auth-context";
 
 export type ChartType = "area" | "line" | "bar";
 
@@ -52,8 +59,16 @@ interface EvolutionChartProps {
 }
 
 export function EvolutionChart({ indicador }: EvolutionChartProps) {
+  const { isAuthenticated } = useAuth();
   const [chartType, setChartType] = useState<ChartType>("area");
   const [showLabels, setShowLabels] = useState(false);
+
+  // Estados da IA
+  const [isGeneratingIA, setIsGeneratingIA] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [displayedAnalysis, setDisplayedAnalysis] = useState<string>("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const resultados = indicador.resultados || [];
   const meta = parseMeta(indicador.meta, indicador.unidade_de_medida);
@@ -101,7 +116,7 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
       tickMargin={8}
       fontSize={10}
       interval={0}
-      padding={{ left: 20, right: 20 }} // Evita cortes de texto nas bordas do modal
+      padding={{ left: 20, right: 20 }}
     />
   );
 
@@ -138,12 +153,11 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
       />
     ) : null;
 
-  // Renderizador exclusivo para a BARRA: Calcula o centro dinamicamente usando a largura
   const renderBarLabel = (props: any) => {
     const { x, y, width, value } = props;
     if (value === null || value === undefined) return null;
     const formatted = formatValue(value, indicador.unidade_de_medida);
-    const centerX = x + width / 2; // ENCONTRA O CENTRO DA BARRA
+    const centerX = x + width / 2;
 
     return (
       <g className="animate-in fade-in zoom-in duration-300">
@@ -170,7 +184,6 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
     );
   };
 
-  // Renderizador para LINHA e ÁREA: Usa apenas o ponto (X, Y)
   const renderFloatingLabel = (props: any) => {
     const { x, y, value } = props;
     if (value === null || value === undefined) return null;
@@ -202,7 +215,6 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
   };
 
   const renderChart = () => {
-    // CORREÇÃO AQUI: margem direita alterada para 40 para não cortar a palavra "Meta"
     const margin = { top: showLabels ? 35 : 15, right: 40, left: 0, bottom: 0 };
 
     if (chartType === "bar") {
@@ -305,6 +317,70 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
     );
   };
 
+  // Efeito LLM Streaming (Por Tokens/Palavras em vez de Letras)
+  useEffect(() => {
+    if (!aiAnalysis) {
+      setDisplayedAnalysis("");
+      setIsTyping(false);
+      return;
+    }
+
+    setIsTyping(true);
+
+    // O regex /(\s+)/ divide a string mantendo os espaços e quebras de linha no array.
+    // Assim não perdemos a formatação de parágrafos.
+    const tokens = aiAnalysis.split(/(\s+)/);
+    let currentTokenIndex = 0;
+    let currentText = "";
+
+    const intervalId = setInterval(() => {
+      // Simula o pulo de tokens do Gemini (pega de 1 a 4 pedaços por vez)
+      const tokensToTake = Math.floor(Math.random() * 4) + 1;
+
+      for (let i = 0; i < tokensToTake; i++) {
+        if (currentTokenIndex < tokens.length) {
+          currentText += tokens[currentTokenIndex];
+          currentTokenIndex++;
+        }
+      }
+
+      setDisplayedAnalysis(currentText);
+
+      if (currentTokenIndex >= tokens.length) {
+        clearInterval(intervalId);
+        setIsTyping(false);
+      }
+    }, 25); // 25ms de intervalo entre os blocos (rápido e orgânico)
+
+    return () => clearInterval(intervalId);
+  }, [aiAnalysis]);
+
+  const handleGenerateIA = async () => {
+    const unidadeIdToUse = indicador.unidadeId || resultados[0]?.unidade_id;
+
+    if (!unidadeIdToUse) {
+      setAiError("ID da unidade não encontrado para análise.");
+      return;
+    }
+
+    setIsGeneratingIA(true);
+    setAiError(null);
+    setAiAnalysis(null);
+    setDisplayedAnalysis("");
+
+    try {
+      const result = await DashifyService.gerarAnaliseIA(
+        indicador.id,
+        unidadeIdToUse,
+      );
+      setAiAnalysis(result.analiseGerada);
+    } catch (error: any) {
+      setAiError(error.message || "Erro desconhecido ao comunicar com a IA.");
+    } finally {
+      setIsGeneratingIA(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -339,6 +415,7 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
           </div>
         </div>
       </CardHeader>
+
       <CardContent>
         {data.length === 0 ? (
           <div className="h-[280px] w-full flex items-center justify-center border-dashed border-2 rounded-md bg-muted/5">
@@ -352,6 +429,7 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
           </ChartContainer>
         )}
 
+        {/* 1. ANÁLISE HUMANA (Existente) */}
         {resultadoComAnalise && (
           <div className="mt-4 flex gap-3 rounded-lg border border-blue-200 bg-blue-50/50 dark:border-blue-900/50 dark:bg-blue-950/20 p-4">
             <div className="mt-0.5 text-blue-600 dark:text-blue-400">
@@ -374,6 +452,88 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
                 {resultadoComAnalise.analise}
               </span>
             </div>
+          </div>
+        )}
+
+        {/* 2. ÁREA DE INTELIGÊNCIA ARTIFICIAL */}
+        {isAuthenticated && data.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-border/50">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                Dashify AI Insight
+              </h4>
+
+              {!aiAnalysis && !isGeneratingIA && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleGenerateIA}
+                  className="h-8 text-xs border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800 dark:border-purple-900/50 dark:text-purple-400 dark:hover:bg-purple-900/30 dark:hover:text-purple-300 transition-colors"
+                >
+                  <Bot className="h-3.5 w-3.5 mr-1.5" />
+                  Gerar Análise
+                </Button>
+              )}
+            </div>
+
+            {/* Skeleton: Enquanto a API responde */}
+            {isGeneratingIA && (
+              <div className="rounded-lg border border-purple-100 bg-purple-50/40 dark:border-purple-900/30 dark:bg-purple-950/20 p-4 space-y-3 animate-pulse">
+                <Skeleton className="h-3.5 w-full bg-purple-200/50 dark:bg-purple-800/40" />
+                <Skeleton className="h-3.5 w-[90%] bg-purple-200/50 dark:bg-purple-800/40" />
+                <Skeleton className="h-3.5 w-[65%] bg-purple-200/50 dark:bg-purple-800/40" />
+                <div className="pt-2">
+                  <Skeleton className="h-3.5 w-[80%] bg-purple-200/50 dark:bg-purple-800/40" />
+                  <Skeleton className="h-3.5 w-[40%] mt-3 bg-purple-200/50 dark:bg-purple-800/40" />
+                </div>
+              </div>
+            )}
+
+            {/* Erro */}
+            {aiError && (
+              <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{aiError}</span>
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0 ml-auto"
+                  onClick={handleGenerateIA}
+                >
+                  Tentar novamente
+                </Button>
+              </div>
+            )}
+
+            {/* Resultado (Sendo digitado na tela) */}
+            {aiAnalysis && !isGeneratingIA && (
+              <div className="relative rounded-lg border border-purple-200 bg-gradient-to-br from-purple-50/80 to-transparent dark:border-purple-900/50 dark:from-purple-950/30 dark:to-transparent p-4 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500 min-h-[100px]">
+                <div className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                  {displayedAnalysis}
+                  {/* Cursor piscante */}
+                  {isTyping && (
+                    <span className="inline-block w-1.5 h-4 ml-0.5 align-middle bg-purple-500 animate-pulse" />
+                  )}
+                </div>
+
+                {/* Botão de Fechar só aparece quando terminar de digitar */}
+                {!isTyping && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 h-6 w-6 rounded-full hover:bg-purple-200/50 dark:hover:bg-purple-800/50 text-muted-foreground animate-in fade-in zoom-in duration-300"
+                    onClick={() => {
+                      setAiAnalysis(null);
+                      setDisplayedAnalysis("");
+                    }}
+                    title="Dispensar Insight"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         )}
       </CardContent>

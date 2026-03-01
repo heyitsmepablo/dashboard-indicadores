@@ -9,7 +9,6 @@ export const DashifyService = {
       "Content-Type": "application/json",
     };
 
-    // Pega o token do localStorage se existir
     const token =
       typeof window !== "undefined"
         ? localStorage.getItem("dashify_token")
@@ -30,7 +29,7 @@ export const DashifyService = {
     });
 
     if (!res.ok) throw new Error("Credenciais inválidas");
-    return res.json(); // Retorna { access_token, user }
+    return res.json();
   },
 
   // === MÉTODOS DE DADOS ===
@@ -116,5 +115,26 @@ export const DashifyService = {
 
     const results = await Promise.all(promises);
     return results.flat();
+  },
+
+  // === MÉTODOS DE INTELIGÊNCIA ARTIFICIAL ===
+  async gerarAnaliseIA(
+    indicadorId: number,
+    unidadeId: number,
+  ): Promise<{ indicadorId: number; analiseGerada: string }> {
+    const res = await fetch(`${API_URL}/analises/gerar-agora`, {
+      method: "POST",
+      headers: this.getHeaders(),
+      body: JSON.stringify({ indicadorId, unidadeId }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(
+        err.message || "Falha ao gerar análise de IA. Tente novamente.",
+      );
+    }
+
+    return res.json();
   },
 };
