@@ -8,7 +8,8 @@ import { Unidade } from "@/lib/types";
 
 interface SectorHeaderProps {
   tipoAtivoNome: string;
-  totalIndicadores: number;
+  totalIndicadores: number; // Mantido para a lógica da barra de busca
+  totalComResultados: number; // Nova propriedade para o texto
   totalComparacao: number;
   termoBusca: string;
   setTermoBusca: (termo: string) => void;
@@ -23,6 +24,7 @@ interface SectorHeaderProps {
 export function SectorHeader({
   tipoAtivoNome,
   totalIndicadores,
+  totalComResultados,
   totalComparacao,
   termoBusca,
   setTermoBusca,
@@ -41,7 +43,7 @@ export function SectorHeader({
             {tipoAtivoNome}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {totalIndicadores} indicadores monitorados na unidade selecionada.
+            {totalComResultados} indicadores monitorados na unidade selecionada.
           </p>
         </div>
 

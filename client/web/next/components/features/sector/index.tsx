@@ -49,6 +49,13 @@ export function SectorDashboard() {
     );
   }, [indicadoresAtuais, termoBusca]);
 
+  // Conta quantos indicadores realmente possuem dados alimentados (resultados > 0)
+  const totalComResultados = useMemo(() => {
+    return indicadoresAtuais.filter(
+      (ind) => ind.resultados && ind.resultados.length > 0,
+    ).length;
+  }, [indicadoresAtuais]);
+
   // Renderizações Condicionais (Early Returns)
   if (loading) {
     return (
@@ -112,6 +119,7 @@ export function SectorDashboard() {
       <SectorHeader
         tipoAtivoNome={tipoAtivoNome}
         totalIndicadores={indicadoresAtuais.length}
+        totalComResultados={totalComResultados}
         totalComparacao={itensComparacao.length}
         termoBusca={termoBusca}
         setTermoBusca={setTermoBusca}
