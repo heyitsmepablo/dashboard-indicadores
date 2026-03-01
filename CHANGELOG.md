@@ -2,6 +2,12 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo. Consulte [Conventional Commits](https://www.conventionalcommits.org/pt-br/v1.0.0/) para diretrizes de commits.
 
+## [1.0.0-alpha.2](https://github.com/heyitsmepablo/dashboard-indicadores/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2026-03-01)
+
+### ✨ Funcionalidades
+
+* **api:** Implementado Login e Cadastro ([86566bf](https://github.com/heyitsmepablo/dashboard-indicadores/commit/86566bf051259449a90eab664016c655035af618))
+
 ## 1.0.0-beta.1 (2026-02-28)
 
 ### ✨ Funcionalidades
