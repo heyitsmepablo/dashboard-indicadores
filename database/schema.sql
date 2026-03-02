@@ -2,14 +2,13 @@
 CREATE EXTENSION IF NOT EXISTS unaccent;
 ALTER FUNCTION unaccent(text) IMMUTABLE;
 
--- Habilita geração de UUID (para versões mais antigas do Postgres, se necessário)
+-- Habilita geração de UUID
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ============================================================================
--- 1. ESTRUTURA DE TABELAS
+-- 1. ESTRUTURA DE TABELAS PRINCIPAIS
 -- ============================================================================
 
--- Nova Tabela: Usuários (Com UUID)
 CREATE TABLE "usuarios" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "nome" VARCHAR(255) NOT NULL,
@@ -19,7 +18,6 @@ CREATE TABLE "usuarios" (
   "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabela: Superintendências
 CREATE TABLE "superintendencias" (
   "id" SERIAL PRIMARY KEY,
   "nome" VARCHAR(255) NOT NULL,
@@ -38,6 +36,8 @@ CREATE TABLE "unidades" (
   "id" SERIAL PRIMARY KEY,
   "nome" VARCHAR(255) NOT NULL,
   "sigla" VARCHAR(50),
+  "cnes" VARCHAR(20) UNIQUE,           -- Adicionado: Código CNES
+  "uf" CHAR(2) DEFAULT 'MA',           -- Adicionado: Estado padrão
   "tipo_unidade_id" INT NOT NULL,
   "superintendencia_id" INT, 
   "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -58,7 +58,6 @@ CREATE TABLE "indicadores" (
   "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Nova Tabela Intermediária: Indicadores <-> Tipo de Unidade (N:N)
 CREATE TABLE "indicador_tipo_unidade" (
   "indicador_id" INT NOT NULL,
   "tipo_unidade_id" INT NOT NULL,
@@ -78,7 +77,42 @@ CREATE TABLE "resultados" (
 );
 
 -- ============================================================================
--- 2. ÍNDICES E RELACIONAMENTOS
+-- 2. ESTRUTURA DE TABELAS PYSUS (DATASUS)
+-- ============================================================================
+
+CREATE TABLE "sih_registros" (
+  "id" SERIAL PRIMARY KEY,
+  "unidade_id" INT NOT NULL,
+  "cnes" VARCHAR(20) NOT NULL,
+  "ano" INT NOT NULL,
+  "mes" INT NOT NULL,
+  "n_aih" VARCHAR(50),
+  "dados" JSONB NOT NULL,
+  "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "sia_registros" (
+  "id" SERIAL PRIMARY KEY,
+  "unidade_id" INT NOT NULL,
+  "cnes" VARCHAR(20) NOT NULL,
+  "ano" INT NOT NULL,
+  "mes" INT NOT NULL,
+  "dados" JSONB NOT NULL,
+  "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "datasus_sync_log" (
+  "id" SERIAL PRIMARY KEY,
+  "uf" CHAR(2) NOT NULL,
+  "sistema" VARCHAR(10) NOT NULL,
+  "ano" INT NOT NULL,
+  "mes" INT NOT NULL,
+  "data_sincronizacao" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE("uf", "sistema", "ano", "mes")
+);
+
+-- ============================================================================
+-- 3. ÍNDICES E RELACIONAMENTOS
 -- ============================================================================
 
 -- Relacionamentos Unidades
@@ -89,13 +123,13 @@ ADD CONSTRAINT "fk_unidade_superintendencia" FOREIGN KEY ("superintendencia_id")
 CREATE INDEX "idx_unidades_tipo" ON "unidades" ("tipo_unidade_id");
 CREATE INDEX "idx_unidades_super" ON "unidades" ("superintendencia_id");
 
--- Relacionamentos tipo_de_unidade (1:N)
+-- Relacionamentos tipo_de_unidade
 ALTER TABLE "tipo_de_unidade"
 ADD CONSTRAINT "fk_tipo_unidade_super" FOREIGN KEY ("superintendencia_id") REFERENCES "superintendencias" ("id") ON DELETE SET NULL;
 
 CREATE INDEX "idx_tipo_unidade_super" ON "tipo_de_unidade" ("superintendencia_id");
 
--- Relacionamentos Indicador_Tipo_Unidade (N:N)
+-- Relacionamentos Indicador_Tipo_Unidade
 ALTER TABLE "indicador_tipo_unidade"
 ADD CONSTRAINT "fk_itu_indicador" FOREIGN KEY ("indicador_id") REFERENCES "indicadores" ("id") ON DELETE CASCADE,
 ADD CONSTRAINT "fk_itu_tipo" FOREIGN KEY ("tipo_unidade_id") REFERENCES "tipo_de_unidade" ("id") ON DELETE CASCADE;
@@ -107,9 +141,16 @@ ALTER TABLE "resultados"
 ADD CONSTRAINT "fk_resultado_indicador" FOREIGN KEY ("indicador_id") REFERENCES "indicadores" ("id") ON DELETE CASCADE,
 ADD CONSTRAINT "fk_resultado_unidade" FOREIGN KEY ("unidade_id") REFERENCES "unidades" ("id") ON DELETE CASCADE;
 
--- Chave única para evitar duplicidade no mesmo mês/indicador/unidade
 CREATE UNIQUE INDEX "uk_resultado_competencia_unidade" ON "resultados" ("indicador_id", "competencia", "unidade_id");
-
--- Índices gerais para performance de busca
 CREATE INDEX "idx_resultados_competencia" ON "resultados" ("competencia");
 CREATE INDEX "idx_resultados_unidade" ON "resultados" ("unidade_id");
+
+-- Relacionamentos DATASUS
+ALTER TABLE "sih_registros"
+ADD CONSTRAINT "fk_sih_unidade" FOREIGN KEY ("unidade_id") REFERENCES "unidades" ("id") ON DELETE CASCADE;
+
+ALTER TABLE "sia_registros"
+ADD CONSTRAINT "fk_sia_unidade" FOREIGN KEY ("unidade_id") REFERENCES "unidades" ("id") ON DELETE CASCADE;
+
+CREATE INDEX "idx_sih_cnes_competencia" ON "sih_registros" ("cnes", "ano", "mes");
+CREATE INDEX "idx_sia_cnes_competencia" ON "sia_registros" ("cnes", "ano", "mes");
