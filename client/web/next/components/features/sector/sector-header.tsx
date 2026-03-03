@@ -8,8 +8,8 @@ import { Unidade } from "@/lib/types";
 
 interface SectorHeaderProps {
   tipoAtivoNome: string;
-  totalIndicadores: number; // Mantido para a lógica da barra de busca
-  totalComResultados: number; // Nova propriedade para o texto
+  totalIndicadores: number;
+  totalComResultados: number;
   totalComparacao: number;
   termoBusca: string;
   setTermoBusca: (termo: string) => void;
@@ -54,8 +54,8 @@ export function SectorHeader({
             className="gap-2 shrink-0 border-chart-2/50 text-chart-2 hover:bg-chart-2/10 hover:text-chart-2"
             onClick={onCompareClick}
           >
-            <GitCompareArrows className="h-4 w-4" />
-            Comparar ({totalComparacao})
+            <GitCompareArrows className="h-4 w-4" /> Comparar ({totalComparacao}
+            )
           </Button>
         )}
       </div>
@@ -70,7 +70,6 @@ export function SectorHeader({
             setIsOpen={setIsUnitSelectorOpen}
           />
         </div>
-
         {totalIndicadores > 0 && (
           <div className="relative w-full sm:w-[300px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

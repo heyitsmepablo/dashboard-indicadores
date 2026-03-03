@@ -12,7 +12,12 @@ import {
 import { DashifyService } from "@/services/dashify.service";
 import { Indicador, Unidade, Superintendencia, TipoUnidade } from "@/lib/types";
 
-export type ViewMode = "setor" | "comparador" | "meu-painel";
+export type ViewMode =
+  | "setor"
+  | "comparador"
+  | "meu-painel"
+  | "ministerial-sih"
+  | "ministerial-sia";
 
 export interface ItemSelecao {
   id: number;
@@ -37,12 +42,17 @@ interface DashboardContextType {
   setTipoUnidadeAtivoId: (id: number | null) => void;
   unidadeSelecionada: number | null;
   setUnidadeSelecionada: (id: number | null) => void;
+
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
 
   itensComparacao: ItemSelecao[];
   dadosComparacao: Indicador[];
-  toggleItemComparador: (id: number, unidadeId: number) => void;
+  toggleItemComparador: (
+    id: number,
+    unidadeId: number,
+    indicadorOverride?: Indicador,
+  ) => void;
   isComparando: (id: number, unidadeId: number) => boolean;
   limparComparador: () => void;
   comparadorAberto: boolean;
@@ -50,16 +60,22 @@ interface DashboardContextType {
 
   itensPainel: ItemSelecao[];
   dadosMeuPainel: Indicador[];
-  toggleItemPainel: (id: number, unidadeId: number) => void;
+  toggleItemPainel: (
+    id: number,
+    unidadeId: number,
+    indicadorOverride?: Indicador,
+  ) => void;
   isNoPainel: (id: number, unidadeId: number) => boolean;
   limparPainel: () => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | null>(null);
 const STORAGE_KEY_PAINEL = "dashify_meu_painel_v2";
+const STORAGE_KEY_MINISTERIAL_CACHE = "dashify_ministerial_cache";
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const [viewMode, setViewMode] = useState<ViewMode>("setor");
+
   const [superintendenciaAtivaId, setSuperintendenciaAtivaId] = useState<
     number | null
   >(null);
@@ -69,6 +85,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [unidadeSelecionada, setUnidadeSelecionada] = useState<number | null>(
     null,
   );
+
   const [loading, setLoading] = useState(true);
   const [loadingComparador, setLoadingComparador] = useState(false);
 
@@ -80,6 +97,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [indicadoresAtuais, setIndicadoresAtuais] = useState<Indicador[]>([]);
   const [listaCompleta, setListaCompleta] = useState<Indicador[]>([]);
 
+  const [ministerialCache, setMinisterialCache] = useState<
+    Record<string, Indicador>
+  >({});
+
   const [itensComparacao, setItensComparacao] = useState<ItemSelecao[]>([]);
   const [dadosComparacao, setDadosComparacao] = useState<Indicador[]>([]);
   const [itensPainel, setItensPainel] = useState<ItemSelecao[]>([]);
@@ -90,7 +111,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_PAINEL);
+      const savedCache = localStorage.getItem(STORAGE_KEY_MINISTERIAL_CACHE);
       if (saved) setItensPainel(JSON.parse(saved));
+      if (savedCache) setMinisterialCache(JSON.parse(savedCache));
     } catch (e) {
       console.error(e);
     } finally {
@@ -101,10 +124,13 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isPainelLoaded) {
       localStorage.setItem(STORAGE_KEY_PAINEL, JSON.stringify(itensPainel));
+      localStorage.setItem(
+        STORAGE_KEY_MINISTERIAL_CACHE,
+        JSON.stringify(ministerialCache),
+      );
     }
-  }, [itensPainel, isPainelLoaded]);
+  }, [itensPainel, ministerialCache, isPainelLoaded]);
 
-  // CARGA INICIAL
   useEffect(() => {
     async function loadInitialData() {
       try {
@@ -168,7 +194,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }
   }, [unidadesFiltradas, unidadeSelecionada]);
 
-  // CORREÇÃO: CARGA DE INDICADORES COM RESULTADOS
   useEffect(() => {
     if (!tipoUnidadeAtivoId || !unidadeSelecionada || viewMode !== "setor")
       return;
@@ -176,18 +201,15 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     async function loadIndicadores() {
       setLoading(true);
       try {
-        // 1. Busca quais indicadores pertencem a esta unidade (sem os resultados pesados)
         const baseIndicadores = await DashifyService.getIndicadores(
           tipoUnidadeAtivoId!,
           unidadeSelecionada!,
         );
-
         if (baseIndicadores.length === 0) {
           setIndicadoresAtuais([]);
           return;
         }
 
-        // 2. Usa a rota de comparação para puxar o histórico de resultados DESSES indicadores
         const idsSelecao = baseIndicadores.map((ind) => ({
           id: ind.id,
           unidadeId: unidadeSelecionada!,
@@ -195,9 +217,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         const dadosComResultados =
           await DashifyService.getComparacao(idsSelecao);
 
-        // 3. Converte as strings que vem do banco para Number para não quebrar o gráfico
         const dadosTratados = dadosComResultados.map((d) => ({
           ...d,
+          // Não filtramos mais por ano aqui! O Evolution Chart fará o recorte.
           resultados: (d.resultados || []).map((r) => ({
             ...r,
             valor: Number(r.valor),
@@ -246,22 +268,37 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }
   }, [viewMode, listaCompleta]);
 
-  useEffect(() => {
-    if (itensComparacao.length === 0) {
-      setDadosComparacao([]);
-      return;
-    }
-    DashifyService.getComparacao(itensComparacao).then((dados) => {
-      const tratados = dados.map((d) => ({
+  const resolveMixedData = async (itens: ItemSelecao[]) => {
+    const localItems = itens.filter((i) => i.id < 9000);
+    let dadosMisturados: Indicador[] = [];
+
+    if (localItems.length > 0) {
+      const dbData = await DashifyService.getComparacao(localItems);
+      dadosMisturados = dbData.map((d) => ({
         ...d,
         resultados: (d.resultados || []).map((r) => ({
           ...r,
           valor: Number(r.valor),
         })),
       }));
-      setDadosComparacao(tratados);
+    }
+
+    const ministerialItems = itens.filter((i) => i.id >= 9000);
+    ministerialItems.forEach((mi) => {
+      const key = `${mi.id}-${mi.unidadeId}`;
+      if (ministerialCache[key]) dadosMisturados.push(ministerialCache[key]);
     });
-  }, [itensComparacao]);
+
+    return dadosMisturados;
+  };
+
+  useEffect(() => {
+    if (itensComparacao.length === 0) {
+      setDadosComparacao([]);
+      return;
+    }
+    resolveMixedData(itensComparacao).then(setDadosComparacao);
+  }, [itensComparacao, ministerialCache]);
 
   useEffect(() => {
     if (itensPainel.length === 0) {
@@ -269,53 +306,52 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       return;
     }
     if (viewMode === "meu-painel" || itensPainel.length > 0) {
-      DashifyService.getComparacao(itensPainel).then((dados) => {
-        const tratados = dados.map((d) => ({
-          ...d,
-          resultados: (d.resultados || []).map((r) => ({
-            ...r,
-            valor: Number(r.valor),
-          })),
-        }));
-        setDadosMeuPainel(tratados);
-      });
+      resolveMixedData(itensPainel).then(setDadosMeuPainel);
     }
-  }, [itensPainel, viewMode]);
+  }, [itensPainel, viewMode, ministerialCache]);
 
-  const toggleItemComparador = useCallback((id: number, unidadeId: number) => {
-    setItensComparacao((prev) => {
+  const handleItemToggle = (
+    id: number,
+    unidadeId: number,
+    stateSetter: React.Dispatch<React.SetStateAction<ItemSelecao[]>>,
+    indicadorOverride?: Indicador,
+  ) => {
+    if (indicadorOverride && indicadorOverride.isMinisterial) {
+      setMinisterialCache((prev) => ({
+        ...prev,
+        [`${id}-${unidadeId}`]: indicadorOverride,
+      }));
+    }
+
+    stateSetter((prev) => {
       if (prev.some((i) => i.id === id && i.unidadeId === unidadeId)) {
         return prev.filter((i) => !(i.id === id && i.unidadeId === unidadeId));
       }
-      if (prev.length === 0) return [{ id, unidadeId }];
-      const p = prev[0];
-      if (
-        prev.every((i) => i.unidadeId === p.unidadeId) &&
-        unidadeId === p.unidadeId
-      )
-        return [...prev, { id, unidadeId }];
-      if (prev.every((i) => i.id === p.id) && id === p.id)
-        return [...prev, { id, unidadeId }];
-      if (prev.length === 1 && (p.unidadeId === unidadeId || p.id === id))
-        return [...prev, { id, unidadeId }];
-      return prev;
+      return [...prev, { id, unidadeId }];
     });
-  }, []);
+  };
+
+  const toggleItemComparador = useCallback(
+    (id: number, unidadeId: number, ind?: Indicador) => {
+      handleItemToggle(id, unidadeId, setItensComparacao, ind);
+    },
+    [],
+  );
 
   const isComparando = useCallback(
     (id: number, unidadeId: number) =>
       itensComparacao.some((i) => i.id === id && i.unidadeId === unidadeId),
     [itensComparacao],
   );
+
   const limparComparador = useCallback(() => setItensComparacao([]), []);
 
-  const toggleItemPainel = useCallback((id: number, unidadeId: number) => {
-    setItensPainel((prev) =>
-      prev.some((i) => i.id === id && i.unidadeId === unidadeId)
-        ? prev.filter((i) => !(i.id === id && i.unidadeId === unidadeId))
-        : [...prev, { id, unidadeId }],
-    );
-  }, []);
+  const toggleItemPainel = useCallback(
+    (id: number, unidadeId: number, ind?: Indicador) => {
+      handleItemToggle(id, unidadeId, setItensPainel, ind);
+    },
+    [],
+  );
 
   const isNoPainel = useCallback(
     (id: number, unidadeId: number) =>
@@ -323,6 +359,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     [itensPainel],
   );
   const limparPainel = useCallback(() => setItensPainel([]), []);
+
   const setComparadorAberto = useCallback(
     (aberto: boolean) => setViewMode(aberto ? "comparador" : "setor"),
     [],

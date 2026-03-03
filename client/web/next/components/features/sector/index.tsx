@@ -8,11 +8,6 @@ import { SectorHeader } from "./sector-header";
 import { SectorGrid } from "./sector-grid";
 import { UnitSelector } from "@/components/shared/unit-selector";
 
-/**
- * Componente Contêiner (Smart) do Dashboard Setorial.
- * Gerencia a conexão com o contexto do dashboard, estados de busca,
- * filtragem e orquestra a renderização da interface e estados vazios.
- */
 export function SectorDashboard() {
   const {
     tiposUnidade,
@@ -30,13 +25,11 @@ export function SectorDashboard() {
     isComparando,
   } = useDashboard();
 
-  // Estados Locais
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [termoBusca, setTermoBusca] = useState("");
   const [isUnitSelectorOpen, setIsUnitSelectorOpen] = useState(false);
   const columns = useColumns();
 
-  // Helpers / Cálculos
   const tipoAtivoNome =
     tiposUnidade.find((t) => t.id === tipoUnidadeAtivoId)?.nome ||
     "Selecione um tipo";
@@ -49,14 +42,12 @@ export function SectorDashboard() {
     );
   }, [indicadoresAtuais, termoBusca]);
 
-  // Conta quantos indicadores realmente possuem dados alimentados (resultados > 0)
   const totalComResultados = useMemo(() => {
     return indicadoresAtuais.filter(
       (ind) => ind.resultados && ind.resultados.length > 0,
     ).length;
   }, [indicadoresAtuais]);
 
-  // Renderizações Condicionais (Early Returns)
   if (loading) {
     return (
       <div className="flex flex-col gap-4 h-[50vh] w-full items-center justify-center">
@@ -113,7 +104,6 @@ export function SectorDashboard() {
     );
   }
 
-  // Renderização Principal
   return (
     <div className="flex flex-col gap-6 pb-20">
       <SectorHeader

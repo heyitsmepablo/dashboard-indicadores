@@ -11,7 +11,7 @@ export interface Superintendencia {
   id: number;
   nome: string;
   sigla: string;
-  tipo_de_unidade?: TipoUnidade[]; // Relacionamento incluído na busca
+  tipo_de_unidade?: TipoUnidade[];
 }
 
 export interface TipoUnidade {
@@ -39,7 +39,7 @@ export interface Resultado {
   valor: number;
   valor_texto?: string | null;
   analise_critica?: string | null;
-  updated_at?: string; // Usado para calcular a última atualização
+  updated_at?: string;
   unidades?: Unidade;
 }
 
@@ -49,11 +49,18 @@ export interface Indicador {
   meta: string | null;
   fonte_formula?: string | null;
   unidade_de_medida: UnidadeMedida;
+  referencia_ministerial_sistema?:
+    | "SIH"
+    | "SIA_RESUMO"
+    | "SIA_ESPECIALIDADE"
+    | null;
+  referencia_ministerial_chave?: string | null;
   resultados?: Resultado[];
   indicador_tipo_unidade?: {
     tipo_de_unidade: TipoUnidade;
   }[];
-  // Campos virtuais
   unidadeId?: number;
   nomeUnidade?: string;
+  isMinisterial?: boolean;
+  ministerialKey?: string;
 }

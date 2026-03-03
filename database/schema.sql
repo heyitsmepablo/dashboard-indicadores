@@ -36,14 +36,15 @@ CREATE TABLE "unidades" (
   "id" SERIAL PRIMARY KEY,
   "nome" VARCHAR(255) NOT NULL,
   "sigla" VARCHAR(50),
-  "cnes" VARCHAR(20) UNIQUE,           -- Adicionado: Código CNES
-  "uf" CHAR(2) DEFAULT 'MA',           -- Adicionado: Estado padrão
+  "cnes" VARCHAR(20) UNIQUE,           
+  "uf" CHAR(2) DEFAULT 'MA',           
   "tipo_unidade_id" INT NOT NULL,
   "superintendencia_id" INT, 
   "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- TABELA ATUALIZADA COM OS VÍNCULOS MINISTERIAIS
 CREATE TABLE "indicadores" (
   "id" SERIAL PRIMARY KEY,
   "descricao" TEXT NOT NULL,
@@ -54,6 +55,9 @@ CREATE TABLE "indicadores" (
         'ABSOLUTO', 'PERCENTUAL', 'FINANCEIRO', 
         'TEMPO_DIAS', 'TEMPO_HORAS', 'TAXA', 'TEXTO'
     )),
+  "referencia_ministerial_sistema" VARCHAR(50) 
+    CHECK (referencia_ministerial_sistema IN ('SIH', 'SIA_RESUMO', 'SIA_ESPECIALIDADE')),
+  "referencia_ministerial_chave" VARCHAR(100),
   "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

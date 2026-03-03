@@ -38,22 +38,18 @@ export function AppSidebar() {
     itensPainel,
   } = useDashboard();
 
-  // Controla o estado manual de expansão
   const [expandedSup, setExpandedSup] = useState<Record<number, boolean>>({});
 
   const toggleSup = (id: number) => {
     setExpandedSup((prev) => {
-      // Descobre se ele está aberto no momento (lendo do estado ou do padrão)
       const isCurrentlyExpanded =
         prev[id] !== undefined ? prev[id] : id === superintendenciaAtivaId;
-      // Inverte o valor
       return { ...prev, [id]: !isCurrentlyExpanded };
     });
   };
 
   return (
     <Sidebar>
-      {/* Header com a correção de altura (h-14) e alinhamento do border para o dark mode */}
       <SidebarHeader className="h-16 border-b border-sidebar-border flex flex-col justify-center px-4 w-full">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
@@ -71,6 +67,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="overflow-x-hidden">
+        {/* GRUPO 1: ESTRUTURA ORGANIZACIONAL */}
         <SidebarGroup>
           <SidebarGroupLabel>Estrutura Organizacional</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -82,7 +79,6 @@ export function AppSidebar() {
               )}
 
               {superintendencias.map((sup) => {
-                // Se existe valor no estado manual, usa ele. Se não, usa o fato de ser o ativo como padrão.
                 const isExpanded =
                   expandedSup[sup.id] !== undefined
                     ? expandedSup[sup.id]
@@ -100,23 +96,15 @@ export function AppSidebar() {
                       >
                         <FolderTree className="h-4 w-4" />
                         <span className="flex-1 truncate">{sup.sigla}</span>
-                        {/* Ícone com animação de rotação */}
                         <ChevronDown
-                          className={`h-4 w-4 opacity-50 transition-transform duration-200 ease-in-out ${
-                            isExpanded ? "rotate-0" : "-rotate-90"
-                          }`}
+                          className={`h-4 w-4 opacity-50 transition-transform duration-200 ease-in-out ${isExpanded ? "rotate-0" : "-rotate-90"}`}
                         />
                       </SidebarMenuButton>
                     </SidebarMenuItem>
 
-                    {/* Sub-menu: Tipos de Unidade (com animação de Grid) */}
                     {sup.tipo_de_unidade && (
                       <div
-                        className={`grid transition-all duration-300 ease-in-out ${
-                          isExpanded
-                            ? "grid-rows-[1fr] opacity-100 mt-0.5"
-                            : "grid-rows-[0fr] opacity-0 mt-0"
-                        }`}
+                        className={`grid transition-all duration-300 ease-in-out ${isExpanded ? "grid-rows-[1fr] opacity-100 mt-0.5" : "grid-rows-[0fr] opacity-0 mt-0"}`}
                       >
                         <div className="overflow-hidden">
                           <div className="pl-6 flex flex-col gap-0.5 relative before:absolute before:inset-y-0 before:left-[17px] before:w-px before:bg-sidebar-border">
@@ -154,6 +142,36 @@ export function AppSidebar() {
 
         <SidebarSeparator />
 
+        {/* GRUPO 2: PANORAMA MINISTERIAL */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Panorama Ministerial</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={viewMode === "ministerial-sih"}
+                  onClick={() => setViewMode("ministerial-sih")}
+                >
+                  <Building2 className="h-4 w-4 text-blue-500" />
+                  <span>Hospitalar (SIH)</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={viewMode === "ministerial-sia"}
+                  onClick={() => setViewMode("ministerial-sia")}
+                >
+                  <BarChart3 className="h-4 w-4 text-emerald-500" />
+                  <span>Ambulatorial (SIA)</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+
+        {/* GRUPO 3: FERRAMENTAS */}
         <SidebarGroup>
           <SidebarGroupLabel>Ferramentas</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -203,13 +221,6 @@ export function AppSidebar() {
             >
               Pablo Eduardo <Linkedin className="h-3 w-3" />
             </a>
-          </div>
-        </div>
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between text-xs ">
-            <span className="text-sidebar-foreground/60">
-              Aprovado pela Superintendencia de Qualidade - SEMUS
-            </span>
           </div>
         </div>
       </SidebarFooter>

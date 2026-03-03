@@ -1,56 +1,43 @@
-import {
-  IsNotEmpty,
-  IsInt,
-  IsString,
-  IsISO8601,
-  IsOptional,
-} from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger'; // Opcional: caso use Swagger
+import { IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
 
-/**
- * DTO Base para garantir consistência entre as operações de análise
- */
-export class BaseAnaliseDto {
-  @IsInt()
-  @IsNotEmpty()
-  @ApiProperty({ description: 'ID do indicador referente à análise' })
+export class SolicitarAnaliseDto {
+  @IsNumber()
   indicadorId: number;
 
-  @IsInt()
-  @IsNotEmpty()
-  @ApiProperty({ description: 'ID da unidade de saúde da SEMUS' })
+  @IsNumber()
   unidadeId: number;
 
-  @IsISO8601()
-  @IsNotEmpty()
-  @ApiProperty({
-    description: 'Data de competência no formato ISO8601 (AAAA-MM-DD)',
-  })
+  @IsString()
   competencia: string;
 }
 
-/**
- * DTO para solicitação inicial (Fluxo Assíncrono)
- */
-export class SolicitarAnaliseDto extends BaseAnaliseDto {}
+export class WebhookRetornoDto {
+  @IsNumber()
+  indicadorId: number;
 
-/**
- * DTO para geração em tempo real (Fluxo Síncrono)
- * Permite que a competência seja opcional caso queira assumir o mês atual no service
- */
-export class GerarAnaliseSobDemandaDto extends BaseAnaliseDto {
-  @IsOptional()
-  @IsISO8601()
-  competencia: string = new Date(Date.now()).toISOString();
+  @IsNumber()
+  unidadeId: number;
+
+  @IsString()
+  competencia: string;
+
+  @IsString()
+  analise: string;
 }
 
-/**
- * DTO para o retorno do Webhook do n8n
- * Inclui o campo obrigatório da análise crítica gerada pelo Gemini
- */
-export class WebhookRetornoDto extends BaseAnaliseDto {
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty({ description: 'Texto da análise crítica gerado pela IA' })
-  analise: string;
+export class GerarAnaliseSobDemandaDto {
+  @IsNumber()
+  indicadorId: number;
+
+  @IsNumber()
+  unidadeId: number;
+
+  @IsObject()
+  dadosContexto: {
+    nome: string;
+    meta?: string | null;
+    unidadeMedida: string;
+    historico: any[];
+    visaoGlobal?: boolean;
+  };
 }

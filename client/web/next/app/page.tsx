@@ -6,8 +6,9 @@ import { DashboardHeader } from "@/components/dashboard-header";
 import { SectorDashboard } from "@/components/features/sector";
 import { IndicatorComparator } from "@/components/features/comparator";
 import { MyDashboard } from "@/components/my-dashboard";
+import { PanoramaMinisterial } from "@/components/features/panorama-ministeral";
 import { DashboardProvider, useDashboard } from "@/lib/dashboard-context";
-import { AuthProvider } from "@/lib/auth-context"; // <--- Importação adicionada
+import { AuthProvider } from "@/lib/auth-context";
 
 function DashboardContent() {
   const { viewMode } = useDashboard();
@@ -21,6 +22,8 @@ function DashboardContent() {
           {viewMode === "comparador" && <IndicatorComparator />}
           {viewMode === "meu-painel" && <MyDashboard />}
           {viewMode === "setor" && <SectorDashboard />}
+          {viewMode === "ministerial-sih" && <PanoramaMinisterial tipo="sih" />}
+          {viewMode === "ministerial-sia" && <PanoramaMinisterial tipo="sia" />}
         </div>
       </SidebarInset>
     </SidebarProvider>
@@ -29,7 +32,6 @@ function DashboardContent() {
 
 export default function Page() {
   return (
-    // AuthProvider abraçando a aplicação por fora
     <AuthProvider>
       <DashboardProvider>
         <DashboardContent />
