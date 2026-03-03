@@ -8,6 +8,7 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
+  vw_indicadores_sia_cbo: any;
   constructor() {
     const connectionString = process.env.DATABASE_URL;
 

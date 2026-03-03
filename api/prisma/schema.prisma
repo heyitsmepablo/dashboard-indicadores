@@ -1,15 +1,14 @@
 generator client {
-  provider     = "prisma-client"
-  output       = "../generated/prisma"
-  moduleFormat = "cjs"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  previewFeatures = ["views"]
+  moduleFormat    = "cjs"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model indicadores {
   id                     Int                      @id @default(autoincrement())
   descricao              String
@@ -40,6 +39,64 @@ model resultados {
   @@index([unidade_id], map: "idx_resultados_unidade")
 }
 
+model datasus_sync_log {
+  id                 Int       @id @default(autoincrement())
+  uf                 String    @db.Char(2)
+  sistema            String    @db.VarChar(10)
+  ano                Int
+  mes                Int
+  data_sincronizacao DateTime? @default(now()) @db.Timestamp(6)
+
+  @@unique([uf, sistema, ano, mes])
+}
+
+model indicador_tipo_unidade {
+  indicador_id    Int
+  tipo_unidade_id Int
+  indicadores     indicadores     @relation(fields: [indicador_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_itu_indicador")
+  tipo_de_unidade tipo_de_unidade @relation(fields: [tipo_unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_itu_tipo")
+
+  @@id([indicador_id, tipo_unidade_id])
+  @@index([tipo_unidade_id], map: "idx_itu_tipo_unidade")
+}
+
+model sia_registros {
+  id         Int       @id @default(autoincrement())
+  unidade_id Int
+  cnes       String    @db.VarChar(20)
+  ano        Int
+  mes        Int
+  dados      Json
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  unidades   unidades  @relation(fields: [unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_sia_unidade")
+
+  @@index([cnes, ano, mes], map: "idx_sia_cnes_competencia")
+}
+
+model sih_registros {
+  id         Int       @id @default(autoincrement())
+  unidade_id Int
+  cnes       String    @db.VarChar(20)
+  ano        Int
+  mes        Int
+  n_aih      String?   @db.VarChar(50)
+  dados      Json
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  unidades   unidades  @relation(fields: [unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_sih_unidade")
+
+  @@index([cnes, ano, mes], map: "idx_sih_cnes_competencia")
+}
+
+model superintendencias {
+  id              Int               @id @default(autoincrement())
+  nome            String            @db.VarChar(255)
+  sigla           String?           @db.VarChar(50)
+  created_at      DateTime?         @default(now()) @db.Timestamp(6)
+  updated_at      DateTime?         @default(now()) @db.Timestamp(6)
+  tipo_de_unidade tipo_de_unidade[]
+  unidades        unidades[]
+}
+
 model tipo_de_unidade {
   id                     Int                      @id @default(autoincrement())
   nome                   String                   @db.VarChar(100)
@@ -55,36 +112,20 @@ model unidades {
   id                  Int                @id @default(autoincrement())
   nome                String             @db.VarChar(255)
   sigla               String?            @db.VarChar(50)
+  cnes                String?            @unique @db.VarChar(20)
+  uf                  String?            @default("MA") @db.Char(2)
   tipo_unidade_id     Int
   superintendencia_id Int?
   created_at          DateTime?          @default(now()) @db.Timestamp(6)
   updated_at          DateTime?          @default(now()) @db.Timestamp(6)
   resultados          resultados[]
+  sia_registros       sia_registros[]
+  sih_registros       sih_registros[]
   superintendencias   superintendencias? @relation(fields: [superintendencia_id], references: [id], onUpdate: NoAction, map: "fk_unidade_superintendencia")
   tipo_de_unidade     tipo_de_unidade    @relation(fields: [tipo_unidade_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_unidade_tipo")
 
-  @@index([tipo_unidade_id], map: "idx_unidades_tipo")
   @@index([superintendencia_id], map: "idx_unidades_super")
-}
-
-model indicador_tipo_unidade {
-  indicador_id    Int
-  tipo_unidade_id Int
-  indicadores     indicadores     @relation(fields: [indicador_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_itu_indicador")
-  tipo_de_unidade tipo_de_unidade @relation(fields: [tipo_unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_itu_tipo")
-
-  @@id([indicador_id, tipo_unidade_id])
-  @@index([tipo_unidade_id], map: "idx_itu_tipo_unidade")
-}
-
-model superintendencias {
-  id              Int               @id @default(autoincrement())
-  nome            String            @db.VarChar(255)
-  sigla           String?           @db.VarChar(50)
-  created_at      DateTime?         @default(now()) @db.Timestamp(6)
-  updated_at      DateTime?         @default(now()) @db.Timestamp(6)
-  tipo_de_unidade tipo_de_unidade[]
-  unidades        unidades[]
+  @@index([tipo_unidade_id], map: "idx_unidades_tipo")
 }
 
 model usuarios {
@@ -94,4 +135,51 @@ model usuarios {
   senha      String    @db.VarChar(255)
   created_at DateTime? @default(now()) @db.Timestamp(6)
   updated_at DateTime? @default(now()) @db.Timestamp(6)
+}
+
+view vw_indicadores_sia_especialidades {
+  unidade_id                     Int?
+  cnes                           String?  @db.VarChar(20)
+  ano                            Int?
+  mes                            Int?
+  cbo_profissional               String?
+  qtd_procedimentos_apresentados Decimal? @db.Decimal
+  qtd_procedimentos_aprovados    Decimal? @db.Decimal
+  faturamento_gerado             Decimal? @db.Decimal
+
+  @@unique([unidade_id, ano, mes, cbo_profissional])
+}
+
+view vw_indicadores_sih {
+  unidade_id                     Int?
+  cnes                           String?  @db.VarChar(20)
+  ano                            Int?
+  mes                            Int?
+  total_internacoes              BigInt?
+  total_obitos                   BigInt?
+  taxa_mortalidade_institucional Decimal? @db.Decimal
+  media_permanencia_dias         Decimal? @db.Decimal
+  total_icsap                    BigInt?
+  proporcao_icsap                Decimal? @db.Decimal
+  faturamento_total_sih          Decimal? @db.Decimal
+  ticket_medio_internacao        Decimal? @db.Decimal
+  internacoes_uti                BigInt?
+  obitos_uti                     BigInt?
+  proporcao_obitos_uti           Decimal? @db.Decimal
+
+  @@unique([unidade_id, ano, mes])
+}
+
+view vw_indicadores_sia_resumo {
+  unidade_id                Int?
+  cnes                      String?  @db.VarChar(20)
+  ano                       Int?
+  mes                       Int?
+  quantidade_produzida      Decimal? @db.Decimal
+  quantidade_aprovada       Decimal? @db.Decimal
+  indice_glosa_ambulatorial Decimal? @db.Decimal
+  valor_produzido           Decimal? @db.Decimal
+  faturamento_total_sia     Decimal? @db.Decimal
+
+  @@unique([unidade_id, ano, mes])
 }

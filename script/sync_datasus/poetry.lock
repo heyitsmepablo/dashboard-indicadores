@@ -17,6 +17,18 @@ socks = ["siosocks (>=0.2.0)"]
 tests = ["async-timeout (>=4.0.0)", "pytest", "pytest-asyncio", "pytest-cov", "siosocks", "trustme"]
 
 [[package]]
+name = "argparse"
+version = "1.4.0"
+description = "Python command-line parsing library"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "argparse-1.4.0-py2.py3-none-any.whl", hash = "sha256:c31647edb69fd3d465a847ea3157d37bed1f95f19760b11a47aa91c04b666314"},
+    {file = "argparse-1.4.0.tar.gz", hash = "sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4"},
+]
+
+[[package]]
 name = "bigtree"
 version = "0.12.5"
 description = "Tree Implementation and Methods for Python, integrated with Python list, dictionary, and pandas DataFrame."
@@ -1272,4 +1284,4 @@ dev = ["black (>=19.3b0) ; python_version >= \"3.6\"", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "2d2fd8a770496fcec1ca2e53836a571884407d2285d7d1e0e10870d4bf504b6f"
+content-hash = "667cfb43a36b64660ecf9c288bc61a303d6cfdc887732ecfba186eefa7aeaced"

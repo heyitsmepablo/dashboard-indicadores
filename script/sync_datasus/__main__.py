@@ -1,7 +1,12 @@
+import sys
+import os
+import argparse
 import psycopg2
 import pandas as pd
 import json
+import time
 from datetime import datetime
+from contextlib import contextmanager
 from pysus import SIH, SIA 
 from tqdm import tqdm
 
@@ -14,8 +19,38 @@ DB_CONFIG = {
     "port": "5432"
 }
 
+@contextmanager
+def silenciar_logs_pysus():
+    """
+    Bloqueia temporariamente o sys.stderr (onde o PySUS cospe os logs de it/s)
+    para manter o terminal limpo e focado na barra principal.
+    """
+    with open(os.devnull, 'w') as devnull:
+        old_stderr = sys.stderr
+        sys.stderr = devnull
+        try:
+            yield
+        finally:
+            sys.stderr = old_stderr
+
 def get_connection():
     return psycopg2.connect(**DB_CONFIG)
+
+def reset_database():
+    """Limpa as tabelas de log e de registros para testes."""
+    print("⚠️  Iniciando limpeza do banco de dados (--reset-db)...")
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                TRUNCATE TABLE datasus_sync_log, sih_registros, sia_registros CASCADE;
+            """)
+            conn.commit()
+            print("✅ Tabelas limpas com sucesso!\n")
+    except Exception as e:
+        print(f"❌ Erro ao limpar o banco de dados: {e}\n")
+    finally:
+        conn.close()
 
 def fetch_unidades_ativas():
     conn = get_connection()
@@ -98,10 +133,13 @@ def salvar_registros(sistema, df_filtrado, cnes_dict, ano, mes):
         
     inserir_registros_db(query, dados_insercao)
 
-def executar_etl_datasus():
-    print("Iniciando rotina de extração pySUS...\n")
-    unidades = fetch_unidades_ativas()
+def executar_etl_datasus(save_to_disk=False, load_from_disk=False):
+    print("Iniciando rotina de extração pySUS com Retry System...\n")
     
+    if save_to_disk or load_from_disk:
+        os.makedirs("data", exist_ok=True)
+
+    unidades = fetch_unidades_ativas()
     if not unidades:
         print("Nenhuma unidade com CNES encontrada no banco.")
         return
@@ -122,68 +160,120 @@ def executar_etl_datasus():
             for mes in range(1, 13):
                 if ano == data_atual.year and mes > data_atual.month:
                     break 
-                
                 tarefas.append({'uf': uf, 'cnes_dict': cnes_dict, 'ano': ano, 'mes': mes, 'sistema': 'SIH'})
                 tarefas.append({'uf': uf, 'cnes_dict': cnes_dict, 'ano': ano, 'mes': mes, 'sistema': 'SIA'})
 
-    tqdm.write("Conectando aos servidores do Ministério da Saúde...")
-    sih = SIH().load()
-    sia = SIA().load()
+    sih = SIH().load() if not load_from_disk else None
+    sia = SIA().load() if not load_from_disk else None
+    
+    # Relatório Final
+    sucessos = []
+    falhas = []
+    MAX_RETRIES = 3
 
-    with tqdm(total=len(tarefas), desc="Preparando...", unit="lote", dynamic_ncols=True) as pbar:
-        
+    if not load_from_disk:
+        print("Conectando aos servidores do Ministério da Saúde...")
+
+    with tqdm(total=len(tarefas), desc="Progresso Geral", unit="lote", dynamic_ncols=True, file=sys.stdout) as pbar:
         for tarefa in tarefas:
-            uf = tarefa['uf']
-            cnes_dict = tarefa['cnes_dict']
-            ano = tarefa['ano']
-            mes = tarefa['mes']
-            sistema = tarefa['sistema']
-            lista_cnes_db = list(cnes_dict.keys())
+            uf, ano, mes, sistema = tarefa['uf'], tarefa['ano'], tarefa['mes'], tarefa['sistema']
+            cnes_dict, lista_cnes_db = tarefa['cnes_dict'], list(tarefa['cnes_dict'].keys())
+            lote_id = f"{sistema} {uf} {mes:02d}/{ano}"
             
-            pbar.set_description(f"Processando {sistema} - {uf} {mes:02d}/{ano}")
+            pbar.set_postfix(lote=lote_id, status="Checking...")
 
             if sync_concluido(uf, sistema, ano, mes):
+                sucessos.append(lote_id)
                 pbar.update(1)
                 continue
 
-            try:
-                arquivos_baixados = None
-                
-                if sistema == 'SIH':
-                    arquivos_ftp = sih.get_files("RD", uf=uf, year=ano, month=mes)
-                    if arquivos_ftp:
-                        arquivos_baixados = sih.download(arquivos_ftp)
-                else:
-                    arquivos_ftp = sia.get_files("PA", uf=uf, year=ano, month=mes)
-                    if arquivos_ftp:
-                        arquivos_baixados = sia.download(arquivos_ftp)
+            processado = False
+            for tentativa in range(1, MAX_RETRIES + 1):
+                try:
+                    df = None
+                    arquivo_local = f"data/{sistema}_{uf}_{ano}_{mes:02d}.parquet"
 
-                # --- LÓGICA CORRIGIDA PARA O PARQUETSET ---
-                if arquivos_baixados is not None:
-                    # Se for o objeto ParquetSet nativo das versões novas
-                    if hasattr(arquivos_baixados, 'to_dataframe'):
-                        df = arquivos_baixados.to_dataframe()
-                    # Caso de fallback para compatibilidade
-                    elif isinstance(arquivos_baixados, list):
-                        df = pd.read_parquet(arquivos_baixados[0])
+                    if load_from_disk:
+                        pbar.set_postfix(lote=lote_id, status="Loading Disk")
+                        if os.path.exists(arquivo_local):
+                            df = pd.read_parquet(arquivo_local)
+                        else:
+                            raise FileNotFoundError(f"Arquivo local não encontrado: {arquivo_local}")
                     else:
-                        df = pd.read_parquet(arquivos_baixados)
-                    
-                    col_cnes = 'CNES' if sistema == 'SIH' else ('PA_CODUNI' if 'PA_CODUNI' in df.columns else 'CNES')
-                    
-                    if col_cnes in df.columns:
-                        df[col_cnes] = df[col_cnes].astype(str).str.zfill(7)
-                        df_alvo = df[df[col_cnes].isin(lista_cnes_db)]
-                        salvar_registros(sistema, df_alvo, cnes_dict, ano, mes)
+                        pbar.set_postfix(lote=lote_id, status=f"Download T{tentativa}")
+                        arquivos_baixados = None
                         
-                registrar_sync(uf, sistema, ano, mes)
-                
-            except Exception as err:
-                tqdm.write(f"  -> [AVISO] Falha ao processar lote {sistema} {uf} {mes:02d}/{ano}: {err}")
+                        with silenciar_logs_pysus():
+                            if sistema == 'SIH':
+                                arquivos_ftp = sih.get_files("RD", uf=uf, year=ano, month=mes)
+                                if arquivos_ftp: arquivos_baixados = sih.download(arquivos_ftp)
+                            else:
+                                arquivos_ftp = sia.get_files("PA", uf=uf, year=ano, month=mes)
+                                if arquivos_ftp: arquivos_baixados = sia.download(arquivos_ftp)
+
+                        if arquivos_baixados is not None:
+                            pbar.set_postfix(lote=lote_id, status=f"Parsing T{tentativa}")
+                            try:
+                                if hasattr(arquivos_baixados, 'to_dataframe'):
+                                    df = arquivos_baixados.to_dataframe()
+                                elif isinstance(arquivos_baixados, list) and arquivos_baixados:
+                                    df = pd.read_parquet(arquivos_baixados[0])
+                                else:
+                                    df = pd.read_parquet(arquivos_baixados)
+                            except ValueError as ve:
+                                if "concatenate" in str(ve).lower():
+                                    df = None # Lote reconhecidamente vazio no servidor
+                                    tqdm.write(f"  -> [INFO] Lote {lote_id} está vazio no Governo.")
+                                    break # Não adianta tentar de novo se o MS diz que está vazio
+                                raise ve
+                            
+                            if save_to_disk and df is not None:
+                                df.to_parquet(arquivo_local)
+
+                    # Se chegou aqui com dados, salva no DB
+                    if df is not None and not df.empty:
+                        pbar.set_postfix(lote=lote_id, status="Saving DB")
+                        col_cnes = 'CNES' if sistema == 'SIH' else ('PA_CODUNI' if 'PA_CODUNI' in df.columns else 'CNES')
+                        if col_cnes in df.columns:
+                            df[col_cnes] = df[col_cnes].astype(str).str.zfill(7)
+                            df_alvo = df[df[col_cnes].isin(lista_cnes_db)]
+                            salvar_registros(sistema, df_alvo, cnes_dict, ano, mes)
+                    
+                    registrar_sync(uf, sistema, ano, mes)
+                    sucessos.append(lote_id)
+                    processado = True
+                    break # Sai do loop de retentativa pois deu certo
+
+                except Exception as err:
+                    if tentativa < MAX_RETRIES:
+                        time.sleep(3) # Espera antes da próxima tentativa
+                    else:
+                        falhas.append(f"{lote_id} Error: {str(err)}")
             
             pbar.update(1)
 
-    print("\nSincronização concluída com sucesso!")
+    # --- RELATÓRIO FINAL ---
+    print("\n" + "="*60)
+    print(f"📊  RESUMO DA SINCRONIZAÇÃO")
+    print(f"✅  Sucessos: {len(sucessos)}")
+    print(f"❌  Falhas:   {len(falhas)}")
+    print("="*60)
+    
+    if falhas:
+        print("\nLista de Falhas (Verificar conexão ou disponibilidade no MS):")
+        for f in falhas:
+            print(f"  • {f}")
+    
+    print("\nConcluído!")
 
 if __name__ == "__main__":
-    executar_etl_datasus()
+    parser = argparse.ArgumentParser(description="ETL DataSUS Dashify - Optimized Sync.")
+    parser.add_argument("--save", action="store_true", help="Cache local em .parquet")
+    parser.add_argument("--load", action="store_true", help="Usa apenas cache local")
+    parser.add_argument("--reset-db", action="store_true", help="Limpa tabelas antes de iniciar")
+    args = parser.parse_args()
+
+    if args.reset_db:
+        reset_database()
+
+    executar_etl_datasus(save_to_disk=args.save, load_from_disk=args.load)

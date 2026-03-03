@@ -19,15 +19,18 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./database/seeds:/tmp/seeds
+      - ./database/sql/seeds/data:/tmp/seeds
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ./database/sql/seed_indicadores.sql:/docker-entrypoint-initdb.d/02_seeds.sql
-      - ./database/sql/seed_superintendencias.sql:/docker-entrypoint-initdb.d/03_seeds.sql
-      - ./database/sql/seed_tipo_de_unidade.sql:/docker-entrypoint-initdb.d/04_seeds.sql
-      - ./database/sql/seed_indicador_tipo_de_unidade.sql:/docker-entrypoint-initdb.d/05_seeds.sql
-      - ./database/sql/seed_unidades.sql:/docker-entrypoint-initdb.d/06_seeds.sql
-      - ./database/sql/seed_resultados.sql:/docker-entrypoint-initdb.d/07_seeds.sql
-      - ./docker/database/data:/var/lib/postgresql/MAJOR/data
+      - ./database/sql/seeds/seed_indicadores.sql:/docker-entrypoint-initdb.d/02_seeds.sql
+      - ./database/sql/seeds/seed_superintendencias.sql:/docker-entrypoint-initdb.d/03_seeds.sql
+      - ./database/sql/seeds/seed_tipo_de_unidade.sql:/docker-entrypoint-initdb.d/04_seeds.sql
+      - ./database/sql/seeds/seed_indicador_tipo_de_unidade.sql:/docker-entrypoint-initdb.d/05_seeds.sql
+      - ./database/sql/seeds/seed_unidades.sql:/docker-entrypoint-initdb.d/06_seeds.sql
+      - ./database/sql/seeds/seed_resultados.sql:/docker-entrypoint-initdb.d/07_seeds.sql
+      - ./database/sql/views/vw_indicadores_sih.sql:/docker-entrypoint-initdb.d/08_view.sql
+      - ./database/sql/views/vw_indicadores_sia_resumo.sql:/docker-entrypoint-initdb.d/09_view.sql
+      - ./database/sql/views/vw_indicadores_sia_especialidades.sql:/docker-entrypoint-initdb.d/10_view.sql
+      # - ./docker/database/data:/var/lib/postgresql/MAJOR/data
       - /etc/localtime:/etc/localtime:ro
     networks:
       - dashboard

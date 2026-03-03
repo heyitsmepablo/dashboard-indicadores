@@ -9,8 +9,8 @@ import {
 } from '@nestjs/common';
 import { ResultadoService } from 'src/services/resultado-service/resultado-service.service';
 import { CreateResultadoDto } from './resultado.dto';
-import { JwtAuthGuard } from 'src/module/auth/jwt-auth.guard';
-import { OptionalJwtAuthGuard } from 'src/module/auth/optional-jwt-auth.guard';
+import { JwtAuthGuard } from 'src/modules/auth/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from 'src/modules/auth/optional-jwt-auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 @ApiBearerAuth()
 @Controller('resultados')
