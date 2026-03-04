@@ -2,6 +2,24 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo. Consulte [Conventional Commits](https://www.conventionalcommits.org/pt-br/v1.0.0/) para diretrizes de commits.
 
+## [1.0.0-alpha.4](https://github.com/heyitsmepablo/dashboard-indicadores/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2026-03-04)
+
+### ⚠ BREAKING CHANGES
+
+* A tabela 'unidades' agora exige a coluna 'cnes' para persistência
+e o ambiente Python requer o Poetry para gestão de dependências.
+
+### ✨ Funcionalidades
+
+* **backend:** implement ministerial indicators, global aggregation and AI analysis" -m " ([295f4b2](https://github.com/heyitsmepablo/dashboard-indicadores/commit/295f4b29c5bee8ea162fe356306e525f961ceec5))
+* integra sincronização com DATASUS e atualiza schema de unidades ([79ed6e6](https://github.com/heyitsmepablo/dashboard-indicadores/commit/79ed6e6229bc7a34dcfb42f502817e19ad8f53dd))
+* integração DATASUS, filtros de data no comparador e redesign do Meu Painel ([e7e0c2f](https://github.com/heyitsmepablo/dashboard-indicadores/commit/e7e0c2f2c6b918b1d6aea854b742b7cc9d15f65c))
+* integração do panorama ministerial, filtros dinâmicos de tempo e IA context-aware ([95fe60f](https://github.com/heyitsmepablo/dashboard-indicadores/commit/95fe60f7e1cb2cbfe566419d5cf5322fd1775706))
+
+### 📚 Documentação
+
+* atualizando env example ([bf48990](https://github.com/heyitsmepablo/dashboard-indicadores/commit/bf489901f2cb65f5a851bbd297ad7f23c533255c))
+
 ## [1.0.0-alpha.3](https://github.com/heyitsmepablo/dashboard-indicadores/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2026-03-01)
 
 ### ✨ Funcionalidades
