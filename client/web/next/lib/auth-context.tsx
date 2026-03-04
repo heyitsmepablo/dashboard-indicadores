@@ -9,10 +9,12 @@ import {
 } from "react";
 import { DashifyService } from "@/services/dashify.service";
 
-interface User {
+export interface User {
   id: string; // UUID
   nome: string;
+  matricula: string;
   email: string;
+  must_change_password?: boolean;
 }
 
 interface AuthContextType {
@@ -20,7 +22,8 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  updateUserSession: (token: string, user: User) => void;
   isAuthLoading: boolean;
 }
 
@@ -32,7 +35,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
-    // Restaura a sessão ao carregar a página
     const storedToken = localStorage.getItem("dashify_token");
     const storedUser = localStorage.getItem("dashify_user");
 
@@ -46,22 +48,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       const data = await DashifyService.login(email, password);
-      setToken(data.access_token);
-      setUser(data.user);
-
-      localStorage.setItem("dashify_token", data.access_token);
-      localStorage.setItem("dashify_user", JSON.stringify(data.user));
+      updateUserSession(data.access_token, data.user);
     } catch (error) {
       throw error;
     }
   };
 
-  const logout = () => {
+  const updateUserSession = (newToken: string, newUser: User) => {
+    setToken(newToken);
+    setUser(newUser);
+    localStorage.setItem("dashify_token", newToken);
+    localStorage.setItem("dashify_user", JSON.stringify(newUser));
+  };
+
+  const logout = async () => {
+    // 💡 Primeiro avisa a API para gravar o log
+    if (token) {
+      await DashifyService.logout();
+    }
+
+    // Depois limpa a máquina do cliente
     setToken(null);
     setUser(null);
     localStorage.removeItem("dashify_token");
     localStorage.removeItem("dashify_user");
-    // Recarrega a página para limpar estados residuais e refazer fetch sem token
     window.location.reload();
   };
 
@@ -73,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!token,
         login,
         logout,
+        updateUserSession,
         isAuthLoading,
       }}
     >

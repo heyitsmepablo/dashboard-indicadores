@@ -23,10 +23,36 @@ export const DashifyService = {
     return res.json();
   },
 
+  // 💡 NOVO MÉTODO: Avisa a API que o usuário saiu
+  async logout() {
+    try {
+      await fetch(`${API_URL}/auth/logout`, {
+        method: "POST",
+        headers: this.getHeaders(),
+      });
+    } catch (error) {
+      console.warn("Não foi possível registrar o logout no servidor.", error);
+    }
+  },
+
+  async changePassword(currentPassword: string, newPassword: string) {
+    const res = await fetch(`${API_URL}/auth/change-password`, {
+      method: "POST",
+      headers: this.getHeaders(),
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || "Falha ao alterar senha");
+    }
+    return res.json();
+  },
+
   async getSuperintendencias(): Promise<Superintendencia[]> {
     const res = await fetch(`${API_URL}/superintendencia`, {
       headers: this.getHeaders(),
     });
+    if (res.status === 401) throw new Error("Unauthorized");
     if (!res.ok) throw new Error("Falha ao buscar superintendencias");
     return res.json();
   },

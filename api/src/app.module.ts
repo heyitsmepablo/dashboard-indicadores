@@ -5,20 +5,22 @@ import { AppService } from './app.service';
 import { IndicadorController } from './modules/inidicador/controller/indicador.controller';
 
 import { PrismaService } from './services/prisma-service/prisma-service.service';
-import { ResultadoService } from './services/resultado-service/resultado-service.service';
+import { ResultadoService } from './modules/resultado/service/resultado-service.service';
 import { IndicadorService } from './modules/inidicador/service/indicador-service.service';
-import { ResultadosController } from './controllers/resultado/resultado.controller';
+import { ResultadoController } from './modules/resultado/controller/resultado.controller';
 import { ConfigModule } from '@nestjs/config';
-import { UnidadeService } from './services/unidade/unidade.service';
-import { UnidadesController } from './controllers/unidade/unidade.controller';
-import { TipoUnidadeController } from './controllers/tipo-de-unidade/tipo-de-unidade.controller';
-import { TipoUnidadeService } from './services/tipo-de-unidade-service/tipo-de-unidade-service.service';
-import { SuperintendenciaService } from './services/superintendencia/superintendencia.service';
-import { SuperintendenciaController } from './controllers/superintendencia/superintendencia.controller';
+import { UnidadeService } from './modules/unidade/service/unidade.service';
+import { UnidadeController } from './modules/unidade/controller/unidade.controller';
+import { TipoUnidadeController } from './modules/tipo-de-unidade/controller/tipo-de-unidade.controller';
+import { TipoDeUnidadeService } from './modules/tipo-de-unidade/service/tipo-de-unidade-service.service';
+import { SuperintendenciaService } from './modules/superintendencia/service/superintendencia.service';
+import { SuperintendenciaController } from './modules/superintendencia/controller/superintendencia.controller';
 
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AnaliseModule } from './modules/analise/analise.module';
+import { WinstonModule } from 'nest-winston';
+import { winstonConfig } from './logger/winston.config';
 
 @Module({
   imports: [
@@ -26,13 +28,14 @@ import { AnaliseModule } from './modules/analise/analise.module';
     UserModule,
     AuthModule,
     AnaliseModule,
+    WinstonModule.forRoot(winstonConfig),
   ],
   controllers: [
     AppController,
     IndicadorController,
-    ResultadosController,
+    ResultadoController,
     TipoUnidadeController,
-    UnidadesController,
+    UnidadeController,
     SuperintendenciaController,
   ],
   providers: [
@@ -40,7 +43,7 @@ import { AnaliseModule } from './modules/analise/analise.module';
     PrismaService,
     IndicadorService,
     ResultadoService,
-    TipoUnidadeService,
+    TipoDeUnidadeService,
     UnidadeService,
     SuperintendenciaService,
   ],

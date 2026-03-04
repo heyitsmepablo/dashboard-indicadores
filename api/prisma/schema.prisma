@@ -131,12 +131,14 @@ model unidades {
 }
 
 model usuarios {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nome       String    @db.VarChar(255)
-  email      String    @unique @db.VarChar(255)
-  senha      String    @db.VarChar(255)
-  created_at DateTime? @default(now()) @db.Timestamp(6)
-  updated_at DateTime? @default(now()) @db.Timestamp(6)
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome                 String    @db.VarChar(255)
+  matricula            String    @db.VarChar(255)
+  email                String    @unique @db.VarChar(255)
+  senha                String    @db.VarChar(255)
+  must_change_password Boolean?  @default(true)
+  created_at           DateTime? @default(now()) @db.Timestamp(6)
+  updated_at           DateTime? @default(now()) @db.Timestamp(6)
 }
 
 view vw_indicadores_sia_especialidades {

@@ -16,7 +16,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    // payload.sub é o UUID do usuário
-    return { id: payload.sub, email: payload.email, nome: payload.nome };
+    return {
+      id: payload.sub,
+      email: payload.email,
+      nome: payload.nome,
+      matricula: payload.matricula,
+    };
   }
 }

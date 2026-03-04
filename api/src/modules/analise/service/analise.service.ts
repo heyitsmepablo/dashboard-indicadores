@@ -7,7 +7,7 @@ import {
   GerarAnaliseSobDemandaDto,
 } from '../analise.dto';
 import { IndicadorService } from 'src/modules/inidicador/service/indicador-service.service';
-import { ResultadoService } from 'src/services/resultado-service/resultado-service.service';
+import { ResultadoService } from 'src/modules/resultado/service/resultado-service.service';
 import { Prisma } from 'generated/prisma/client';
 
 type ResultadoComUnidade = Prisma.resultadosGetPayload<{
