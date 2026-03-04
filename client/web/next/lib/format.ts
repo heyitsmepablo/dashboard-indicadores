@@ -30,7 +30,7 @@ export function formatValue(value: number, unidade: UnidadeMedida): string {
 
 /**
  * Formata a data de competência no formato curto (ex: "jan. 25").
- * @param dateStr Data no formato ISO ou YYYY-MM-DD.
+ * @param dateStr Data no formato ISO ou YYYY-MM ou YYYY-MM-DD.
  */
 export function formatCompetencia(dateStr: string): string {
   if (!dateStr) return "";
@@ -39,13 +39,15 @@ export function formatCompetencia(dateStr: string): string {
     const cleanDate = dateStr.toString().split("T")[0];
     const parts = cleanDate.split("-");
 
-    if (parts.length !== 3) return cleanDate;
-
     const year = parseInt(parts[0]);
     const month = parseInt(parts[1]) - 1;
-    const day = parseInt(parts[2]);
+    // Se não vier o dia na string, assume dia 1
+    const day = parts.length >= 3 ? parseInt(parts[2]) : 1;
 
     const date = new Date(year, month, day);
+
+    // Validação extra caso a data fique inválida
+    if (isNaN(date.getTime())) return cleanDate;
 
     return date.toLocaleDateString("pt-BR", {
       month: "short",
@@ -59,17 +61,29 @@ export function formatCompetencia(dateStr: string): string {
 
 /**
  * Formata a data de competência por extenso (ex: "NOVEMBRO DE 2025").
- * Utilizado para cabeçalhos de análise crítica.
- * @param dateStr Data no formato ISO ou YYYY-MM-DD.
+ * Utilizado para cabeçalhos de análise crítica e Tooltips.
+ * @param dateStr Data no formato ISO ou YYYY-MM ou YYYY-MM-DD.
  */
 export function formatCompetenciaLonga(dateStr: string): string {
   if (!dateStr) return "";
   try {
-    const [year, month, day] = dateStr.split("T")[0].split("-");
-    const date = new Date(Number(year), Number(month) - 1, Number(day));
-    return date
-      .toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
-      .toUpperCase();
+    const parts = dateStr.split("T")[0].split("-");
+    const year = Number(parts[0]);
+    const month = Number(parts[1]) - 1;
+    // Se não vier o dia na string, assume dia 1 para evitar NaN
+    const day = parts[2] ? Number(parts[2]) : 1;
+
+    const date = new Date(year, month, day);
+
+    // Validação extra caso a data fique inválida
+    if (isNaN(date.getTime())) return dateStr.toUpperCase();
+
+    // Primeira letra maiúscula para ficar bonito no Tooltip (ex: "Janeiro de 2025")
+    const formatada = date.toLocaleDateString("pt-BR", {
+      month: "long",
+      year: "numeric",
+    });
+    return formatada.charAt(0).toUpperCase() + formatada.slice(1);
   } catch (e) {
     return dateStr.toUpperCase();
   }

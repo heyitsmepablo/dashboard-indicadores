@@ -10,15 +10,17 @@ datasource db {
 }
 
 model indicadores {
-  id                     Int                      @id @default(autoincrement())
-  descricao              String
-  fonte_formula          String?
-  meta                   String?
-  unidade_de_medida      String                   @default("ABSOLUTO") @db.VarChar(50)
-  created_at             DateTime?                @default(now()) @db.Timestamp(6)
-  updated_at             DateTime?                @default(now()) @db.Timestamp(6)
-  indicador_tipo_unidade indicador_tipo_unidade[]
-  resultados             resultados[]
+  id                             Int                      @id @default(autoincrement())
+  descricao                      String
+  fonte_formula                  String?
+  meta                           String?
+  unidade_de_medida              String                   @default("ABSOLUTO") @db.VarChar(50)
+  referencia_ministerial_sistema String?                  @db.VarChar(50)
+  referencia_ministerial_chave   String?                  @db.VarChar(100)
+  created_at                     DateTime?                @default(now()) @db.Timestamp(6)
+  updated_at                     DateTime?                @default(now()) @db.Timestamp(6)
+  indicador_tipo_unidade         indicador_tipo_unidade[]
+  resultados                     resultados[]
 }
 
 model resultados {

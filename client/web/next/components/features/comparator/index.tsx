@@ -145,7 +145,6 @@ export function IndicatorComparator() {
     setTermoBuscaIndicador("");
   };
 
-  // Esta função já fazia o comportamento "Global" correto
   const removerIndicador = (indicadorId: number) => {
     itensComparacao
       .filter((i) => i.id === indicadorId)
@@ -168,15 +167,12 @@ export function IndicatorComparator() {
       .forEach((item) => toggleItemComparador(item.id, item.unidadeId));
   };
 
-  // CORREÇÃO AQUI: Alternância global de indicadores
   const handleToggleIndicador = (indId: number, currentUnitId: number) => {
     const isSelectedGlobally = itensComparacao.some((i) => i.id === indId);
 
     if (isSelectedGlobally) {
-      // Se já estava selecionado, removemos de TODAS as unidades na comparação (igual ao botão X)
       removerIndicador(indId);
     } else {
-      // Se não estava selecionado, adicionamos para TODAS as unidades ativas
       const unitsToApply = Array.from(new Set([...activeUnits, currentUnitId]));
       setActiveUnits(unitsToApply);
 
@@ -230,7 +226,10 @@ export function IndicatorComparator() {
     return Array.from(dates)
       .sort()
       .map((d) => {
-        const p: any = { competencia: formatCompetencia(d) };
+        const p: any = {
+          competencia: formatCompetencia(d),
+          rawCompetencia: d.substring(0, 7), // Propriedade adicionada para o filtro de datas e tooltip funcionar
+        };
         dadosComparacao.forEach((ind) => {
           const r = ind.resultados?.find((res) =>
             res.competencia.startsWith(d),

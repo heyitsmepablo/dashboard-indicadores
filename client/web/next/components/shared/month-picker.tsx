@@ -46,11 +46,15 @@ export function MonthPicker({
   );
   const [isYearView, setIsYearView] = useState(false);
 
-  // Extrai apenas os anos únicos da base de dados
+  // CORREÇÃO: Filtra para garantir que apenas strings válidas passem pelo split
   const availableYears = useMemo(() => {
     if (!availableDates || availableDates.length === 0) return [];
+
+    // Retira undefined, nulos ou arrays vazios antes de mapear
+    const validDates = availableDates.filter((d) => d && typeof d === "string");
+
     return Array.from(
-      new Set(availableDates.map((d) => parseInt(d.split("-")[0]))),
+      new Set(validDates.map((d) => parseInt(d.split("-")[0]))),
     ).sort();
   }, [availableDates]);
 

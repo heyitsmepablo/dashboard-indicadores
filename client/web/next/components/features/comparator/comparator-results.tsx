@@ -40,27 +40,27 @@ import {
   Tag as TagIcon,
 } from "lucide-react";
 import { useDashboard } from "@/lib/dashboard-context";
-import { formatValue, getVariacao } from "@/lib/format";
+import { formatValue, getVariacao, formatCompetenciaLonga } from "@/lib/format";
 import { ChartTypeToggle, type ChartType } from "@/components/evolution-chart";
+import { MonthPicker } from "@/components/shared/month-picker";
 
-// Paleta estendida (15 cores) livre de Verde, Vermelho, Amarelo e Azul clássico.
-// Focada em Roxos, Rosas, Magentas, Marrons e Cinzas/Ardósia.
+// Paleta estendida (15 cores)
 const CHART_COLORS = [
-  "#8b5cf6", // Violeta
-  "#ec4899", // Rosa
-  "#64748b", // Ardósia (Slate)
-  "#d946ef", // Fúcsia
-  "#8B4513", // Marrom (SaddleBrown)
-  "#c026d3", // Magenta
-  "#475569", // Ardósia Escuro
-  "#a855f7", // Roxo Claro
-  "#db2777", // Rosa Escuro
-  "#9333ea", // Roxo Escuro
-  "#a1a1aa", // Cinza (Zinc)
-  "#78716c", // Pedra (Stone)
-  "#f472b6", // Rosa Claro
-  "#57534e", // Pedra Escuro
-  "#c4b5fd", // Violeta Claro
+  "#8b5cf6",
+  "#ec4899",
+  "#64748b",
+  "#d946ef",
+  "#8B4513",
+  "#c026d3",
+  "#475569",
+  "#a855f7",
+  "#db2777",
+  "#9333ea",
+  "#a1a1aa",
+  "#78716c",
+  "#f472b6",
+  "#57534e",
+  "#c4b5fd",
 ];
 
 interface ComparatorResultsProps {
@@ -70,37 +70,21 @@ interface ComparatorResultsProps {
   limparIndicadores: () => void;
   chartType: ChartType;
   setChartType: (val: ChartType) => void;
-  data: any[];
+  data: any[]; // Os dados brutos processados pelo pai
   chartConfig: ChartConfig;
   indicadoresUnicos: any[];
 }
 
-// Helper para transformar "Jan. de 2026" em "Janeiro/2026"
-const formatarDataTooltip = (val: any) => {
-  if (!val) return val;
-  const str = String(val).toLowerCase();
-  const meses: Record<string, string> = {
-    jan: "Janeiro",
-    fev: "Fevereiro",
-    mar: "Março",
-    abr: "Abril",
-    mai: "Maio",
-    jun: "Junho",
-    jul: "Julho",
-    ago: "Agosto",
-    set: "Setembro",
-    out: "Outubro",
-    nov: "Novembro",
-    dez: "Dezembro",
-  };
+const parseYYYYMM = (val: string) => {
+  if (!val) return 0;
+  const [y, m] = val.split("-");
+  return parseInt(y) * 12 + parseInt(m);
+};
 
-  for (const [key, full] of Object.entries(meses)) {
-    if (str.startsWith(key)) {
-      const yearMatch = str.match(/\d{4}/);
-      if (yearMatch) return `${full}/${yearMatch[0]}`;
-    }
-  }
-  return val;
+const formatYYYYMM = (total: number) => {
+  const y = Math.floor((total - 1) / 12);
+  const m = ((total - 1) % 12) + 1;
+  return `${y}-${String(m).padStart(2, "0")}`;
 };
 
 export function ComparatorResults({
@@ -110,15 +94,17 @@ export function ComparatorResults({
   limparIndicadores,
   chartType,
   setChartType,
-  data,
+  data: rawData,
   chartConfig,
   indicadoresUnicos,
 }: ComparatorResultsProps) {
   const { dadosComparacao, itensComparacao, unidades } = useDashboard();
-
   const [showLabels, setShowLabels] = useState(false);
 
-  // Estados para foco cruzado
+  // Filtros de Data
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+
   const [focusedUnitId, setFocusedUnitId] = useState<number | null>(null);
   const [focusedIndicatorId, setFocusedIndicatorId] = useState<number | null>(
     null,
@@ -127,7 +113,47 @@ export function ComparatorResults({
   const canFocusUnit = activeUnits.length >= 2;
   const canFocusIndicator = indicadoresUnicos.length >= 2;
 
-  // Limpa o foco se o item focado deixar de existir na tela/seleção
+  // Lógica para capturar as datas disponíveis baseadas no RAW DATA
+  const availableDates = useMemo(() => {
+    return Array.from(
+      new Set(rawData.map((r) => r.rawCompetencia as string)),
+    ).sort();
+  }, [rawData]);
+
+  useEffect(() => {
+    if (availableDates.length > 0 && !startDate && !endDate) {
+      const lastAvailable = availableDates[availableDates.length - 1];
+      const endParsed = parseYYYYMM(lastAvailable);
+      setStartDate(formatYYYYMM(endParsed - 11));
+      setEndDate(lastAvailable);
+    }
+  }, [availableDates, startDate, endDate]);
+
+  const handleStartDateChange = (val: string) => {
+    setStartDate(val);
+    const start = parseYYYYMM(val);
+    const end = parseYYYYMM(endDate);
+    if (end === 0) return;
+    if (start > end || end - start > 11) setEndDate(formatYYYYMM(start + 11));
+  };
+
+  const handleEndDateChange = (val: string) => {
+    setEndDate(val);
+    const end = parseYYYYMM(val);
+    const start = parseYYYYMM(startDate);
+    if (start === 0) return;
+    if (end < start || end - start > 11) setStartDate(formatYYYYMM(end - 11));
+  };
+
+  // Filtra os dados efetivamente exibidos no chart baseados no MonthPicker
+  const filteredData = useMemo(() => {
+    if (!startDate || !endDate) return rawData;
+    return rawData.filter(
+      (d) => d.rawCompetencia >= startDate && d.rawCompetencia <= endDate,
+    );
+  }, [rawData, startDate, endDate]);
+
+  // Efeitos de foco
   useEffect(() => {
     if (focusedUnitId !== null && !activeUnits.includes(focusedUnitId)) {
       setFocusedUnitId(null);
@@ -163,7 +189,6 @@ export function ComparatorResults({
     );
   }
 
-  // Helper para verificar se a barra/linha/área atual deve estar esmaecida
   const isElementFaded = (uId: number, indId: number) => {
     const isUnitFaded = focusedUnitId !== null && focusedUnitId !== uId;
     const isIndFaded =
@@ -225,6 +250,60 @@ export function ComparatorResults({
     );
   };
 
+  // TOOLTIP CUSTOMIZADO IGUAL AO EVOLUTION CHART
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const rawComp = payload[0]?.payload?.rawCompetencia;
+      const formattedTitle = rawComp ? formatCompetenciaLonga(rawComp) : label;
+
+      return (
+        <div className="z-50 rounded-lg border bg-background p-2 shadow-sm text-sm">
+          <div className="font-semibold mb-1 text-foreground border-b pb-1">
+            {formattedTitle}
+          </div>
+          <div className="flex flex-col gap-1.5 mt-1.5">
+            {payload.map((entry: any, index: number) => {
+              const parts = String(entry.dataKey).split("_");
+              const indId = Number(parts[1]);
+              const uId = Number(parts[2]);
+
+              const sigla = getSiglaUnidade(uId);
+              const ind = dadosComparacao.find(
+                (d) => d.id === indId && d.unidadeId === uId,
+              );
+
+              const val = sameUnidade
+                ? formatValue(entry.value, uniqueUnidadesMedida[0])
+                : entry.value.toLocaleString("pt-BR");
+
+              const isFaded = isElementFaded(uId, indId);
+              const labelName =
+                indicadoresUnicos.length > 1 && ind
+                  ? `${sigla} - ${ind.descricao}`
+                  : sigla;
+
+              return (
+                <div
+                  key={`item-${index}`}
+                  className={`flex items-center gap-2 transition-opacity ${isFaded ? "opacity-30" : "opacity-100"}`}
+                >
+                  <div
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: entry.color }}
+                  />
+                  <span className="text-muted-foreground font-medium flex-1">
+                    {val} - {labelName}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   const renderChart = () => {
     const dynamicTopMargin = showLabels ? 25 + dadosComparacao.length * 14 : 25;
     const margin = { top: dynamicTopMargin, right: 35, left: 0, bottom: 0 };
@@ -251,7 +330,6 @@ export function ComparatorResults({
         fontSize={12}
       />
     );
-
     const yAxis = (
       <YAxis
         tickLine={false}
@@ -262,79 +340,13 @@ export function ComparatorResults({
         tickFormatter={yAxisTickFormatter}
       />
     );
-
-    const tooltip = (
-      <RechartsTooltip
-        cursor={{
-          stroke: "hsl(var(--muted-foreground) / 0.2)",
-          strokeWidth: 1,
-          strokeDasharray: "3 3",
-        }}
-        content={({ active, payload, label }) => {
-          if (active && payload && payload.length) {
-            return (
-              <div className="z-50 rounded-lg border bg-background px-3 py-2 shadow-md sm:text-sm">
-                <div className="mb-2 font-semibold text-foreground capitalize">
-                  {formatarDataTooltip(label)}
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  {payload.map((entry: any, index: number) => {
-                    const parts = String(entry.dataKey).split("_");
-                    const indId = Number(parts[1]);
-                    const uId = Number(parts[2]);
-
-                    const sigla = getSiglaUnidade(uId);
-                    const ind = dadosComparacao.find(
-                      (d) => d.id === indId && d.unidadeId === uId,
-                    );
-
-                    const valueFormatted = sameUnidade
-                      ? formatValue(entry.value, uniqueUnidadesMedida[0])
-                      : entry.value.toLocaleString("pt-BR");
-
-                    const isFaded = isElementFaded(uId, indId);
-
-                    return (
-                      <div
-                        key={index}
-                        className={`flex items-center justify-between gap-6 transition-opacity ${
-                          isFaded ? "opacity-30" : "opacity-100"
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className="font-bold text-[13px]"
-                            style={{ color: entry.color }}
-                          >
-                            {sigla}
-                          </span>
-                          {indicadoresUnicos.length > 1 && ind && (
-                            <span className="text-[10px] text-muted-foreground/70 truncate max-w-[150px]">
-                              - {ind.descricao}
-                            </span>
-                          )}
-                        </div>
-                        <span className="font-bold text-foreground tabular-nums">
-                          {valueFormatted}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          }
-          return null;
-        }}
-      />
-    );
-
     const legend = <Legend content={<ChartLegendContent />} />;
 
     if (chartType === "bar") {
       return (
-        <BarChart data={data} margin={margin}>
-          {grid} {xAxis} {yAxis} {tooltip} {legend}
+        <BarChart data={filteredData} margin={margin}>
+          {grid} {xAxis} {yAxis} <RechartsTooltip content={<CustomTooltip />} />{" "}
+          {legend}
           {dadosComparacao.map((ind, idx) => {
             const color = CHART_COLORS[idx % CHART_COLORS.length];
             const isFaded = isElementFaded(ind.unidadeId!, ind.id);
@@ -374,7 +386,7 @@ export function ComparatorResults({
 
     if (chartType === "area") {
       return (
-        <AreaChart data={data} margin={margin}>
+        <AreaChart data={filteredData} margin={margin}>
           <defs>
             {dadosComparacao.map((ind, idx) => (
               <linearGradient
@@ -398,7 +410,8 @@ export function ComparatorResults({
               </linearGradient>
             ))}
           </defs>
-          {grid} {xAxis} {yAxis} {tooltip} {legend}
+          {grid} {xAxis} {yAxis} <RechartsTooltip content={<CustomTooltip />} />{" "}
+          {legend}
           {dadosComparacao.map((ind, idx) => {
             const color = CHART_COLORS[idx % CHART_COLORS.length];
             const isFaded = isElementFaded(ind.unidadeId!, ind.id);
@@ -450,8 +463,9 @@ export function ComparatorResults({
     }
 
     return (
-      <LineChart data={data} margin={margin}>
-        {grid} {xAxis} {yAxis} {tooltip} {legend}
+      <LineChart data={filteredData} margin={margin}>
+        {grid} {xAxis} {yAxis} <RechartsTooltip content={<CustomTooltip />} />{" "}
+        {legend}
         {dadosComparacao.map((ind, idx) => {
           const color = CHART_COLORS[idx % CHART_COLORS.length];
           const isFaded = isElementFaded(ind.unidadeId!, ind.id);
@@ -509,7 +523,6 @@ export function ComparatorResults({
   return (
     <>
       <div className="flex flex-col gap-3 p-4 bg-muted/20 rounded-xl border border-dashed">
-        {/* === SEÇÃO DE UNIDADES === */}
         <div className="flex flex-col gap-1.5">
           <Badge
             variant="outline"
@@ -540,17 +553,9 @@ export function ComparatorResults({
                           : "bg-background border"
                   }`}
                   onClick={() => {
-                    if (canFocusUnit) {
+                    if (canFocusUnit)
                       setFocusedUnitId((prev) => (prev === uId ? null : uId));
-                    }
                   }}
-                  title={
-                    canFocusUnit
-                      ? isFocused
-                        ? "Remover foco"
-                        : "Focar nesta unidade"
-                      : ""
-                  }
                 >
                   <span className="text-xs font-semibold shrink-0 mt-0.5 sm:mt-0 pointer-events-none">
                     {getSiglaUnidade(uId)}
@@ -573,14 +578,8 @@ export function ComparatorResults({
               );
             })}
           </div>
-          {canFocusUnit && (
-            <span className="text-[10px] text-muted-foreground mt-1 italic">
-              Dica: Clique em uma unidade para destacar seus resultados.
-            </span>
-          )}
         </div>
 
-        {/* === SEÇÃO DE INDICADORES === */}
         <div className="flex flex-col gap-1.5 mt-2">
           <div className="flex items-center gap-4 w-full">
             <Badge
@@ -590,7 +589,6 @@ export function ComparatorResults({
               <Tag className="h-3 w-3" /> Indicadores Monitorados (
               {indicadoresUnicos.length})
             </Badge>
-
             {indicadoresUnicos.length > 0 && (
               <button
                 type="button"
@@ -629,19 +627,11 @@ export function ComparatorResults({
                             : "bg-background"
                     }`}
                     onClick={() => {
-                      if (canFocusIndicator) {
+                      if (canFocusIndicator)
                         setFocusedIndicatorId((prev) =>
                           prev === ind.id ? null : ind.id,
                         );
-                      }
                     }}
-                    title={
-                      canFocusIndicator
-                        ? isFocusedInd
-                          ? "Remover foco"
-                          : "Focar neste indicador"
-                        : ""
-                    }
                   >
                     <span className="text-xs font-medium whitespace-normal break-words pointer-events-none">
                       {ind.descricao}
@@ -662,11 +652,6 @@ export function ComparatorResults({
               })
             )}
           </div>
-          {canFocusIndicator && (
-            <span className="text-[10px] text-muted-foreground mt-1 italic">
-              Dica: Clique em um indicador para destacar sua linha no gráfico.
-            </span>
-          )}
         </div>
       </div>
 
@@ -681,7 +666,7 @@ export function ComparatorResults({
       ) : (
         <>
           <Card>
-            <CardHeader className="flex flex-row items-start justify-between pb-2">
+            <CardHeader className="flex flex-col xl:items-start justify-between gap-4 pb-2">
               <div className="space-y-1">
                 <CardTitle className="text-lg">Gráfico de Evolução</CardTitle>
                 <CardDescription>
@@ -690,22 +675,48 @@ export function ComparatorResults({
                     : "Comparações entre dados normalizados"}
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={showLabels ? "secondary" : "ghost"}
-                  size="sm"
-                  onClick={() => setShowLabels(!showLabels)}
-                  className={`h-8 px-2 text-xs transition-colors ${showLabels ? "text-primary font-medium" : "text-muted-foreground"}`}
-                  title="Mostrar Rótulos de Dados"
-                >
-                  <TagIcon className="h-3.5 w-3.5 mr-1.5" />
-                  {showLabels ? "Ocultar Valores" : "Mostrar Valores"}
-                </Button>
-                <ChartTypeToggle value={chartType} onChange={setChartType} />
+
+              {/* Controles de Data + Toggle Igual ao Evolution Chart */}
+              <div className=" flex flex-row justify-end w-full">
+                <div className="flex flex-wrap items-center gap-3 shrink-0 bg-muted/20 p-1.5 rounded-lg border w-full justify-between">
+                  <div className="flex items-center gap-2 px-2 ">
+                    <MonthPicker
+                      value={startDate}
+                      onChange={handleStartDateChange}
+                      placeholder="Início"
+                      availableDates={availableDates}
+                    />
+                    <span className="text-xs text-muted-foreground">até</span>
+                    <MonthPicker
+                      value={endDate}
+                      onChange={handleEndDateChange}
+                      placeholder="Fim"
+                      availableDates={availableDates}
+                    />
+                  </div>
+                  <div className="flex flex-row gap-2">
+                    <Button
+                      variant={showLabels ? "secondary" : "ghost"}
+                      size="sm"
+                      onClick={() => setShowLabels(!showLabels)}
+                      className="h-8 text-xs px-2"
+                    >
+                      {showLabels ? "Ocultar Valores" : "Mostrar Valores"}
+                    </Button>
+
+                    <ChartTypeToggle
+                      value={chartType}
+                      onChange={setChartType}
+                    />
+                  </div>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
-              <ChartContainer config={chartConfig} className="h-[400px] w-full">
+              <ChartContainer
+                config={chartConfig}
+                className="h-[400px] w-full mt-4"
+              >
                 {renderChart()}
               </ChartContainer>
             </CardContent>
@@ -721,7 +732,6 @@ export function ComparatorResults({
               const variacao = penultimo
                 ? getVariacao(valorAtual, valorAnterior)
                 : 0;
-
               const isCardFaded = isElementFaded(ind.unidadeId!, ind.id);
 
               return (
@@ -758,11 +768,7 @@ export function ComparatorResults({
                     </div>
                     {penultimo && (
                       <div
-                        className={`flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded ${
-                          variacao >= 0
-                            ? "text-emerald-600 bg-emerald-50"
-                            : "text-red-600 bg-red-50"
-                        }`}
+                        className={`flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded ${variacao >= 0 ? "text-emerald-600 bg-emerald-50" : "text-red-600 bg-red-50"}`}
                       >
                         {variacao > 0 ? (
                           <ArrowUpRight className="h-3 w-3" />

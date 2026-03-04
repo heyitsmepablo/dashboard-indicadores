@@ -7,6 +7,7 @@ import {
   Target,
   Info,
   FileText,
+  GitCompareArrows,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,12 @@ export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
     resultados.length > 0 ? resultados[resultados.length - 1] : null;
   const penultimo =
     resultados.length > 1 ? resultados[resultados.length - 2] : null;
+
+  // Verifica se pode ser comparado com o DATASUS ou se já é um indicador puramente ministerial
+  const podeCompararDatasus =
+    !!indicador.referencia_ministerial_sistema &&
+    !!indicador.referencia_ministerial_chave;
+  const exibeSeloDatasus = indicador.isMinisterial || podeCompararDatasus;
 
   if (!ultimo) {
     return (
@@ -98,13 +105,28 @@ export function KpiCard({ indicador, onClick, isActive }: KpiCardProps) {
             >
               {indicador.descricao}
             </CardTitle>
-            {indicador.isMinisterial && (
-              <Badge
-                variant="outline"
-                className="text-[9px] bg-blue-50 text-blue-700 border-blue-200 uppercase px-1 shrink-0 ml-1"
-              >
-                DATASUS
-              </Badge>
+
+            {exibeSeloDatasus && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] bg-blue-50 text-blue-700 border-blue-200 uppercase px-1 shrink-0 ml-1 cursor-help flex items-center gap-0.5"
+                  >
+                    {podeCompararDatasus && (
+                      <GitCompareArrows className="h-2.5 w-2.5" />
+                    )}
+                    DATASUS
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {podeCompararDatasus
+                      ? "Dados oficiais disponíveis para comparação no gráfico"
+                      : "Indicador da base de dados oficial do Ministério da Saúde"}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             )}
           </div>
         </CardHeader>
