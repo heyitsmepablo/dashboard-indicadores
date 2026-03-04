@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma-service/prisma-service.service';
+import { PrismaService } from '../../../services/prisma-service/prisma-service.service';
 
 @Injectable()
 export class ResultadoService {
@@ -48,10 +48,12 @@ export class ResultadoService {
     const where: any = { competencia: date };
 
     if (unidadeId) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       where.unidade_id = unidadeId;
     }
 
     const resultados = await this.prisma.resultados.findMany({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       where,
       include: {
         indicadores: true,

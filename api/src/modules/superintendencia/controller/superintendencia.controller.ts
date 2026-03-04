@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 
 import { Prisma } from 'generated/prisma/client';
-import { SuperintendenciaService } from 'src/services/superintendencia/superintendencia.service';
+import { SuperintendenciaService } from 'src/modules/superintendencia/service/superintendencia.service';
 
 @Controller('superintendencia')
 export class SuperintendenciaController {

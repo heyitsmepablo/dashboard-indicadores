@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { ApiQuery } from '@nestjs/swagger';
 import { Prisma } from 'generated/prisma/client';
-import { TipoUnidadeService } from 'src/services/tipo-de-unidade-service/tipo-de-unidade-service.service';
+import { TipoUnidadeService } from 'src/modules/tipo-de-unidade/service/tipo-de-unidade-service.service';
 
 @Controller('tipo-unidade')
 export class TipoUnidadeController {

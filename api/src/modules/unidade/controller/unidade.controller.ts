@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiQuery } from '@nestjs/swagger';
 import { Prisma } from 'generated/prisma/client';
-import { UnidadeService } from 'src/services/unidade/unidade.service';
+import { UnidadeService } from 'src/modules/unidade/service/unidade.service';
 
 @Controller('unidades')
 export class UnidadesController {

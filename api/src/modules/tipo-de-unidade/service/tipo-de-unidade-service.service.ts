@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma-service/prisma-service.service';
+import { PrismaService } from '../../../services/prisma-service/prisma-service.service';
 import { Prisma } from 'generated/prisma/client';
 
 @Injectable()
-export class TipoUnidadeService {
+export class TipoDeUnidadeService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(superintendenciaId?: number) {

@@ -7,14 +7,14 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { ResultadoService } from 'src/services/resultado-service/resultado-service.service';
+import { ResultadoService } from 'src/modules/resultado/service/resultado-service.service';
 import { CreateResultadoDto } from './resultado.dto';
 import { JwtAuthGuard } from 'src/modules/auth/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from 'src/modules/auth/optional-jwt-auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 @ApiBearerAuth()
 @Controller('resultados')
-export class ResultadosController {
+export class ResultadoController {
   constructor(private readonly resultadoService: ResultadoService) {}
 
   @UseGuards(JwtAuthGuard)
@@ -43,6 +43,7 @@ export class ResultadosController {
     @Query('competencia') competencia: string,
     @Query('unidadeId') unidadeId?: string,
   ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const isAuth = !!req.user;
     const uId = unidadeId ? parseInt(unidadeId) : undefined;
     return this.resultadoService.findByCompetencia(competencia, uId, isAuth);
