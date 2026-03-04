@@ -32,16 +32,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Realiza o login do usuário' })
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() authDto: AuthDto): Promise<LoginResponseDto> {
-    return await this.authService.login(authDto);
+  login(@Body() authDto: AuthDto): Promise<LoginResponseDto> {
+    return this.authService.login(authDto);
   }
 
   @ApiOperation({ summary: 'Registra um novo administrador' })
   @Post('register')
-  async register(
-    @Body() registerDto: RegisterDto,
-  ): Promise<RegisterResponseDto> {
-    return await this.authService.register(registerDto);
+  register(@Body() registerDto: RegisterDto): Promise<RegisterResponseDto> {
+    return this.authService.register(registerDto);
   }
 
   @ApiOperation({ summary: 'Altera a senha do usuário autenticado' })
@@ -49,12 +47,12 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('change-password')
   @HttpCode(HttpStatus.OK)
-  async changePassword(
+  changePassword(
     @Req() req: any,
     @Body() dto: ChangePasswordDto,
   ): Promise<LoginResponseDto> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    return await this.authService.changePassword(req.user.id, dto);
+    return this.authService.changePassword(req.user.id, dto);
   }
 
   @ApiOperation({ summary: 'Força a redefinição de senha para um usuário' })
@@ -62,8 +60,19 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('force-reset')
   @HttpCode(HttpStatus.OK)
-  async forceReset(@Body() dto: ForceResetDto): Promise<ForceResetResponseDto> {
-    await this.userService.forcePasswordChange(dto.email);
-    return { message: 'Usuário forçado a trocar de senha no próximo login' };
+  forceReset(@Body() dto: ForceResetDto): Promise<ForceResetResponseDto> {
+    return this.userService.forcePasswordChange(dto.email).then(() => ({
+      message: 'Usuário forçado a trocar de senha no próximo login',
+    }));
+  }
+
+  // 💡 NOVA ROTA: Serve apenas para registrar a trilha de auditoria
+  @ApiOperation({ summary: 'Registra o logout do usuário no log de auditoria' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  logout() {
+    return { message: 'Logout registrado com sucesso' };
   }
 }

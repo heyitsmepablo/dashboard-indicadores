@@ -19,6 +19,8 @@ import { SuperintendenciaController } from './modules/superintendencia/controlle
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AnaliseModule } from './modules/analise/analise.module';
+import { WinstonModule } from 'nest-winston';
+import { winstonConfig } from './logger/winston.config';
 
 @Module({
   imports: [
@@ -26,6 +28,7 @@ import { AnaliseModule } from './modules/analise/analise.module';
     UserModule,
     AuthModule,
     AnaliseModule,
+    WinstonModule.forRoot(winstonConfig),
   ],
   controllers: [
     AppController,

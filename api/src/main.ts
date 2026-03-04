@@ -3,6 +3,11 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { PrismaClientExceptionFilter } from './filters/prisma-exception.filter';
+import { WINSTON_MODULE_PROVIDER, WinstonModule } from 'nest-winston';
+import { Logger } from 'winston'; // 💡 Importamos o tipo Logger do winston
+import { winstonConfig } from './logger/winston.config';
+import { AuditInterceptor } from './interceptors/audit.interceptor';
+import { GlobalExceptionFilter } from './filters/global-exception.filter';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 (BigInt.prototype as any).toJSON = function () {
@@ -16,6 +21,7 @@ async function bootstrap() {
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       credentials: true,
     },
+    logger: WinstonModule.createLogger(winstonConfig),
   });
 
   app.useGlobalPipes(
@@ -26,8 +32,14 @@ async function bootstrap() {
     }),
   );
 
+  // 💡 Tipamos o retorno com <Logger> para o Linter não reclamar de 'any'
+  const winstonLogger = app.get<Logger>(WINSTON_MODULE_PROVIDER);
+  app.useGlobalInterceptors(new AuditInterceptor(winstonLogger));
+
   // 2. Habilita o filtro de erros do Prisma Globalmente
   app.useGlobalFilters(new PrismaClientExceptionFilter());
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
   const config = new DocumentBuilder()
     .setTitle('Dashify API')
     .setDescription('API para utilização do sistema e-Quali')
@@ -36,6 +48,7 @@ async function bootstrap() {
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
+
   // 1. Habilita validação automática (DTOs)
   await app.listen(process.env.PORT ?? 3000);
 }

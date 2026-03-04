@@ -23,6 +23,18 @@ export const DashifyService = {
     return res.json();
   },
 
+  // 💡 NOVO MÉTODO: Avisa a API que o usuário saiu
+  async logout() {
+    try {
+      await fetch(`${API_URL}/auth/logout`, {
+        method: "POST",
+        headers: this.getHeaders(),
+      });
+    } catch (error) {
+      console.warn("Não foi possível registrar o logout no servidor.", error);
+    }
+  },
+
   async changePassword(currentPassword: string, newPassword: string) {
     const res = await fetch(`${API_URL}/auth/change-password`, {
       method: "POST",

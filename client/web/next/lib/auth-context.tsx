@@ -22,7 +22,7 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUserSession: (token: string, user: User) => void;
   isAuthLoading: boolean;
 }
@@ -61,7 +61,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("dashify_user", JSON.stringify(newUser));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // 💡 Primeiro avisa a API para gravar o log
+    if (token) {
+      await DashifyService.logout();
+    }
+
+    // Depois limpa a máquina do cliente
     setToken(null);
     setUser(null);
     localStorage.removeItem("dashify_token");
