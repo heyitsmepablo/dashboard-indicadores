@@ -12,8 +12,10 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE TABLE "usuarios" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "nome" VARCHAR(255) NOT NULL,
+  "matricula" VARCHAR(255) NOT NULL,
   "email" VARCHAR(255) UNIQUE NOT NULL,
   "senha" VARCHAR(255) NOT NULL,
+  "must_change_password" BOOLEAN DEFAULT TRUE, -- Nova regra de negócio
   "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -44,7 +46,6 @@ CREATE TABLE "unidades" (
   "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- TABELA ATUALIZADA COM OS VÍNCULOS MINISTERIAIS
 CREATE TABLE "indicadores" (
   "id" SERIAL PRIMARY KEY,
   "descricao" TEXT NOT NULL,
@@ -119,7 +120,6 @@ CREATE TABLE "datasus_sync_log" (
 -- 3. ÍNDICES E RELACIONAMENTOS
 -- ============================================================================
 
--- Relacionamentos Unidades
 ALTER TABLE "unidades"
 ADD CONSTRAINT "fk_unidade_tipo" FOREIGN KEY ("tipo_unidade_id") REFERENCES "tipo_de_unidade" ("id"),
 ADD CONSTRAINT "fk_unidade_superintendencia" FOREIGN KEY ("superintendencia_id") REFERENCES "superintendencias" ("id") ON DELETE SET NULL;
@@ -127,20 +127,17 @@ ADD CONSTRAINT "fk_unidade_superintendencia" FOREIGN KEY ("superintendencia_id")
 CREATE INDEX "idx_unidades_tipo" ON "unidades" ("tipo_unidade_id");
 CREATE INDEX "idx_unidades_super" ON "unidades" ("superintendencia_id");
 
--- Relacionamentos tipo_de_unidade
 ALTER TABLE "tipo_de_unidade"
 ADD CONSTRAINT "fk_tipo_unidade_super" FOREIGN KEY ("superintendencia_id") REFERENCES "superintendencias" ("id") ON DELETE SET NULL;
 
 CREATE INDEX "idx_tipo_unidade_super" ON "tipo_de_unidade" ("superintendencia_id");
 
--- Relacionamentos Indicador_Tipo_Unidade
 ALTER TABLE "indicador_tipo_unidade"
 ADD CONSTRAINT "fk_itu_indicador" FOREIGN KEY ("indicador_id") REFERENCES "indicadores" ("id") ON DELETE CASCADE,
 ADD CONSTRAINT "fk_itu_tipo" FOREIGN KEY ("tipo_unidade_id") REFERENCES "tipo_de_unidade" ("id") ON DELETE CASCADE;
 
 CREATE INDEX "idx_itu_tipo_unidade" ON "indicador_tipo_unidade" ("tipo_unidade_id");
 
--- Relacionamentos Resultados
 ALTER TABLE "resultados" 
 ADD CONSTRAINT "fk_resultado_indicador" FOREIGN KEY ("indicador_id") REFERENCES "indicadores" ("id") ON DELETE CASCADE,
 ADD CONSTRAINT "fk_resultado_unidade" FOREIGN KEY ("unidade_id") REFERENCES "unidades" ("id") ON DELETE CASCADE;
@@ -149,7 +146,6 @@ CREATE UNIQUE INDEX "uk_resultado_competencia_unidade" ON "resultados" ("indicad
 CREATE INDEX "idx_resultados_competencia" ON "resultados" ("competencia");
 CREATE INDEX "idx_resultados_unidade" ON "resultados" ("unidade_id");
 
--- Relacionamentos DATASUS
 ALTER TABLE "sih_registros"
 ADD CONSTRAINT "fk_sih_unidade" FOREIGN KEY ("unidade_id") REFERENCES "unidades" ("id") ON DELETE CASCADE;
 

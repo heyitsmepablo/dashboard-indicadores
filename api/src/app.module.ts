@@ -10,7 +10,7 @@ import { IndicadorService } from './modules/inidicador/service/indicador-service
 import { ResultadoController } from './modules/resultado/controller/resultado.controller';
 import { ConfigModule } from '@nestjs/config';
 import { UnidadeService } from './modules/unidade/service/unidade.service';
-import { UnidadesController } from './modules/unidade/controller/unidade.controller';
+import { UnidadeController } from './modules/unidade/controller/unidade.controller';
 import { TipoUnidadeController } from './modules/tipo-de-unidade/controller/tipo-de-unidade.controller';
 import { TipoDeUnidadeService } from './modules/tipo-de-unidade/service/tipo-de-unidade-service.service';
 import { SuperintendenciaService } from './modules/superintendencia/service/superintendencia.service';
@@ -32,7 +32,7 @@ import { AnaliseModule } from './modules/analise/analise.module';
     IndicadorController,
     ResultadoController,
     TipoUnidadeController,
-    UnidadesController,
+    UnidadeController,
     SuperintendenciaController,
   ],
   providers: [

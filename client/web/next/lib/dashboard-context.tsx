@@ -17,7 +17,8 @@ export type ViewMode =
   | "comparador"
   | "meu-painel"
   | "ministerial-sih"
-  | "ministerial-sia";
+  | "ministerial-sia"
+  | "alterar-senha"; // <-- Novo modo adicionado
 
 export interface ItemSelecao {
   id: number;
@@ -219,7 +220,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
         const dadosTratados = dadosComResultados.map((d) => ({
           ...d,
-          // Não filtramos mais por ano aqui! O Evolution Chart fará o recorte.
           resultados: (d.resultados || []).map((r) => ({
             ...r,
             valor: Number(r.valor),

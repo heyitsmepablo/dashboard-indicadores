@@ -26,6 +26,10 @@ import {
 import { useDashboard } from "@/lib/dashboard-context";
 import { Badge } from "@/components/ui/badge";
 
+// Importando o package.json para ler a versão dinamicamente.
+// Ajuste o caminho "../../" conforme a profundidade da pasta onde este componente está.
+import packageJson from "../package.json";
+
 export function AppSidebar() {
   const {
     superintendencias,
@@ -47,6 +51,14 @@ export function AppSidebar() {
       return { ...prev, [id]: !isCurrentlyExpanded };
     });
   };
+
+  // Configuração Dinâmica da Versão e Link do Changelog
+  const appVersion = packageJson.version;
+  // TODO: Substitua pelo link do seu repositório no GitHub
+  const GITHUB_REPO_URL =
+    "https://github.com/heyitsmepablo/dashboard-indicadores";
+  // O semantic-release por padrão cria as tags com o prefixo 'v' (ex: v1.0.0)
+  const releaseUrl = `${GITHUB_REPO_URL}/releases/tag/v${appVersion}`;
 
   return (
     <Sidebar>
@@ -209,18 +221,34 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-4 border-t border-sidebar-border">
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-x-1 text-xs">
-            <span className="text-sidebar-foreground/60">
-              Desenvolvido por:
+          <div className="flex items-start flex-col gap-1.5">
+            <div className="flex flex-row gap-1 text-xs">
+              <span className="text-sidebar-foreground/60">
+                Desenvolvido por:
+              </span>
+              <a
+                href="https://www.linkedin.com/in/pabloeduardoss"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 font-medium text-primary hover:underline bg-primary/10"
+              >
+                Pablo Eduardo <Linkedin className="h-3 w-3" />
+              </a>
+            </div>
+            <div className="flex flex-row gap-1 items-center">
+              <p className="text-xs text-sidebar-foreground/60">Versão:</p>
+              <a
+                href={releaseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-medium text-primary hover:underline bg-primary/10 px-1.5 py-0.5 rounded-md"
+              >
+                {appVersion}
+              </a>
+            </div>
+            <span className="text-[10px] text-sidebar-foreground/60">
+              Aprovado pela Superintendência da Qualidade
             </span>
-            <a
-              href="https://www.linkedin.com/in/pabloeduardoss"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 font-medium text-primary hover:underline"
-            >
-              Pablo Eduardo <Linkedin className="h-3 w-3" />
-            </a>
           </div>
         </div>
       </SidebarFooter>
