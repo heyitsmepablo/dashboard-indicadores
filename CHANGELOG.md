@@ -2,6 +2,17 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo. Consulte [Conventional Commits](https://www.conventionalcommits.org/pt-br/v1.0.0/) para diretrizes de commits.
 
+## [1.0.0-alpha.5](https://github.com/heyitsmepablo/dashify/compare/v1.0.0-alpha.4...v1.0.0-alpha.5) (2026-03-04)
+
+### ✨ Funcionalidades
+
+* adiciona matrícula de usuário, tracking de logout e aprimora logs de auditoria ([260c50d](https://github.com/heyitsmepablo/dashify/commit/260c50ddd53a9c170e65c2feb5eb58f174403194))
+* implementa portal privado, gestão de senhas, auditoria e Swagger ([4e384c6](https://github.com/heyitsmepablo/dashify/commit/4e384c641969f32cc311066bab51fbb69e7f5c17))
+
+### ♻️ Refatoração de Código
+
+* **backend:** reorganizando a estrutura do projeto em modulos desacoplados ([6f1b238](https://github.com/heyitsmepablo/dashify/commit/6f1b2383b3b765fbfde0620d61ddee5e2b2782b1))
+
 ## [1.0.0-alpha.4](https://github.com/heyitsmepablo/dashboard-indicadores/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2026-03-04)
 
 ### ⚠ BREAKING CHANGES
