@@ -1,71 +1,140 @@
-name: dashboard-indicadores
+name: ${ENV_NAME}-dashify
+
 services:
   database:
     build:
       context: ./database
       dockerfile: Dockerfile
-    user: "${UID:-1000}:${GID:-1000}"
-    restart: always
-    shm_size: 128mb
+    restart: unless-stopped
+    shm_size: 256mb
     environment:
       TZ: America/Sao_Paulo
       PGTZ: America/Sao_Paulo
       LANG: en_US
       LANGUAGE: en_US
       LC_ALL: pt_BR.UTF-8
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_INITDB_ARGS: "--lc-numeric=pt_BR.UTF-8 --lc-monetary=pt_BR.UTF-8 --lc-collate=pt_BR.UTF-8 --lc-ctype=pt_BR.UTF-8"
     ports:
-      - "5432:5432"
+      - "${HOST_PORT_DB}:5432"
     volumes:
-      - ./database/sql/seeds/data:/tmp/seeds
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ./database/sql/seeds/seed_indicadores.sql:/docker-entrypoint-initdb.d/02_seeds.sql
-      - ./database/sql/seeds/seed_superintendencias.sql:/docker-entrypoint-initdb.d/03_seeds.sql
-      - ./database/sql/seeds/seed_tipo_de_unidade.sql:/docker-entrypoint-initdb.d/04_seeds.sql
-      - ./database/sql/seeds/seed_indicador_tipo_de_unidade.sql:/docker-entrypoint-initdb.d/05_seeds.sql
-      - ./database/sql/seeds/seed_unidades.sql:/docker-entrypoint-initdb.d/06_seeds.sql
-      - ./database/sql/seeds/seed_resultados.sql:/docker-entrypoint-initdb.d/07_seeds.sql
-      - ./database/sql/views/vw_indicadores_sih.sql:/docker-entrypoint-initdb.d/08_view.sql
-      - ./database/sql/views/vw_indicadores_sia_resumo.sql:/docker-entrypoint-initdb.d/09_view.sql
-      - ./database/sql/views/vw_indicadores_sia_especialidades.sql:/docker-entrypoint-initdb.d/10_view.sql
-      # - ./docker/database/data:/var/lib/postgresql/MAJOR/data
+      - db_data:/var/lib/postgresql/data
+      - ./database/sql/seeds/data:/tmp/seeds:ro
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./database/sql/seeds/seed_indicadores.sql:/docker-entrypoint-initdb.d/02_seeds.sql:ro
+      - ./database/sql/seeds/seed_superintendencias.sql:/docker-entrypoint-initdb.d/03_seeds.sql:ro
+      - ./database/sql/seeds/seed_tipo_de_unidade.sql:/docker-entrypoint-initdb.d/04_seeds.sql:ro
+      - ./database/sql/seeds/seed_indicador_tipo_de_unidade.sql:/docker-entrypoint-initdb.d/05_seeds.sql:ro
+      - ./database/sql/seeds/seed_unidades.sql:/docker-entrypoint-initdb.d/06_seeds.sql:ro
+      - ./database/sql/seeds/seed_resultados.sql:/docker-entrypoint-initdb.d/07_seeds.sql:ro
+      - ./database/sql/views/vw_indicadores_sih.sql:/docker-entrypoint-initdb.d/08_view.sql:ro
+      - ./database/sql/views/vw_indicadores_sia_resumo.sql:/docker-entrypoint-initdb.d/09_view.sql:ro
+      - ./database/sql/views/vw_indicadores_sia_especialidades.sql:/docker-entrypoint-initdb.d/10_view.sql:ro
       - /etc/localtime:/etc/localtime:ro
+    # 💡 OTIMIZAÇÃO: A API só vai iniciar quando o banco responder com sucesso ao ping
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - dashboard
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   pgadmin:
     image: dpage/pgadmin4:latest
+    restart: unless-stopped
     ports:
-      - 8080:80
+      - "${HOST_PORT_PGADMIN}:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@postgres.com
-      PGADMIN_DEFAULT_PASSWORD: postgres
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     volumes:
-      - ./docker/pgadmin/data:/var/lib/pgadmin/data
-    mem_limit: "2gb"
+      - pgadmin_data:/var/lib/pgadmin/data
+    mem_limit: "1gb"
     cpus: "1"
     networks:
       - dashboard
+    depends_on:
+      - database
+
   n8n:
     image: docker.n8n.io/n8nio/n8n
-    container_name: n8n_dashify
-    # Executa o n8n com o seu usuário local
     user: "${UID:-1000}:${GID:-1000}"
     restart: unless-stopped
     ports:
-      - "5678:5678"
+      - "${HOST_PORT_N8N}:5678"
     environment:
       - N8N_HOST=0.0.0.0
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
       - NODE_ENV=production
-      - WEBHOOK_URL=http://localhost:5678/
+      - WEBHOOK_URL=http://localhost:${HOST_PORT_N8N}/
       - GENERIC_TIMEZONE=America/Sao_Paulo
     volumes:
-      - ./docker/n8n_data:/home/node/.n8n
+      - n8n_data:/home/node/.n8n
     networks:
       - dashboard
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT_API}:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
+      - PORT=3000
+    volumes:
+      - ./api/logs:/usr/src/app/logs
+    networks:
+      - dashboard
+    # 💡 OTIMIZAÇÃO: Garante que a API não quebre na inicialização esperando as tabelas serem criadas
+    depends_on:
+      database:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+
+  client:
+    build:
+      context: ./client/web/next
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT_CLIENT}:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+    networks:
+      - dashboard
+    depends_on:
+      - api
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+
 networks:
   dashboard:
     driver: bridge
+
+volumes:
+  db_data:
+  pgadmin_data:
+  n8n_data:
