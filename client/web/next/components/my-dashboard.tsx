@@ -1,7 +1,7 @@
 "use client";
 
 import { useDashboard } from "@/lib/dashboard-context";
-import { EvolutionChart } from "./evolution-chart";
+import { EvolutionChart } from "./features/charts/evolution-chart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
