@@ -1,0 +1,57 @@
+name: dashify-database
+services:
+  database:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    shm_size: 256mb
+    environment:
+      TZ: America/Sao_Paulo
+      PGTZ: America/Sao_Paulo
+      LANG: en_US
+      LANGUAGE: en_US
+      LC_ALL: pt_BR.UTF-8
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_INITDB_ARGS: "--lc-numeric=pt_BR.UTF-8 --lc-monetary=pt_BR.UTF-8 --lc-collate=pt_BR.UTF-8 --lc-ctype=pt_BR.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      # - db_data:/var/lib/postgresql/data
+      - ./sql/seeds/data:/tmp/seeds:ro
+      - ./schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./sql/seeds/seed_indicadores.sql:/docker-entrypoint-initdb.d/02_seeds.sql:ro
+      - ./sql/seeds/seed_superintendencias.sql:/docker-entrypoint-initdb.d/03_seeds.sql:ro
+      - ./sql/seeds/seed_tipo_de_unidade.sql:/docker-entrypoint-initdb.d/04_seeds.sql:ro
+      - ./sql/seeds/seed_indicador_tipo_de_unidade.sql:/docker-entrypoint-initdb.d/05_seeds.sql:ro
+      - ./sql/seeds/seed_unidades.sql:/docker-entrypoint-initdb.d/06_seeds.sql:ro
+      - ./sql/seeds/seed_resultados.sql:/docker-entrypoint-initdb.d/07_seeds.sql:ro
+      - ./sql/views/vw_indicadores_sih.sql:/docker-entrypoint-initdb.d/08_view.sql:ro
+      - ./sql/views/vw_indicadores_sia_resumo.sql:/docker-entrypoint-initdb.d/09_view.sql:ro
+      - ./sql/views/vw_indicadores_sia_especialidades.sql:/docker-entrypoint-initdb.d/10_view.sql:ro
+      - /etc/localtime:/etc/localtime:ro
+    # 💡 OTIMIZAÇÃO: A API só vai iniciar quando o banco responder com sucesso ao ping
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - database
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: postgres@admin.com
+      PGADMIN_DEFAULT_PASSWORD: postgres
+    mem_limit: "1gb"
+    cpus: "1"
+    networks:
+      - database
+networks:
+  database:
+    driver: bridge
