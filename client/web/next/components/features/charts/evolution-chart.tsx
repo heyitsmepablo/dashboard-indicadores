@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
 import {
   Area,
   AreaChart,
@@ -41,30 +40,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { MonthPicker } from "./shared/month-picker";
+import { MonthPicker } from "@/components/shared/month-picker";
 import type { Indicador } from "@/lib/types";
-import {
-  formatValue,
-  formatCompetencia,
-  formatCompetenciaLonga,
-  parseMeta,
-} from "@/lib/format";
-import { DashifyService } from "@/services/dashify.service";
+import { formatValue, formatCompetenciaLonga, parseMeta } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
+import { useEvolutionChart } from "@/hooks/use-evolution-chart";
 
 export type ChartType = "area" | "line" | "bar";
-
-const parseYYYYMM = (val: string) => {
-  if (!val) return 0;
-  const [y, m] = val.split("-");
-  return parseInt(y) * 12 + parseInt(m);
-};
-
-const formatYYYYMM = (total: number) => {
-  const y = Math.floor((total - 1) / 12);
-  const m = ((total - 1) % 12) + 1;
-  return `${y}-${String(m).padStart(2, "0")}`;
-};
 
 interface EvolutionChartProps {
   indicador: Indicador;
@@ -72,160 +54,28 @@ interface EvolutionChartProps {
 
 export function EvolutionChart({ indicador }: EvolutionChartProps) {
   const { isAuthenticated } = useAuth();
-  const [chartType, setChartType] = useState<ChartType>("area");
-  const [showLabels, setShowLabels] = useState(false);
-
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-
-  const [showMinisterial, setShowMinisterial] = useState(false);
-  const [ministerialData, setMinisterialData] = useState<any[]>([]);
-  const [loadingMinisterial, setLoadingMinisterial] = useState(false);
-
-  const [isGeneratingIA, setIsGeneratingIA] = useState(false);
-  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
-  const [displayedAnalysis, setDisplayedAnalysis] = useState<string>("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-
-  const resultados = indicador.resultados || [];
   const meta = parseMeta(indicador.meta, indicador.unidade_de_medida);
 
-  const availableDates = useMemo(() => {
-    return Array.from(
-      new Set(resultados.map((r) => r.competencia.slice(0, 7))),
-    ).sort();
-  }, [resultados]);
-
-  useEffect(() => {
-    if (availableDates.length > 0 && !startDate && !endDate) {
-      const lastAvailable = availableDates[availableDates.length - 1];
-      const endParsed = parseYYYYMM(lastAvailable);
-
-      setStartDate(formatYYYYMM(endParsed - 11));
-      setEndDate(lastAvailable);
-    }
-  }, [availableDates, startDate, endDate]);
-
-  const handleStartDateChange = (val: string) => {
-    setStartDate(val);
-    const start = parseYYYYMM(val);
-    const end = parseYYYYMM(endDate);
-    if (end === 0) return;
-
-    if (start > end || end - start > 11) {
-      setEndDate(formatYYYYMM(start + 11));
-    }
-  };
-
-  const handleEndDateChange = (val: string) => {
-    setEndDate(val);
-    const end = parseYYYYMM(val);
-    const start = parseYYYYMM(startDate);
-    if (start === 0) return;
-
-    if (end < start || end - start > 11) {
-      setStartDate(formatYYYYMM(end - 11));
-    }
-  };
-
-  const hasMinisterialLink =
-    !!indicador.referencia_ministerial_sistema &&
-    !!indicador.referencia_ministerial_chave;
-
-  useEffect(() => {
-    if (showMinisterial && hasMinisterialLink && ministerialData.length === 0) {
-      async function fetchMinisterial() {
-        setLoadingMinisterial(true);
-        try {
-          const targetUnit =
-            indicador.unidadeId !== undefined
-              ? indicador.unidadeId
-              : resultados[0]?.unidade_id;
-
-          let dados = [];
-          if (indicador.referencia_ministerial_sistema === "SIH") {
-            dados = await DashifyService.getMinisterialSih(
-              targetUnit,
-              undefined,
-              targetUnit === 0,
-            );
-          } else {
-            dados = await DashifyService.getMinisterialSia(
-              targetUnit,
-              undefined,
-              targetUnit === 0,
-            );
-          }
-          setMinisterialData(dados);
-        } catch (e) {
-          console.error("Erro ao cruzar dado ministerial", e);
-        } finally {
-          setLoadingMinisterial(false);
-        }
-      }
-      fetchMinisterial();
-    }
-  }, [
-    showMinisterial,
-    hasMinisterialLink,
-    indicador,
-    resultados,
-    ministerialData.length,
-  ]);
-
-  const chartData = useMemo(() => {
-    type ChartDataPoint = {
-      competencia: string;
-      rawCompetencia: string;
-      valorLocal: number;
-      analise?: string | null;
-      valorMinisterio?: number | null;
-    };
-
-    let processed: ChartDataPoint[] = resultados.map((r) => ({
-      competencia: formatCompetencia(r.competencia),
-      rawCompetencia: r.competencia.slice(0, 7),
-      valorLocal: r.valor,
-      analise: r.analise_critica,
-    }));
-
-    if (startDate && endDate) {
-      processed = processed.filter(
-        (d) => d.rawCompetencia >= startDate && d.rawCompetencia <= endDate,
-      );
-    }
-
-    if (
-      showMinisterial &&
-      ministerialData.length > 0 &&
-      indicador.referencia_ministerial_chave
-    ) {
-      processed = processed.map((d) => {
-        const [ano, mes] = d.rawCompetencia.split("-");
-        const match = ministerialData.find(
-          (m) => m.ano === Number(ano) && m.mes === Number(mes),
-        );
-        return {
-          ...d,
-          valorMinisterio: match
-            ? Number(match[indicador.referencia_ministerial_chave!])
-            : null,
-        };
-      });
-    }
-
-    return processed.sort((a, b) =>
-      a.rawCompetencia.localeCompare(b.rawCompetencia),
-    );
-  }, [
-    resultados,
+  // Utilizando o nosso novo Hook arquitetural (Clean Code / SOLID)
+  const {
+    chartType,
+    setChartType,
+    showLabels,
+    setShowLabels,
     startDate,
+    handleStartDateChange,
     endDate,
+    handleEndDateChange,
     showMinisterial,
-    ministerialData,
-    indicador,
-  ]);
+    setShowMinisterial,
+    loadingMinisterial,
+    hasMinisterialLink,
+    availableDates,
+    chartData,
+    aiState,
+    handleGenerateIA,
+    clearAi,
+  } = useEvolutionChart(indicador);
 
   const resultadoComAnalise = [...chartData].reverse().find((r) => r.analise);
 
@@ -507,74 +357,6 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
     );
   };
 
-  useEffect(() => {
-    if (!aiAnalysis) {
-      setDisplayedAnalysis("");
-      setIsTyping(false);
-      return;
-    }
-    setIsTyping(true);
-    const tokens = aiAnalysis.split(/(\s+)/);
-    let currentTokenIndex = 0;
-    let currentText = "";
-    const intervalId = setInterval(() => {
-      const tokensToTake = Math.floor(Math.random() * 4) + 1;
-      for (let i = 0; i < tokensToTake; i++) {
-        if (currentTokenIndex < tokens.length) {
-          currentText += tokens[currentTokenIndex];
-          currentTokenIndex++;
-        }
-      }
-      setDisplayedAnalysis(currentText);
-      if (currentTokenIndex >= tokens.length) {
-        clearInterval(intervalId);
-        setIsTyping(false);
-      }
-    }, 25);
-    return () => clearInterval(intervalId);
-  }, [aiAnalysis]);
-
-  const handleGenerateIA = async () => {
-    const unidadeIdToUse =
-      indicador.unidadeId !== undefined
-        ? indicador.unidadeId
-        : resultados[0]?.unidade_id;
-    if (unidadeIdToUse === undefined || unidadeIdToUse === null) {
-      setAiError("ID da unidade não encontrado para análise.");
-      return;
-    }
-
-    setIsGeneratingIA(true);
-    setAiError(null);
-    setAiAnalysis(null);
-    setDisplayedAnalysis("");
-
-    const payloadParaIA = {
-      nome: indicador.descricao,
-      meta: indicador.meta,
-      unidadeMedida: indicador.unidade_de_medida,
-      historico: chartData.map((d) => ({
-        mes: d.rawCompetencia,
-        valorLocal: d.valorLocal,
-        ...(showMinisterial ? { valorRedeDatasus: d.valorMinisterio } : {}),
-      })),
-      visaoGlobal: unidadeIdToUse === 0,
-    };
-
-    try {
-      const result = await DashifyService.gerarAnaliseIA(
-        indicador.id,
-        unidadeIdToUse,
-        payloadParaIA,
-      );
-      setAiAnalysis(result.analiseGerada);
-    } catch (error: any) {
-      setAiError(error.message || "Erro desconhecido ao comunicar com a IA.");
-    } finally {
-      setIsGeneratingIA(false);
-    }
-  };
-
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-col xl:items-start justify-between gap-4 pb-2 shrink-0">
@@ -699,7 +481,7 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
                   <Sparkles className="h-4 w-4 text-purple-600" /> Dashify AI
                   Insight
                 </h4>
-                {!aiAnalysis && !isGeneratingIA && (
+                {!aiState.analysis && !aiState.isGenerating && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -712,7 +494,7 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
                 )}
               </div>
 
-              {isGeneratingIA && (
+              {aiState.isGenerating && (
                 <div className="rounded-lg border border-purple-100 bg-purple-50/40 p-4 space-y-3 animate-pulse">
                   <Skeleton className="h-3.5 w-full bg-purple-200/50" />
                   <Skeleton className="h-3.5 w-[90%] bg-purple-200/50" />
@@ -720,30 +502,27 @@ export function EvolutionChart({ indicador }: EvolutionChartProps) {
                 </div>
               )}
 
-              {aiError && (
+              {aiState.error && (
                 <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-md">
                   <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{aiError}</span>
+                  <span>{aiState.error}</span>
                 </div>
               )}
 
-              {aiAnalysis && !isGeneratingIA && (
+              {aiState.analysis && !aiState.isGenerating && (
                 <div className="relative rounded-lg border border-purple-200 bg-gradient-to-br from-purple-50/80 to-transparent p-4 shadow-sm animate-in fade-in">
                   <div className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
-                    {displayedAnalysis}
-                    {isTyping && (
+                    {aiState.displayedText}
+                    {aiState.isTyping && (
                       <span className="inline-block w-1.5 h-4 ml-0.5 align-middle bg-purple-500 animate-pulse" />
                     )}
                   </div>
-                  {!isTyping && (
+                  {!aiState.isTyping && (
                     <Button
                       variant="ghost"
                       size="icon"
                       className="absolute top-2 right-2 h-6 w-6 text-muted-foreground"
-                      onClick={() => {
-                        setAiAnalysis(null);
-                        setDisplayedAnalysis("");
-                      }}
+                      onClick={clearAi}
                     >
                       <X className="h-3.5 w-3.5" />
                     </Button>
