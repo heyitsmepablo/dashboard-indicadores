@@ -1,0 +1,13 @@
+descricao,fonte_formula,unidade_de_medida,meta
+Consultas medicas especializadas,Quantidade de consultas,PERCENTUAL,
+Consultas de profissionais de nível superior (exceto medico),Quantidade de consultas,PERCENTUAL,
+Índice de Satisfação do Usuário,Pesquisa simples (escala de 1 a 5),PERCENTUAL,
+Taxa de Reclamações Registradas,N de reclamações/ n total de atendimentos x 100,PERCENTUAL,
+Índice de Ruptura de Estoque,N de itens em falta/total de itens críticos x 100,PERCENTUAL,
+Cobertura de estoque,Estoque disponível/pacientes cadastrados,TAXA,
+Taxa de admissões no programa por município,Admissões no período/ total de admissões x 100,PERCENTUAL,
+Percentual de usuários com complicações ativas,Usuário com complicações/usuários ativos x 100,PERCENTUAL,
+Tempo médio para emissão do laudo caracterizador,Data de entrega do laudo - data da avaliação/n laudos emitidos,TEMPO_DIAS,
+Tempo médio de espera para avaliação no serviço de fibromialgia,Data de avaliação - data da solicitação,TEMPO_DIAS,
+Taxa Geral de Profissionais capacitados,Total de profissionais capacitados / n° total de profissionais da unidade x 100,PERCENTUAL,
+tempo médio para recebimento de OPM,Cadastro / dispensação,TEMPO_DIAS,

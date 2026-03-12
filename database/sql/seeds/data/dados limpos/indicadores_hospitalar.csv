@@ -1,0 +1,74 @@
+descricao,fonte_formula,unidade_de_medida
+Abertura de Protocolo de Dor Torácica,Quantidade de protocolos de Dor torácica abertos,ABSOLUTO
+Admissão na estabilização/ Sala vermelha,Quantidade de pacientes admitidos na estabilização/ sala vermelha,ABSOLUTO
+Angioplastias primárias no Protocolo de Dor Torácica,Quantidade de pacientes encaminhados para angioplastia primária protocolo Dor Torácica,ABSOLUTO
+"Atendimento de Urgência e Emergência (Psiquiátrico - lesão autoprovocada, autoextermínio)","Nº total de Atendimento de Urgência e Emergência (Psiquiátrico - lesão autoprovocada, autoextermínio)",ABSOLUTO
+Atendimentos de Classificação de Risco – Amarelo,Quantidade de atendimentos de acordo com a classificação amarelo,ABSOLUTO
+Atendimentos de Classificação de Risco – Azul,Quantidade de atendimentos de acordo com a classificação azul,ABSOLUTO
+Atendimentos de Classificação de Risco – Laranja,Quantidade de atendimentos de acordo com a classificação laranja,ABSOLUTO
+Atendimentos de Classificação de Risco – Verde,Quantidade de atendimentos de acordo com a classificação verde,ABSOLUTO
+Atendimentos de Classificação de Risco – Vermelho,Quantidade de atendimentos de acordo com a classificação vermelho,ABSOLUTO
+Atendimentos na Sala de Medicação,Quantidade de atendimentos por paciente,ABSOLUTO
+Cirurgias Realizadas,Quantidade de cirurgias realizadas de acordo com a especialidade,ABSOLUTO
+Cirurgias Realizadas,Quantidade de cirurgias realizadas de acordo com a especialidade,ABSOLUTO
+Custo médio de dieta via oral paciente desospitalizado,Custo Médio de Nutrição por Paciente = Valor total gasto com dietas no mês / Número de pacientes desospitalizados assistidos,FINANCEIRO
+Densidade de infecção relacionada à assistência à saúde,N° de casos de IRAS / total de pacientes-dia X 1000,ABSOLUTO
+Giro de Leito - Enfermaria Cirúrgica,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
+Giro de Leito - Enfermaria Clinica,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
+Giro de Leito - GLOBAL,Total de saídas (altas + óbitos + transferências externas + evasões) / nº de leitos operacionais X 100,PERCENTUAL
+Giro de Leito - UCI,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
+Giro de Leito - UTI Adulto,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
+Giro de Leito – UTI Pediátrica,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
+Giro de Salas Cirúrgicas,Total de cirurgias no período / nº total de salas cirúrgicas,ABSOLUTO
+Índice de Intervalo de Substituição de Leitos - Enfermaria Cirúrgica,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
+Índice de Intervalo de Substituição de Leitos - Enfermaria Clinica,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
+Índice de Intervalo de Substituição de Leitos - GLOBAL,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
+Índice de Intervalo de Substituição de Leitos - UTI Adulto,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
+Índice de Intervalo de Substituição de Leitos - UTI Pediátrica,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
+Índice de Intervalo de Substituição de Leitos - UCI,Taxa de desocupação x média de permanência em dias / taxa de ocupação hospitalar,PERCENTUAL
+Índice de Satisfação do Usuário,Total de avaliações classificadas como bom e/ou ótimo / total pesquisas realizadas,PERCENTUAL
+Internações Hospitalares,Quantidade de pacientes internados,ABSOLUTO
+LOS,Tempo (em dias) de passagem do paciente na emergência,ABSOLUTO
+Pacientes aguardando leito de internação na emergência,Quantidade de pacientes aguardando leito de internação na emergência/mês,ABSOLUTO
+Pacientes aguardando leito de internação na emergência,Quantidade de pacientes aguardando leito de internação na emergência/mês,ABSOLUTO
+Produção de Colonoscopia,Colonoscopia ( quantidade),ABSOLUTO
+Produção de Eletrocardiograma,Eletrocardiograma (quantidade),ABSOLUTO
+Produção de Eletroencefalograma,Eletroencefalograma (quantidade),ABSOLUTO
+Produção de Endoscopia,Endoscopia (quantidade),ABSOLUTO
+Produção de Exames laboratoriais,Exames laboratoriais (quantidade),ABSOLUTO
+Produção de Raio – X,Raio - X (quantidade),ABSOLUTO
+Produção de Ressonância Magnética,Ressonância Magnética (quantidade),ABSOLUTO
+Produção de Tomografia,Tomografia (quantidade),ABSOLUTO
+Produção de Ultrassonografia,Ultrassonografia(quantidade),ABSOLUTO
+Taxa de Acidente de Trabalho,Nº de acidentes de trabalho / nº de funcionários ativos no cadastro do hospital X 100,PERCENTUAL
+Taxa de Adesão aos Treinamentos,Total de Profissionais que participaram dos treinamentos / N° total de profissionais convidados para o treinamento x 100,PERCENTUAL
+Taxa de conversão de internação,Total de internações / total de atendimentos de urgência X 100,PERCENTUAL
+Taxa de Ocupação de Sala Cirúrgica,Tempo total de uso das S.C. + Tempo total de higienização das S.C. / tempo total de disponibilidade do centro cirurgico para cirurgias X 100,PERCENTUAL
+Taxa de Ocupação Operacional de Leitos - Enfermaria Cirúrgica,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
+Taxa de Ocupação Operacional de Leitos - Enfermaria Clinica,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
+Taxa de Ocupação Operacional de Leitos - GLOBAL,Total de paciente dia / total de leito dia operacional X 100,PERCENTUAL
+Taxa de Ocupação Operacional de Leitos - UTI Adulto,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
+Taxa de Ocupação Operacional de Leitos – UCI,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
+Taxa de Ocupação Operacional de Leitos – UTI Pediátrica,Total de paciente dia do setor / total de leito dia operacional por setor X 100,PERCENTUAL
+Taxa de Prevenção de Incidentes/Eventos Adversos Global,Total geral de incidentes/eventos adversos / total de pacientes dia X 100-100,PERCENTUAL
+Taxa de Profissionais Treinados - Farmácia,Total de profissionais treinados por categoria / n° total de profissionais desta categoria x 100,PERCENTUAL
+Taxa de Profissionais Treinados - Serviço Social,Total de profissionais treinados por categoria / n° total de profissionais desta categoria x 100,PERCENTUAL
+Taxa de Profissionais Treinados - Administrativo e Apoio,Total de profissionais treinados por categoria / n° total de profissionais desta categoria x 100,PERCENTUAL
+Taxa de Profissionais Treinados – Enfermagem,Total de profissionais treinados por categoria / n° total de profissionais desta categoria x 100,PERCENTUAL
+Taxa de Profissionais Treinados – Fisioterapia,Total de profissionais treinados por categoria / n° total de profissionais desta categoria x 100,PERCENTUAL
+Taxa de Profissionais Treinados – Fonoaudiologia,Total de profissionais treinados por categoria / n° total de profissionais desta categoria x 100,PERCENTUAL
+Taxa de Profissionais Treinados – Médicos,Total de profissionais treinados por categoria / n° total de profissionais desta categoria x 100,PERCENTUAL
+Taxa de Profissionais Treinados – Psicologia,Total de profissionais treinados por categoria / n° total de profissionais desta categoria x 100,PERCENTUAL
+Taxa de utilização de cateter venoso central,N° de pacientes com CVC-dia / n° de pacientes-dia X 100,PERCENTUAL
+Taxa de utilização de cateter vesical de demora,N° CVD-dia / n° de pacientes-dia X 100,PERCENTUAL
+Taxa de utilização de ventilação mecânica,N° de ventilações mecânicas-dia / n° de pacientes-dia X 100,PERCENTUAL
+Taxa Geral de Profissionais Treinados,Total de profissionais treinados / n° total de profissionais da unidade x 100,PERCENTUAL
+Tempo Médio de Permanência - GLOBAL,Total de paciente dia / total de saídas hospitalares (altas + óbitos + transferências externas + evasões),TEMPO_DIAS
+Tempo Médio de Permanência – Enfermaria Cirurgica,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
+Tempo Médio de Permanência – Enfermaria Clinica,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
+Tempo Médio de Permanência – Estabilização/ Sala Vermelha,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
+Tempo Médio de Permanência – UCI,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
+Tempo Médio de Permanência – UTI Adulto,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
+Tempo Médio de Permanência – UTI Pediatrica,Total de paciente dia do setor / total de saídas do setor (altas + óbitos + transferências internas e externas + evasões),TEMPO_DIAS
+Trombólises realizadas por AVC,Quantidade de trombólises realizadas,ABSOLUTO
+Trombólises realizadas por IAM,Quantidade de trombólises realizadas,ABSOLUTO

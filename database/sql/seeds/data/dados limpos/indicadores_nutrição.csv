@@ -1,0 +1,8 @@
+id,descricao,fonte_formula,unidade_de_medida,meta
+,Taxa de pacientes triados em até 48h de internação,Nº de pacientes triados em até 48h/Nº de pacientes admitidos em 48h * 100,TAXA,
+,Taxa de Pacientes em risco nutricional,Nº de pacientes com risco nutricional/Nº de pacientes triados em 48h * 100,TAXA,
+,Taxa de pacientes evoluidos,Nº de pacientes evoluidos / Nº de paciente - dia *100,TAXA,
+,Taxa de pacientes com diarreia em uso de NE,Nº de pacientes com diarreia recebendo TNE / Nº de prescrições em terapia nutricional enteral *100,TAXA,
+,Taxa de volume prescrito X volume infundido,Volume infundido > 80% de NE/ Volume prescrito * 100,TAXA,
+,Taxa de pacientes que receberam orientação de alta em GTT,Nº de pacientes com GTT que receberam orientação na alta/Nº de pacientes em GTT que tiveram alta hospitalar * 100,TAXA,
+,Taxa de incidentes/eventos adversos relacionados a infusão NE,Nº de Incidentes/eventos adversos/nº de pacientes em uso de TNE,TAXA,

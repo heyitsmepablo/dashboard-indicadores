@@ -1,0 +1,13 @@
+descricao,fonte_formula,unidade_de_medida,meta
+Média de permanência geral: Mede o tempo médio de permanência dos usuários no SAD até a alta,Dias de permanência dos usuários com alta ÷ nº de usuários com alta.,TEMPO_DIAS,Dias de permanência dos usuários com alta ÷ nº de usuários com alta.
+Média de permanência por perfil de paciente: Avalia o tempo médio de permanência conforme o perfil clínico do usuário.,"Idem ao indicador anterior, estratificado por condição clínica.",TEMPO_DIAS,"Idem ao indicador anterior, estratificado por condição clínica."
+Capacidade de atendimento por EMAD: Mede a capacidade mensal de atendimento das equipes EMAD.,Usuários do período anterior + novos usuários.,ABSOLUTO,Usuários do período anterior + novos usuários.
+"Percentual de usuários AD1, AD2 e AD3 na admissão: Avalia o perfil de complexidade dos usuários admitidos no SAD",Modalidade ÷ usuários admitidos × 100,PERCENTUAL,Modalidade ÷ usuários admitidos × 100
+Percentual por faixa etária: Identifica a distribuição dos usuários por faixa etária.,Faixa etária ÷ total de usuários × 100,PERCENTUAL,Faixa etária ÷ total de usuários × 100
+Percentual por serviço de origem: Avalia a origem dos usuários admitidos no SAD.,Origem ÷ usuários admitidos × 100,PERCENTUAL,Origem ÷ usuários admitidos × 100
+Percentual por agravo: Identifica os principais agravos de saúde atendidos pelo SAD.,Agravo ÷ total de usuários × 100.,PERCENTUAL,Agravo ÷ total de usuários × 100.
+Percentual por motivo de saída: Avalia os motivos de desligamento dos usuários do SAD.,Saídas por tipo ÷ total de saídas × 100,PERCENTUAL,Saídas por tipo ÷ total de saídas × 100
+Percentual de altas clínicas: Mede a proporção de usuários que receberam alta clínica,Altas clínicas ÷ total de usuários × 100,PERCENTUAL,Altas clínicas ÷ total de usuários × 100
+Percentual de óbitos com declaração pela EMAD: Avalia a atuação da equipe na emissão da declaração de óbito domiciliar.,DO pela equipe ÷ óbitos domiciliares × 100.,PERCENTUAL,DO pela equipe ÷ óbitos domiciliares × 100.
+Taxa de mortalidade em internação domiciliar: Mede a mortalidade entre usuários em internação domiciliar.,Óbitos ÷ total atendido × 100.,PERCENTUAL,Óbitos ÷ total atendido × 100.
+Taxa de internação após atenção domiciliar: Avalia a necessidade de internação hospitalar após acompanhamento domiciliar.,Internações hospitalares ÷ total atendido × 100.,PERCENTUAL,Internações hospitalares ÷ total atendido × 100.
